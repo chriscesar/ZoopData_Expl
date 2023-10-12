@@ -92,7 +92,6 @@ df_wims0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
                                                  "/WIMS_Extract_WaterQuality_Zoop_Samples_230809.xlsx"),
                                           sheet="allDat"))
 
-### Prior to import into R, and following info from RH,
 ### counts for pots 1&2 have been summed as to have those for pots 3&4
 ### removed whitespace from AphiaIDs & taxon names
 
@@ -116,11 +115,6 @@ df_wims %>%
 
 ### remove odd data
 df_tx <- as_tibble(df_tx0) ### create new data (keep df0 as 'raw')
-
-### convert NAs to zero
-df_tx$Abund_m3[is.na(df_tx$Abund_m3)] <- 0
-##throw empty rows out ('gaps' in taxon name cols)
-df_tx <- df_tx[!is.na(df_tx$Taxa),]
 
 ### convert dates
 df_tx$sample.date <- as.Date(df_tx$sample.date, origin = "1899-12-30")
@@ -150,13 +144,13 @@ dfw <- left_join(df_tx_w,df_wims_w,by="PRN")
 ## look at taxon data only ####
 ###############################
 
-### we now have formatted data standardised by volume filtered ###
-### this allows us to run some:
+### we now have formatted abundance data standardised by volume of seawater filtered ###
+
 ### Initial analyses ####
 
 ### tax number
-df_tx_w$S <- vegan::specnumber(df_tx_w[,-c(1:21)])
-df_tx_w$N <- rowSums(df_tx_w[,-c(1:21,length(df_tx_w))])
+df_tx_w$S <- vegan::specnumber(df_tx_w[, -c(1:21)])
+df_tx_w$N <- rowSums(df_tx_w[, -c(1:21, length(df_tx_w))])
 
 ### how often do different taxa appear?
 xx <- df_tx_w %>% 
@@ -205,7 +199,7 @@ xx %>%
   ### need to pivot to longer for plotting
   pivot_longer(!Region, names_to="taxon",values_to="preval") %>% #by Region
   # pivot_longer(!WB_lb, names_to="taxon",values_to="preval") %>%
-  dplyr::filter(preval >0) -> xxprev
+  dplyr::filter(preval >0) -> xxprev ## generates prevalence (# observations) per taxon
 
 xxprev %>% 
   ggplot(.,aes(x=preval))+
@@ -256,7 +250,7 @@ df_tx_w %>%
 
 ### NMDS ####
 ptm <- Sys.time()###
-set.seed(pi);ord <-   vegan::metaMDS(dftmp,trymax = 500)
+set.seed(pi+5);ord <-   vegan::metaMDS(dftmp,trymax = 1000)
 Sys.time() - ptm;rm(ptm)
 plot(ord)
 
@@ -753,3 +747,5 @@ AIC(m_N_0,m_N_pois,m_N_nb,m_N_lgnm)#log-normal is 'best'
 ### look at functional groups(lifeforms)
 # master list saved in:
 # \\prodds.ntnl\Shared\AN\KFH\Groups\N_Marine\07 Training & Reference Documents\A&R Technical Guidance\Traits, Lifeforms etc\Plankton Lifeform Extraction Tool
+# consider reproducing ordination in 3 dimensions using rgl (see: https://riffomonas.org/code_club/2021-03-24-rgl)
+
