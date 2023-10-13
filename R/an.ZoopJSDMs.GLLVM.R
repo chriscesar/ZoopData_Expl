@@ -109,6 +109,20 @@ saveRDS(gllvm_null, file = "data/out/gllvm_null.Rdat")
 gllvm_null <- readRDS("data/out/gllvm_null.Rdat")
 ordiplot(gllvm_null, biplot=TRUE)
 
+## by Region ####
+ptm <- Sys.time()
+gllvm_rgn <- gllvm(y = Y[-na_out,],
+                   X = X[-na_out,],
+                   set.seed = pi,
+                   formula = ~ Region,
+                   num.lv = 2,
+                   family="gaussian")
+Sys.time()-ptm;rm(ptm)
+saveRDS(gllvm_rgn, file = "data/out/gllvm_rgn.Rdata")
+gllvm_rgn <- readRDS("data/out/gllvm_rgn.Rdata")
+ordiplot(gllvm_rgn, biplot=TRUE)
+
+
 ## with env predictors ####
 ptm <- Sys.time()
 gllvm_env <- gllvm(y = Y[-na_out,],
@@ -122,9 +136,9 @@ saveRDS(gllvm_env, file = "data/out/gllvm_env.Rdata")
 gllvm_env <- readRDS("data/out/gllvm_env.Rdata")
 ordiplot(gllvm_env, biplot=TRUE)
 
-par(mfrow = c(3,2), mar=c(4,4,2,2))
-for(i in 1:ncol(X)){
-  Col <- cbPalette[as.numeric(cut(X[,i], breaks = 20))]
-  ordiplot(gllvm_env, symbols = T, s.colors = Col, main = colnames(X)[i], 
-           biplot = TRUE)
-}
+# par(mfrow = c(3,2), mar=c(4,4,2,2))
+# for(i in 1:ncol(X)){
+#   Col <- cbPalette[as.numeric(cut(X[,i], breaks = 20))]
+#   ordiplot(gllvm_env, symbols = T, s.colors = Col, main = colnames(X)[i], 
+#            biplot = TRUE)
+# }
