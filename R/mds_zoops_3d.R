@@ -87,7 +87,7 @@ plot3d(x = scores_site$NMDS1,
        type="s", size = 1,
        xlab = "NMDS1",ylab = "NMDS2",zlab = "NMDS3")
 
-# movie3d(spin3d(axis = c(0,0,1),rpm=4), duration = 15, dir="./")
+# rgloptions = list("windowRect"=c(50,50,1000,1000));movie3d(spin3d(axis = c(0,0,1),rpm=4), duration = 15, dir="./")
 # plot3d(x = scores_species$NMDS1,
 #        y = scores_species$NMDS2,
 #        z = scores_species$NMDS3,
