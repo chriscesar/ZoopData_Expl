@@ -37,7 +37,9 @@ cbPalette <- c("#999999", #153/153/153
 
 ### load data ####
 ### taxon data
-df0 <- as_tibble(read.csv(file=paste0(datfol,"processedData/","zoopWIDEAbund_m3_taxOnly_USE.csv")))
+df0 <- as_tibble(read.csv(file=paste0(datfol,
+                                      "processedData/",
+                                      "zoopWIDEAbund_m3_taxOnly_USE.csv")))
 
 #### quick ordinations ####
 df0 %>% 
@@ -49,6 +51,8 @@ df0 %>%
 ptm <- Sys.time()###
 set.seed(pi+5);ord <-   vegan::metaMDS(dftmp, trymax = 1000, k = 3)
 Sys.time() - ptm;rm(ptm)
+saveRDS(ord, file = "data/out/ord3d.Rdata")
+
 plot(ord)
 
 #### extract ordination axes ####
@@ -74,6 +78,7 @@ rm(tmp_sites)
 scores_species <- as.data.frame(scores(ord,display = "species"))
 scores_species$lbfull <-  row.names(scores_species)
 scores_species$lb <-  make.cepnames(row.names(scores_species))#shorten names
+saveRDS(scores_species, file = "data/out/scores_species3d.Rdata")
 
 plot3d(x = scores_site$NMDS1,
        y = scores_site$NMDS2,
@@ -83,3 +88,19 @@ plot3d(x = scores_site$NMDS1,
        xlab = "NMDS1",ylab = "NMDS2",zlab = "NMDS3")
 
 # movie3d(spin3d(axis = c(0,0,1),rpm=4), duration = 15, dir="./")
+# plot3d(x = scores_species$NMDS1,
+#        y = scores_species$NMDS2,
+#        z = scores_species$NMDS3,
+#        type="s",size = 1,
+#        xlab = "NMDS1",ylab = "NMDS2",zlab = "NMDS3")
+
+text3d(x = scores_species$NMDS1,
+       y = scores_species$NMDS2,
+       z = scores_species$NMDS3,
+       scores_species$lb, size=1,
+       cex = .75, col="grey")
+
+axes3d();title3d(xlab="NMDS1",
+                 ylab="NMDS2",
+                 zlab="NMDS3",
+                 font=2)
