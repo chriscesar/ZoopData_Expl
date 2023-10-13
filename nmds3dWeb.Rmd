@@ -23,7 +23,7 @@ Maybe having an interactive 3d plot could offer some insight?
 ### generate 3 dimensional NMDS plot for sites
 
 #### load packages ####
-ld_pkgs <- c("tidyverse","vegan","rgl")
+ld_pkgs <- c("tidyverse","vegan","rgl", "scales")
 vapply(ld_pkgs, library, logical(1L),
        character.only = TRUE, logical.return = TRUE);rm(ld_pkgs)
 ord <- readRDS("data/out/ord3d.Rdata")
@@ -63,7 +63,7 @@ text3d(x = scores_species$NMDS1,
        y = scores_species$NMDS2,
        z = scores_species$NMDS3,
        scores_species$lb, size=1,
-       cex = .575)
+       cex = .575, col=scales::alpha(1,0.5))
 
 rglwidget(elementId = "nmds2",width=1000,height=1000)
 ```
