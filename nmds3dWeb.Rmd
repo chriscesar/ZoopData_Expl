@@ -17,6 +17,8 @@ It is often difficult to collapse this variability into a 2 dimensional ordinati
 
 Maybe having an interactive 3d plot could offer some insight?
 
+## Sites data only
+
 ```{r, echo=FALSE,message=FALSE,warning=FALSE}
 ### generate 3 dimensional NMDS plot for sites
 
@@ -37,6 +39,8 @@ plot3d(x = scores_site$NMDS1,
 
 rglwidget(elementId = "nmds")
 ```
+
+## Sites and species data
 
 I'm trying to incorporate both sites and taxa into a single plot.
 This version comes out a bit messy.  Can't see how to have semi-transparent text.
@@ -59,8 +63,12 @@ text3d(x = scores_species$NMDS1,
        y = scores_species$NMDS2,
        z = scores_species$NMDS3,
        scores_species$lb, size=1,
-       cex = .55)
+       cex = .575)
 
 rglwidget(elementId = "nmds2",width=1000,height=1000)
 ```
 Stress = `r round(ord$stress,3)`
+
+# Ambitions/To do:
+* Come up with approach to make text transparent
+* Explore approaches to bring in ggplot style methods (non-trivial...)
