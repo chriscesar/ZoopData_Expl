@@ -1,0 +1,66 @@
+---
+title: "An exciting interactive html file"
+output: html_document
+date: "2023-10-12"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Zooplankton data are variable
+The structure of our zooplankton assemblages are variable over time.
+
+We have lots of species from lots of monitoring stations.
+
+It is often difficult to collapse this variability into a 2 dimensional ordination.
+
+Maybe having an interactive 3d plot could offer some insight?
+
+```{r, echo=FALSE,message=FALSE,warning=FALSE}
+### generate 3 dimensional NMDS plot for sites
+
+#### load packages ####
+ld_pkgs <- c("tidyverse","vegan","rgl")
+vapply(ld_pkgs, library, logical(1L),
+       character.only = TRUE, logical.return = TRUE);rm(ld_pkgs)
+ord <- readRDS("data/out/ord3d.Rdata")
+### load data ####
+scores_site <- readRDS("data/out/scores_site3d.Rdata")
+r3dDefaults$windowRect <- c(0,100, 1000, 1000) 
+plot3d(x = scores_site$NMDS1,
+       y = scores_site$NMDS2,
+       z = scores_site$NMDS3,
+       col=scores_site$RegionCol,
+       type="s", size = 1,
+       xlab = "NMDS1",ylab = "NMDS2",zlab = "NMDS3")
+
+rglwidget(elementId = "nmds")
+```
+
+I'm trying to incorporate both sites and taxa into a single plot.
+This version comes out a bit messy.  Can't see how to have semi-transparent text.
+Potentially of some value?
+
+```{r,echo=FALSE}
+### generate 3 dimensional NMDS plot for species
+
+### load data ####
+scores_site <- readRDS("data/out/scores_site3d.Rdata")
+# r3dDefaults$windowRect <- c(0,100, 1000, 1000) 
+plot3d(x = scores_site$NMDS1,
+       y = scores_site$NMDS2,
+       z = scores_site$NMDS3,
+       col=scores_site$RegionCol,
+       type="s", size = 1,
+       xlab = "NMDS1",ylab = "NMDS2",zlab = "NMDS3")
+scores_species <- readRDS("data/out/scores_species3d.Rdata")
+text3d(x = scores_species$NMDS1,
+       y = scores_species$NMDS2,
+       z = scores_species$NMDS3,
+       scores_species$lb, size=1,
+       cex = .55)
+
+rglwidget(elementId = "nmds2",width=1000,height=1000)
+```
+Stress = `r round(ord$stress,3)`
