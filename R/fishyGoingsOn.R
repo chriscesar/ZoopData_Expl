@@ -154,7 +154,28 @@ ggplot(dfplot, aes(x=as.factor(RgWB), y=mean, fill=as.factor(fish_type))) +
         axis.text.x = element_text(angle = 270, vjust = 0.5, hjust=0))
 dev.off()
 
+## as boxplot:
+## append 'empty value'
+x <- dfsummary[dfsummary$RgWB=="SW_Brist Ch In Sth",]
+x$Abund_m3 <- 0;x$fish_type <- "Fish larvae"
 
+dfsummary <- rbind(dfsummary,x)
+
+dfsummary %>% 
+  ggplot(., aes(x = as.factor(RgWB), y=Abund_m3, fill=as.factor(fish_type)))+
+  geom_boxplot(outlier.shape = NA)+
+  geom_jitter(aes(shape = fish_type),
+              position = position_jitterdodge(),
+              alpha=0.3,
+              show.legend = FALSE)+
+  labs(title = "Fish larvae and egg abundances by WFD water body",
+       subtitle = bquote("Values indicate mean recorded abundances " ~m^-3~" ± standard deviation"),
+       y = bquote("Abundance "~(m^-3)),
+       caption = paste0("Samples gathered between ",min(df0$`sample date`),
+                        " & ",max(df0$`sample date`)))+
+  theme(legend.title = element_blank(),
+        axis.title.x = element_blank(),
+        legend.position="bottom")
 
 # dfsum <- dfsummary %>% 
 #   dplyr::select(., !c(Taxa, AbundanceRaw, `Aphia ID`)) %>% 
