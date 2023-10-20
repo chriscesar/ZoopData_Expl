@@ -56,14 +56,111 @@ df0$LF0fish <- grepl("fish", df0$LF0, ignore.case = TRUE)
 df0$fish_type <- ifelse(df0$LF0fish & grepl("egg",
                                             df0$Taxa,
                                             ignore.case = TRUE),
-                        "Fish egg",
+                        "Fish eggs",
                         ifelse(df0$LF0fish, "Fish larvae", "FALSE"))
+# 
+# ### create smaller data for summarising
+# wbs <- unique(dfsumm$WB) ## water body names
 
-### create smaller data for summarising
-dfsumm <- df0 %>% 
+dfsummary <- df0 %>%
   dplyr::select(.,
                 c(`Pot Number`:Category,
-                  fish_type))
+                  fish_type)) %>% # retain only pertinent variables
+  filter(., fish_type != FALSE) %>% #retain only data flagged as fishy
+  dplyr::select(.,!c(Taxa,
+                     AbundanceRaw,
+                     `Aphia ID`)) %>% ## drop unneccessary
+  group_by(across(c(!fish_type,!Abund_m3))) %>% # group by variables of interest
+  summarise(Abund_m3 = sum(Abund_m3,
+                           na.rm = TRUE),
+            .groups = "drop") # sum fishy things
+
+### create shortened WB label
+dfsummary$WBlb <- ifelse(
+  dfsummary$WB == "Solent", "Solent",
+  ifelse(
+    dfsummary$WB == "SOUTHAMPTON WATER", "Soton Wtr",
+    ifelse(
+      dfsummary$WB == "THAMES LOWER", "Thm Low",
+      ifelse(
+        dfsummary$WB == "Blackwater Outer", "Blckw Out",
+        ifelse(
+          dfsummary$WB == "Cornwall North", "Cornw Nth",
+          ifelse(
+            dfsummary$WB == "Barnstaple Bay", "Brnst B",
+            ifelse(
+              dfsummary$WB == "Kent South", "Kent Sth",
+              ifelse(
+                dfsummary$WB == "Mersey Mouth", "Mersey Mth",
+                ifelse(
+                  dfsummary$WB == "Wash Outer", "Wash Out",
+                  ifelse(
+                    dfsummary$WB == "Lincolnshire", "Lincs",
+                    ifelse(
+                      dfsummary$WB == "Yorkshire South", "Yorks Sth",
+                      ifelse(
+                        dfsummary$WB == "TEES", "Tees",
+                        ifelse(
+                          dfsummary$WB == "Northumberland North", "Nrthmb Nth",
+                          ifelse(
+                            dfsummary$WB == "Farne Islands to Newton Haven",
+                            "Farne Is",
+                            ifelse(
+                              dfsummary$WB == "Bristol Channel Inner South",
+                              "Brist Ch In Sth",NA
+                            )))))))))))))))
+dfsummary$RegSh <- ifelse(dfsummary$Region == "Southern", "Sth",
+                          ifelse(dfsummary$Region == "Anglian", "Ang",
+                                 ifelse(dfsummary$Region == "SWest", "SW",
+                                        ifelse(dfsummary$Region == "NWest", "NW",
+                                               ifelse(dfsummary$Region == "NEast", "NE",
+                                                      ifelse(dfsummary$Region == "Thames", "Thm",NA
+                                                      ))))))
+
+dfsummary$RgWB <- paste0(dfsummary$RegSh,"_",dfsummary$WBlb)
+
+### calculate mean and SD by WB
+dfsummary %>% 
+  group_by(RgWB,
+           fish_type) %>% 
+  summarise(n = n(),
+            mean = mean(Abund_m3,
+                        na.rm = TRUE),
+            sd = sd(Abund_m3,
+                    na.rm = TRUE),.groups = "drop") -> dfplot
+
+dfnu <- data.frame("RgWB" = "SW_Brist Ch In Sth",
+                   "fish_type" = "Fish larvae",
+                   n = 0, mean = 0, sd=NA)
+dfplot <- rbind(dfplot, dfnu);rm(dfnu)
+
+png(file = "figs/fishMeans.png",
+    width=18*ppi, height=9*ppi, res=ppi)
+ggplot(dfplot, aes(x=as.factor(RgWB), y=mean, fill=as.factor(fish_type))) +
+  # geom_vline(xintercept = 5)+
+  geom_bar(stat="identity", color="black", 
+           position=position_dodge()) +
+  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), width=.2,
+                position=position_dodge(.9))+
+  coord_cartesian(ylim = c(0,NA))+
+  labs(title = "Fish larvae and egg abundances by WFD water body",
+       subtitle = bquote("Values indicate mean recorded abundances " ~m^-3~" ± standard deviation"),
+       y = bquote("Abundance "~(m^-3)),
+       caption = paste0("Samples gathered between ",min(df0$`sample date`),
+                        " & ",max(df0$`sample date`)))+
+  theme(legend.title = element_blank(),
+        axis.title.x = element_blank(),
+        legend.position="bottom",
+        axis.text.x = element_text(angle = 270, vjust = 0.5, hjust=0))
+dev.off()
+
+
+
+# dfsum <- dfsummary %>% 
+#   dplyr::select(., !c(Taxa, AbundanceRaw, `Aphia ID`)) %>% 
+#   group_by(across(c(!fish_type, !Abund_m3))) %>% 
+#   summarise(Abund_m3 = sum(Abund_m3, na.rm = TRUE), .groups = "drop")
+
 # create total Fish Egg and total Fish larvae values per sample
 # calculate mean egg and larvae values by WB ± sd
 
