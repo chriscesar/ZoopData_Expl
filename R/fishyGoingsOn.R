@@ -40,11 +40,38 @@ df0 <- as_tibble(readxl::read_excel(paste0(datfol,
                                       "MBA_Returns_Amalgamated_USE.xlsx"),
                                     sheet = "outR04_LF"))
 
+### remove unneccessary col
+df0 <- df0 %>% 
+  dplyr::select(., !date_site)
+
+# convert dates
+df0$`sample date` <- as.Date(df0$`sample date`, origin="1899-12-30")
+
+## flag 'fishy' rows
+# any life form flag in LF0 that contains the string "fish"
+# this outputs a TRUE/FALSE against each row in the data
+df0$LF0fish <- grepl("fish", df0$LF0, ignore.case = TRUE)
+
+#### if fish == TRUE, assign "Eggs" to eggy lads and "Larvae" to non-eggsters
+df0$fish_type <- ifelse(df0$LF0fish & grepl("egg",
+                                            df0$Taxa,
+                                            ignore.case = TRUE),
+                        "Fish egg",
+                        ifelse(df0$LF0fish, "Fish larvae", "FALSE"))
+
+### create smaller data for summarising
+dfsumm <- df0 %>% 
+  dplyr::select(.,
+                c(`Pot Number`:Category,
+                  fish_type))
+# create total Fish Egg and total Fish larvae values per sample
+# calculate mean egg and larvae values by WB ± sd
+
 ### to do ####
-# flag 'fish' type rows
-# assign variable "type" to indicate whether it's an EGG or LARVAE
+# flag 'fish' type rows - DONE
+# assign variable "type" to indicate whether it's an EGG or LARVAE - DONE
 # (think about what to do in cases where just the taxon name is provided,
-# e.g. "Gobiidae")
+# e.g. "Gobiidae") - DONE
 # Summarise counts by sample (i.e. Total larvae and Total egg values per sample)
 # calculate mean values ± SD by WB
 # present, e.g., stacked larvae-egg barchart by WB arranged by region?
