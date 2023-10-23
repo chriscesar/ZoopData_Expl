@@ -109,6 +109,7 @@ dfsummary$WBlb <- ifelse(
                               dfsummary$WB == "Bristol Channel Inner South",
                               "Brist Ch In Sth",NA
                             )))))))))))))))
+
 dfsummary$RegSh <- ifelse(dfsummary$Region == "Southern", "Sth",
                           ifelse(dfsummary$Region == "Anglian", "Ang",
                                  ifelse(dfsummary$Region == "SWest", "SW",

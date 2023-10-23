@@ -3,7 +3,7 @@
 ## incorporating zero fish counts
 
 #### load packages ####
-ld_pkgs <- c("tidyverse")
+ld_pkgs <- c("tidyverse", "seas")
 vapply(ld_pkgs, library, logical(1L),
        character.only = TRUE, logical.return = TRUE);rm(ld_pkgs)
 
@@ -78,7 +78,6 @@ dfl %>%
   pivot_longer(cols = c(`Fish eggs`, `Fish larvae`),
                names_to = "fish_type",
                values_to = "Abund_m3") -> dfl
-  
 
 ### create shortened WB label
 dfl$WBlb <- ifelse(
@@ -124,6 +123,9 @@ dfl$RegSh <- ifelse(dfl$Region == "Southern", "Sth",
 
 dfl$RgWB <- paste0(dfl$RegSh,"_",dfl$WBlb)
 
+### append season:
+dfl$DJF <- as.factor(mkseas(dfl$`sample date`, width="DJF"))#convert dates to 3month seasonal block
+
 
 # plot boxplot
 png(file = "figs/fishBoxplot.png",
@@ -137,7 +139,7 @@ ggplot(., aes(x = as.factor(RgWB), y=Abund_m3, fill=as.factor(fish_type)))+
               alpha=0.3,
               show.legend = FALSE)+
   labs(title = "Fish larvae and egg abundances by WFD water body",
-       subtitle = bquote("Values indicate mean recorded abundances " ~m^-3),
+       subtitle = bquote("Values indicate observed abundances " ~m^-3),
        y = bquote("Abundance "~(m^-3)),
        caption = paste0("Samples gathered between ",min(df0$`sample date`),
                         " & ",max(df0$`sample date`),".","\nBox widths are proportional to the number of samples.
@@ -146,3 +148,34 @@ ggplot(., aes(x = as.factor(RgWB), y=Abund_m3, fill=as.factor(fish_type)))+
         axis.title.x = element_blank(),
         legend.position="bottom")
 dev.off()
+
+
+# plot boxplot
+png(file = "figs/fishBoxplot_larvae_DJF.png",
+    width=18*ppi,
+    height=9*ppi,
+    res=ppi)
+dfl %>% 
+  filter(.,fish_type == "Fish larvae") %>% 
+  ggplot(., aes(x = as.factor(RgWB), y=Abund_m3))+
+  geom_hline(yintercept = 0, col="grey")+
+  geom_boxplot(outlier.shape = NA, varwidth = TRUE)+
+  geom_jitter(aes(shape = as.factor(DJF),
+                  fill = as.factor(DJF)),
+              position = position_jitterdodge(),
+              alpha=0.3, size=3,
+              show.legend = TRUE)+
+  scale_shape_manual(values = c(21:24))+
+  scale_fill_manual(values = cbPalette[c(3,6,2,5)])+
+  labs(title = "Fish larvae abundances by WFD water body",
+       subtitle = bquote("Values indicate observed abundances " ~m^-3),
+       y = bquote("Abundance "~(m^-3)),
+       caption = paste0("Samples gathered between ",min(df0$`sample date`),
+                        " & ",max(df0$`sample date`),".","\nBox widths are proportional to the number of samples.
+                        Individual sample points overlain."))+
+  theme(legend.title = element_blank(),
+        axis.title.x = element_blank(),
+        legend.position="bottom")
+dev.off()
+
+
