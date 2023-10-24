@@ -123,6 +123,70 @@ dfl$RegSh <- ifelse(dfl$Region == "Southern", "Sth",
 
 dfl$RgWB <- paste0(dfl$RegSh,"_",dfl$WBlb)
 
+### assign Regional Seas
+# following:
+# chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://data.jncc.gov.uk/data/34032043-c2d5-4fe4-952e-3bfe211ca6eb/JNCC-Report-647-FINAL-WEB.pdf
+# assign to:
+# Northern North Sea; Southern North Sea; Eastern Channel;
+# Western Channel & Celtic Sea; Irish Sea; 
+dfl$RgSea <- ifelse(
+  dfl$WB == "Solent", "Eastern Channel",
+  ifelse(
+    dfl$WB == "SOUTHAMPTON WATER", "Eastern Channel",
+    ifelse(
+      dfl$WB == "THAMES LOWER", "Southern North Sea",
+      ifelse(
+        dfl$WB == "Blackwater Outer", "Southern North Sea",
+        ifelse(
+          dfl$WB == "Cornwall North", "Western Channel & Celtic Sea",
+          ifelse(
+            dfl$WB == "Barnstaple Bay", "Western Channel & Celtic Sea",
+            ifelse(
+              dfl$WB == "Kent South", "Southern North Sea",
+              ifelse(
+                dfl$WB == "Mersey Mouth", "Irish Sea",
+                ifelse(
+                  dfl$WB == "Wash Outer", "Southern North Sea",
+                  ifelse(
+                    dfl$WB == "Lincolnshire", "Southern North Sea",
+                    ifelse(
+                      dfl$WB == "Yorkshire South", "Southern North Sea",
+                      ifelse(
+                        dfl$WB == "TEES", "Northern North Sea",
+                        ifelse(
+                          dfl$WB == "Northumberland North", "Northern North Sea",
+                          ifelse(
+                            dfl$WB == "Farne Islands to Newton Haven",
+                            "Northern North Sea",
+                            ifelse(
+                              dfl$WB == "Bristol Channel Inner South",
+                              "Western Channel & Celtic Sea",NA
+                            )))))))))))))))
+
+dfl$RgSea <- factor(dfl$RgSea, levels = c(
+  "Northern North Sea",
+  "Southern North Sea",
+  "Eastern Channel",
+  "Western Channel & Celtic Sea",
+  "Irish Sea"
+))
+
+dfl$RgSeaSh <- ifelse(dfl$RgSea == "Northern North Sea", "NNS",
+                      ifelse(dfl$RgSea == "Southern North Sea", "SNS",
+                             ifelse(dfl$RgSea == "Eastern Channel", "ECh",
+                                    ifelse(dfl$RgSea == "Western Channel & Celtic Sea", "WCh",
+                                           ifelse(dfl$RgSea == "Irish Sea", "IrS",NA)))))
+
+dfl$RgSeaSh <- factor(dfl$RgSeaSh, levels = c(
+  "NNS",
+  "SNS",
+  "ECh",
+  "WCh",
+  "IrS"
+  )
+  )
+
+
 ### append season:
 dfl$DJF <- as.factor(mkseas(dfl$`sample date`, width="DJF"))#convert dates to 3month seasonal block
 
@@ -142,7 +206,7 @@ ggplot(., aes(x = as.factor(RgWB), y=Abund_m3, fill=as.factor(fish_type)))+
   geom_boxplot(outlier.shape = NA, varwidth = TRUE)+
   geom_jitter(aes(shape = fish_type),
               position = position_jitterdodge(),
-              alpha=0.3,
+              alpha=0.6,
               show.legend = FALSE)+
   labs(title = "Fish larvae and egg abundances by WFD water body",
        subtitle = bquote("Values indicate observed abundances " ~m^-3),
@@ -169,10 +233,11 @@ set.seed(pi); dfl %>%
   geom_jitter(aes(shape = as.factor(DJF),
                   fill = as.factor(DJF)),
               position = position_jitterdodge(),
-              alpha=0.3, size=3,
+              alpha=0.6, size=3,
               show.legend = TRUE)+
   scale_shape_manual(values = c(21:24))+
-  scale_fill_manual(values = cbPalette[c(3,6,2,5)])+
+  # scale_fill_manual(values = cbPalette[c(3,6,2,5)])+
+  scale_fill_manual(values = cbPalette[c(2:5)])+
   labs(title = "Fish larvae abundances by WFD water body",
        subtitle = bquote("Values indicate observed abundances " ~m^-3),
        y = bquote("Abundance "~(m^-3)),
@@ -197,9 +262,10 @@ set.seed(pi); dfl %>%
   geom_jitter(aes(shape = month,
                   fill = month),
               position = position_jitterdodge(),
-              alpha=0.3, size=3)+
+              alpha=0.6, size=3)+
   scale_shape_manual(values = rep(c(21:23),4))+
-  scale_fill_manual(values = rep(cbPalette[c(3,6,2,5)],each=3))+
+  # scale_fill_manual(values = rep(cbPalette[c(3,6,2,5)],each=3))+
+  scale_fill_manual(values = rep(cbPalette[c(2:5)],each=3))+
   labs(title = "Fish larvae abundances by WFD water body",
        subtitle = bquote("Values indicate observed abundances " ~m^-3),
        y = bquote("Abundance "~(m^-3)),
@@ -225,10 +291,11 @@ set.seed(pi); dfl %>%
   geom_jitter(aes(shape = as.factor(DJF),
                   fill = as.factor(DJF)),
               position = position_jitterdodge(),
-              alpha=0.3, size=3,
+              alpha=0.6, size=3,
               show.legend = TRUE)+
   scale_shape_manual(values = c(21:24))+
-  scale_fill_manual(values = cbPalette[c(3,6,2,5)])+
+  # scale_fill_manual(values = cbPalette[c(3,6,2,5)])+
+  scale_fill_manual(values = cbPalette[c(2:5)])+
   labs(title = "Fish egg abundances by WFD water body",
        subtitle = bquote("Values indicate observed abundances " ~m^-3),
        y = bquote("Abundance "~(m^-3)),
@@ -253,9 +320,10 @@ set.seed(pi); dfl %>%
   geom_jitter(aes(shape = month,
                   fill = month),
               position = position_jitterdodge(),
-              alpha=0.3, size=3)+
+              alpha=0.6, size=3)+
   scale_shape_manual(values = rep(c(21:23),4))+
-  scale_fill_manual(values = rep(cbPalette[c(3,6,2,5)],each=3))+
+  # scale_fill_manual(values = rep(cbPalette[c(3,6,2,5)],each=3))+
+  scale_fill_manual(values = rep(cbPalette[c(2:5)],each=3))+
   labs(title = "Fish egg abundances by WFD water body",
        subtitle = bquote("Values indicate observed abundances " ~m^-3),
        y = bquote("Abundance "~(m^-3)),
