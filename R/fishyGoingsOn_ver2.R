@@ -126,11 +126,17 @@ dfl$RgWB <- paste0(dfl$RegSh,"_",dfl$WBlb)
 ### append season:
 dfl$DJF <- as.factor(mkseas(dfl$`sample date`, width="DJF"))#convert dates to 3month seasonal block
 
+dfl$month <- factor(format(dfl$`sample date`, "%m"),
+                    levels = c("12","01","02",
+                               "03","04","05",
+                               "06","07","08",
+                               "09","10","11"))
 
+# larvae and eggs ####
 # plot boxplot
 png(file = "figs/fishBoxplot.png",
     width=18*ppi, height=9*ppi, res=ppi)
-dfl %>% 
+set.seed(pi); dfl %>% 
 ggplot(., aes(x = as.factor(RgWB), y=Abund_m3, fill=as.factor(fish_type)))+
   geom_hline(yintercept = 0, col="grey")+
   geom_boxplot(outlier.shape = NA, varwidth = TRUE)+
@@ -149,13 +155,13 @@ ggplot(., aes(x = as.factor(RgWB), y=Abund_m3, fill=as.factor(fish_type)))+
         legend.position="bottom")
 dev.off()
 
-
-# plot boxplot
+# larvae only ####
+# plot boxplot by season
 png(file = "figs/fishBoxplot_larvae_DJF.png",
     width=18*ppi,
     height=9*ppi,
     res=ppi)
-dfl %>% 
+set.seed(pi); dfl %>% 
   filter(.,fish_type == "Fish larvae") %>% 
   ggplot(., aes(x = as.factor(RgWB), y=Abund_m3))+
   geom_hline(yintercept = 0, col="grey")+
@@ -178,4 +184,85 @@ dfl %>%
         legend.position="bottom")
 dev.off()
 
+# plot boxplot by month
+png(file = "figs/fishBoxplot_larvae_month.png",
+    width=18*ppi,
+    height=9*ppi,
+    res=ppi)
+set.seed(pi); dfl %>% 
+  filter(.,fish_type == "Fish larvae") %>% 
+  ggplot(., aes(x = as.factor(RgWB), y=Abund_m3))+
+  geom_hline(yintercept = 0, col="grey")+
+  geom_boxplot(outlier.shape = NA, varwidth = TRUE)+
+  geom_jitter(aes(shape = month,
+                  fill = month),
+              position = position_jitterdodge(),
+              alpha=0.3, size=3)+
+  scale_shape_manual(values = rep(c(21:23),4))+
+  scale_fill_manual(values = rep(cbPalette[c(3,6,2,5)],each=3))+
+  labs(title = "Fish larvae abundances by WFD water body",
+       subtitle = bquote("Values indicate observed abundances " ~m^-3),
+       y = bquote("Abundance "~(m^-3)),
+       caption = paste0("Samples gathered between ",min(df0$`sample date`),
+                        " & ",max(df0$`sample date`),".","\nBox widths are proportional to the number of samples.
+                        Individual sample points overlain with shape/colour indicating sampling month."))+
+  theme(legend.title = element_blank(),
+        axis.title.x = element_blank(),
+        legend.position="bottom")
+dev.off()
 
+# eggs only ####
+# plot boxplot by season
+png(file = "figs/fishBoxplot_eggs_DJF.png",
+    width=18*ppi,
+    height=9*ppi,
+    res=ppi)
+set.seed(pi); dfl %>% 
+  filter(.,fish_type == "Fish eggs") %>% 
+  ggplot(., aes(x = as.factor(RgWB), y=Abund_m3))+
+  geom_hline(yintercept = 0, col="grey")+
+  geom_boxplot(outlier.shape = NA, varwidth = TRUE)+
+  geom_jitter(aes(shape = as.factor(DJF),
+                  fill = as.factor(DJF)),
+              position = position_jitterdodge(),
+              alpha=0.3, size=3,
+              show.legend = TRUE)+
+  scale_shape_manual(values = c(21:24))+
+  scale_fill_manual(values = cbPalette[c(3,6,2,5)])+
+  labs(title = "Fish egg abundances by WFD water body",
+       subtitle = bquote("Values indicate observed abundances " ~m^-3),
+       y = bquote("Abundance "~(m^-3)),
+       caption = paste0("Samples gathered between ",min(df0$`sample date`),
+                        " & ",max(df0$`sample date`),".","\nBox widths are proportional to the number of samples.
+                        Individual sample points overlain."))+
+  theme(legend.title = element_blank(),
+        axis.title.x = element_blank(),
+        legend.position="bottom")
+dev.off()
+
+# plot boxplot by month
+png(file = "figs/fishBoxplot_eggs_month.png",
+    width=18*ppi,
+    height=9*ppi,
+    res=ppi)
+set.seed(pi); dfl %>% 
+  filter(.,fish_type == "Fish eggs") %>% 
+  ggplot(., aes(x = as.factor(RgWB), y=Abund_m3))+
+  geom_hline(yintercept = 0, col="grey")+
+  geom_boxplot(outlier.shape = NA, varwidth = TRUE)+
+  geom_jitter(aes(shape = month,
+                  fill = month),
+              position = position_jitterdodge(),
+              alpha=0.3, size=3)+
+  scale_shape_manual(values = rep(c(21:23),4))+
+  scale_fill_manual(values = rep(cbPalette[c(3,6,2,5)],each=3))+
+  labs(title = "Fish egg abundances by WFD water body",
+       subtitle = bquote("Values indicate observed abundances " ~m^-3),
+       y = bquote("Abundance "~(m^-3)),
+       caption = paste0("Samples gathered between ",min(df0$`sample date`),
+                        " & ",max(df0$`sample date`),".","\nBox widths are proportional to the number of samples.
+                        Individual sample points overlain with shape/colour indicating sampling month."))+
+  theme(legend.title = element_blank(),
+        axis.title.x = element_blank(),
+        legend.position="bottom")
+dev.off()
