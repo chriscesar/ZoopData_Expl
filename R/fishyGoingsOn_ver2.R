@@ -214,13 +214,17 @@ dfl$month <- factor(format(dfl$`sample date`, "%m"),
                                "06","07","08",
                                "09","10","11"))
 
-# larvae and eggs ####
+# PLOTS! ####
+## larvae and eggs ####
 # plot boxplot
 png(file = "figs/fishBoxplot.png",
     width=18*ppi, height=9*ppi, res=ppi)
 set.seed(pi); dfl %>% 
 ggplot(., aes(x = RgSeaSh_WB, y=Abund_m3, fill=as.factor(fish_type)))+
   geom_hline(yintercept = 0, col="grey")+
+  geom_vline(xintercept = c(3.5, 9.5, 11.5,14.5),
+             colour="lightgrey", linetype = "dashed")+
+  scale_x_discrete()+
   geom_boxplot(outlier.shape = NA, varwidth = TRUE)+
   geom_jitter(aes(shape = fish_type),
               position = position_jitterdodge(),
@@ -232,13 +236,13 @@ ggplot(., aes(x = RgSeaSh_WB, y=Abund_m3, fill=as.factor(fish_type)))+
        caption = paste0("Samples gathered between ",min(df0$`sample date`),
                         " & ",max(df0$`sample date`),".","\nBox widths are proportional to the number of samples.
                         Individual sample points overlain (Circles = fish eggs; Triangles = fish larvae).
-                        WBs arranged by geographic location: clockwise from the Northern North Sea."))+
+                        WBs arranged by regional seas and geographic location: clockwise from the Northern North Sea."))+
   theme(legend.title = element_blank(),
         axis.title.x = element_blank(),
         legend.position="bottom")
 dev.off()
 
-# larvae only ####
+## larvae only ####
 # plot boxplot by season
 png(file = "figs/fishBoxplot_larvae_DJF.png",
     width=18*ppi,
@@ -248,6 +252,9 @@ set.seed(pi); dfl %>%
   filter(.,fish_type == "Fish larvae") %>% 
   ggplot(., aes(x = RgSeaSh_WB, y=Abund_m3))+
   geom_hline(yintercept = 0, col="grey")+
+  geom_vline(xintercept = c(3.5, 9.5, 11.5,14.5),
+             colour="lightgrey", linetype = "dashed")+
+  scale_x_discrete()+
   geom_boxplot(outlier.shape = NA, varwidth = TRUE)+
   geom_jitter(aes(shape = as.factor(DJF),
                   fill = as.factor(DJF)),
@@ -263,7 +270,7 @@ set.seed(pi); dfl %>%
        caption = paste0("Samples gathered between ",min(df0$`sample date`),
                         " & ",max(df0$`sample date`),".","\nBox widths are proportional to the number of samples.
                         Individual sample points overlain.
-                        WBs arranged by geographic location: clockwise from the Northern North Sea."))+
+                        WBs arranged by regional seas and geographic location: clockwise from the Northern North Sea."))+
   theme(legend.title = element_blank(),
         axis.title.x = element_blank(),
         legend.position="bottom")
@@ -278,6 +285,9 @@ set.seed(pi); dfl %>%
   filter(.,fish_type == "Fish larvae") %>% 
   ggplot(., aes(x = RgSeaSh_WB, y=Abund_m3))+
   geom_hline(yintercept = 0, col="grey")+
+  geom_vline(xintercept = c(3.5, 9.5, 11.5,14.5),
+             colour="lightgrey", linetype = "dashed")+
+  scale_x_discrete()+
   geom_boxplot(outlier.shape = NA, varwidth = TRUE)+
   geom_jitter(aes(shape = month,
                   fill = month),
@@ -292,13 +302,13 @@ set.seed(pi); dfl %>%
        caption = paste0("Samples gathered between ",min(df0$`sample date`),
                         " & ",max(df0$`sample date`),".","\nBox widths are proportional to the number of samples.
                         Individual sample points overlain with shape/colour indicating sampling month.
-                        WBs arranged by geographic location: clockwise from the Northern North Sea."))+
+                        WBs arranged by regional seas and geographic location: clockwise from the Northern North Sea."))+
   theme(legend.title = element_blank(),
         axis.title.x = element_blank(),
         legend.position="bottom")
 dev.off()
 
-# eggs only ####
+## eggs only ####
 # plot boxplot by season
 png(file = "figs/fishBoxplot_eggs_DJF.png",
     width=18*ppi,
@@ -308,6 +318,9 @@ set.seed(pi); dfl %>%
   filter(.,fish_type == "Fish eggs") %>% 
   ggplot(., aes(x = RgSeaSh_WB, y=Abund_m3))+
   geom_hline(yintercept = 0, col="grey")+
+  geom_vline(xintercept = c(3.5, 9.5, 11.5,14.5),
+             colour="lightgrey", linetype = "dashed")+
+  scale_x_discrete()+
   geom_boxplot(outlier.shape = NA, varwidth = TRUE)+
   geom_jitter(aes(shape = as.factor(DJF),
                   fill = as.factor(DJF)),
@@ -323,7 +336,7 @@ set.seed(pi); dfl %>%
        caption = paste0("Samples gathered between ",min(df0$`sample date`),
                         " & ",max(df0$`sample date`),".","\nBox widths are proportional to the number of samples.
                         Individual sample points overlain.
-                        WBs arranged by geographic location: clockwise from the Northern North Sea."))+
+                        WBs arranged by regional seas and geographic location: clockwise from the Northern North Sea."))+
   theme(legend.title = element_blank(),
         axis.title.x = element_blank(),
         legend.position="bottom")
@@ -338,6 +351,9 @@ set.seed(pi); dfl %>%
   filter(.,fish_type == "Fish eggs") %>% 
   ggplot(., aes(x = RgSeaSh_WB, y=Abund_m3))+
   geom_hline(yintercept = 0, col="grey")+
+  geom_vline(xintercept = c(3.5, 9.5, 11.5,14.5),
+             colour="lightgrey", linetype = "dashed")+
+  scale_x_discrete()+
   geom_boxplot(outlier.shape = NA, varwidth = TRUE)+
   geom_jitter(aes(shape = month,
                   fill = month),
@@ -352,7 +368,7 @@ set.seed(pi); dfl %>%
        caption = paste0("Samples gathered between ",min(df0$`sample date`),
                         " & ",max(df0$`sample date`),".","\nBox widths are proportional to the number of samples.
                         Individual sample points overlain with shape/colour indicating sampling month.
-                        WBs arranged by geographic location: clockwise from the Northern North Sea."))+
+                        WBs arranged by regional seas and geographic location: clockwise from the Northern North Sea."))+
   theme(legend.title = element_blank(),
         axis.title.x = element_blank(),
         legend.position="bottom")
