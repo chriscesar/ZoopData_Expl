@@ -66,15 +66,17 @@ dfl <- df0 %>%
                      taxUSE, Abund_m3:Category))
 ## widen
 dfl %>% 
-  group_by(across(!Abund_m3)) %>% 
+  group_by(across(!Abund_m3)) %>% #group by everything EXCEPT Abund_m3
   summarise(Abund_m3 = sum(Abund_m3,
                            na.rm = TRUE),
             .groups = "drop") %>%  # sum fishy things
   pivot_wider(names_from = taxUSE, values_from = Abund_m3,
-              values_fill = 0) %>%  ##widen 
+              values_fill = 0) %>%  ##widen data for manipulation
+  #get rid of uneccessary taxa. Retain only 'fishy' taxon cols
   dplyr::select(.,c(`Pot Number`:Category,
                     `Fish eggs`,
-                    `Fish larvae`)) %>% #get rid of unneccessary taxa
+                    `Fish larvae`)) %>% 
+  #convert back to long format
   pivot_longer(cols = c(`Fish eggs`, `Fish larvae`),
                names_to = "fish_type",
                values_to = "Abund_m3") -> dfl
@@ -213,6 +215,9 @@ dfl$month <- factor(format(dfl$`sample date`, "%m"),
                                "03","04","05",
                                "06","07","08",
                                "09","10","11"))
+
+## export data
+#write.csv(dfl, file = "data/out/fishData.csv",row.names = FALSE)
 
 # PLOTS! ####
 ## larvae and eggs ####
