@@ -13,26 +13,26 @@
 #### set local package library 
 
 #### check and install required packages ####
-ptm <- Sys.time()
-req_packages <- c("lubridate",# working with dates
-                  "patchwork", #arranging multiple plots
-                  "tidyverse",# general data manipulation
-                  "vegan",# NMDS, multivariate analysis of ecological data
-                  "vegan3d",# as above, but with 3D figs
-                  "mvabund", #multivariate abundance data analyses
-                  "ecoCopula",#model based ordination/graphical modelling
-                  "ggthemes",# sensible visualisation styles
-                  "openxlsx",# read data from xlsx
-                  "MASS",# fit a negative binomial glm
-                  "gclus",#clustering of data
-                  "corrplot",#correlation plots
-                  "performance",# model checking
-                  "seas"#converting dates to seasonal factors
-)
-
-new_packages <- req_packages[!(req_packages %in% installed.packages()[,"Package"])]
-if(length(new_packages)) install.packages(new_packages,library=libfolder,type="binary")
-Sys.time() - ptm;rm(ptm,req_packages,new_packages)
+# ptm <- Sys.time()
+# req_packages <- c("lubridate",# working with dates
+#                   "patchwork", #arranging multiple plots
+#                   "tidyverse",# general data manipulation
+#                   "vegan",# NMDS, multivariate analysis of ecological data
+#                   "vegan3d",# as above, but with 3D figs
+#                   "mvabund", #multivariate abundance data analyses
+#                   "ecoCopula",#model based ordination/graphical modelling
+#                   "ggthemes",# sensible visualisation styles
+#                   "openxlsx",# read data from xlsx
+#                   "MASS",# fit a negative binomial glm
+#                   "gclus",#clustering of data
+#                   "corrplot",#correlation plots
+#                   "performance",# model checking
+#                   "seas"#converting dates to seasonal factors
+# )
+# 
+# new_packages <- req_packages[!(req_packages %in% installed.packages()[,"Package"])]
+# if(length(new_packages)) install.packages(new_packages,library=libfolder,type="binary")
+# Sys.time() - ptm;rm(ptm,req_packages,new_packages)
 
 #### load packages ####
 ld_pkgs <- c("tidyverse","MASS","lubridate","vegan","mvabund","seas","patchwork",
