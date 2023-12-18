@@ -686,7 +686,8 @@ dev.off()
 
 library(mgcv)
 
-tw <- manyany(mv_dftmp~1,"glm",family=Tweedie(var.power=1.2), var.power=1.2)
+# tw <- manyany(mv_dftmp~1,"glm",family=Tweedie(var.power=1.2), var.power=1.2)
+# tw <- manyany(mv_dftmp~1,"gam",family=tw())
 
 #######################
 #######################
@@ -745,6 +746,45 @@ AIC(m_N_0,m_N_pois,m_N_nb,m_N_lgnm)#log-normal is 'best'
 # dfdist <- vegdist(dftmp)
 # summary(df_anosim <- anosim(dfdist,scores_site$WB))
 # plot(df_anosim)
+
+#################################################################
+# GLLVMs #
+library(gllvm)
+
+names(df_wims_w)
+keep <- c("Ammoniacal Nitrogen, Filtered as N_mg/l",
+          "Chlorophyll : Acetone Extract_ug/l",
+          "NGR : Easting_NGR",
+          "NGR : Northing_NGR",
+          "Nitrate, Filtered as N_mg/l",
+          "Nitrite, Filtered as N_mg/l",
+          "Nitrogen, Dissolved Inorganic : as N_mg/l",
+          "Nitrogen, Total Oxidised, Filtered as N_mg/l",
+          "Orthophosphate, Filtered as P_mg/l",
+          "Oxygen, Dissolved as O2_mg/l",
+          "Oxygen, Dissolved, % Saturation_%",
+          "Salinity : In Situ_ppt",
+          "Silicate, Filtered as SiO2_mg/l",
+          "Temperature of Water_CEL",
+          "Turbidity : In Situ_FTU",
+          "Water Depth_m")
+
+kp <- names(df_wims_w) %in% keep
+df_wims_w_trim <- df_wims_w[,kp]
+
+### replace LESS THAN values with value*0.5
+replace_values <- function(x) { #function to replace "less than" values by  half their value
+  if_else(str_detect(x, "^<"), as.numeric(sub("^<", "", x))/2, as.numeric(x))
+}
+
+df_wims_w_trim %>% 
+  mutate_all(.,replace_values)
+
+df_tx_w %>% 
+  dplyr::select(-c(Pot.Number:Category,S,N,WB_lb)) -> df_tx_w_trm
+
+m_lvm_0 <- gllvm(x = df_tx_w_trm, family="negative.binomial")
+m_lvm_1 <- gllvm(x = df_tx_w_trm, y = df_tx_w, family="negative.binomial")
 
 ### to do:
 ### look at functional groups(lifeforms)
