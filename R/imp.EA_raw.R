@@ -89,7 +89,8 @@ df_tx0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
                                         sheet="outR04"))
 ### WIMS chemical data
 df_wims0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
-                                                 "/WIMS_Extract_WaterQuality_Zoop_Samples_230809.xlsx"),
+                                                 # "/WIMS_Extract_WaterQuality_Zoop_Samples_230809.xlsx"),
+                                                 "/WIMS_Extract_WaterQuality_Zoop_Samples_231218.xlsx"),
                                           sheet="allDat"))
 
 ### counts for pots 1&2 have been summed as to have those for pots 3&4
@@ -171,21 +172,22 @@ xx$WB_lb1 <- ifelse(xx$Region == "Southern","Sth",
                                          )))))
 
 xx$WB_lb2 <- ifelse(xx$WB == "Solent","Solent",
-                    ifelse(xx$WB == "SOUTHAMPTON WATER","Soton Wtr",
-                           ifelse(xx$WB == "THAMES LOWER","Thm Low",
-                                  ifelse(xx$WB == "Blackwater Outer","Blckw Out",
-                                         ifelse(xx$WB == "Cornwall North","Cornw Nth",
-                                                ifelse(xx$WB == "Barnstaple Bay","Brnstp B",
-                                                       ifelse(xx$WB == "Kent South","Kent Sth",
-                                                              ifelse(xx$WB == "Mersey Mouth","Mersey Mth",
-                                                                     ifelse(xx$WB == "Wash Outer","Wash Out",
-                                                                            ifelse(xx$WB == "Lincolnshire","Lincs",
-                                                                                   ifelse(xx$WB == "Yorkshire South","Yorks Sth",
-                                                                                          ifelse(xx$WB == "TEES","Tees",
-                                                                                                 ifelse(xx$WB == "Northumberland North","Nrthmb Nth",
-                                                                                                        ifelse(xx$WB == "Farne Islands to Newton Haven","Farne Is",
-                                                                                                               ifelse(xx$WB == "Bristol Channel Inner South","Brist Ch In Sth",
-                                                                                                                      NA))))))))))
+                    ifelse(xx$WB == "Solway Outer South","Solway O",
+                           ifelse(xx$WB == "SOUTHAMPTON WATER","Soton Wtr",
+                                  ifelse(xx$WB == "THAMES LOWER","Thm Low",
+                                         ifelse(xx$WB == "Blackwater Outer","Blckw Out",
+                                                ifelse(xx$WB == "Cornwall North","Cornw Nth",
+                                                       ifelse(xx$WB == "Barnstaple Bay","Brnstp B",
+                                                              ifelse(xx$WB == "Kent South","Kent Sth",
+                                                                     ifelse(xx$WB == "Mersey Mouth","Mersey Mth",
+                                                                            ifelse(xx$WB == "Wash Outer","Wash Out",
+                                                                                   ifelse(xx$WB == "Lincolnshire","Lincs",
+                                                                                          ifelse(xx$WB == "Yorkshire South","Yorks Sth",
+                                                                                                 ifelse(xx$WB == "TEES","Tees",
+                                                                                                        ifelse(xx$WB == "Northumberland North","Nrthmb Nth",
+                                                                                                               ifelse(xx$WB == "Farne Islands to Newton Haven","Farne Is",
+                                                                                                                      ifelse(xx$WB == "Bristol Channel Inner South","Brist Ch In Sth",
+                                                                                                                             NA)))))))))))
                                          )))))
 xx$WB_lb <- paste0(xx$WB_lb1,"_",xx$WB_lb2)
 xx$WB_lb1 <- NULL; xx$WB_lb2 <- NULL
@@ -236,7 +238,7 @@ df_tx_w %>%
   vegan::poolaccum(.) -> spaccum; plot(spaccum)
 # vegan::specnumber(.)
 
-# pdf(file = "figs/spp_accm_all_WBs_200um_Jun22_Apr23.pdf",width=12,height=7)
+# pdf(file = "figs/spp_accm_all_WBs_200um.pdf",width=12,height=7)
 # plot(spaccum)
 # dev.off()
 
@@ -414,21 +416,22 @@ df_tx_w$WB_lb1 <- ifelse(df_tx_w$Region == "Southern","Sth",
                                               )))))
 
 df_tx_w$WB_lb2 <- ifelse(df_tx_w$WB == "Solent","Solent",
-                         ifelse(df_tx_w$WB == "SOUTHAMPTON WATER","Soton Wtr",
-                                ifelse(df_tx_w$WB == "THAMES LOWER","Thm Low",
-                                       ifelse(df_tx_w$WB == "Blackwater Outer","Blckw Out",
-                                              ifelse(df_tx_w$WB == "Cornwall North","Cornw Nth",
-                                                     ifelse(df_tx_w$WB == "Barnstaple Bay","Brnstp B",
-                                                            ifelse(df_tx_w$WB == "Kent South","Kent Sth",
-                                                                   ifelse(df_tx_w$WB == "Mersey Mouth","Mersey Mth",
-                                                                          ifelse(df_tx_w$WB == "Wash Outer","Wash Out",
-                                                                                 ifelse(df_tx_w$WB == "Lincolnshire","Lincs",
-                                                                                        ifelse(df_tx_w$WB == "Yorkshire South","Yorks Sth",
-                                                                                               ifelse(df_tx_w$WB == "TEES","Tees",
-                                                                                                      ifelse(df_tx_w$WB == "Northumberland North","Nrthmb Nth",
-                                                                                                             ifelse(df_tx_w$WB == "Farne Islands to Newton Haven","Farne Is",
-                                                                                                                    ifelse(df_tx_w$WB == "Bristol Channel Inner South","Brist Ch In Sth",
-                                                                                                                           NA))))))))))
+                         ifelse(df_tx_w$WB == "Solway Outer South","Solway O",
+                                ifelse(df_tx_w$WB == "SOUTHAMPTON WATER","Soton Wtr",
+                                       ifelse(df_tx_w$WB == "THAMES LOWER","Thm Low",
+                                              ifelse(df_tx_w$WB == "Blackwater Outer","Blckw Out",
+                                                     ifelse(df_tx_w$WB == "Cornwall North","Cornw Nth",
+                                                            ifelse(df_tx_w$WB == "Barnstaple Bay","Brnstp B",
+                                                                   ifelse(df_tx_w$WB == "Kent South","Kent Sth",
+                                                                          ifelse(df_tx_w$WB == "Mersey Mouth","Mersey Mth",
+                                                                                 ifelse(df_tx_w$WB == "Wash Outer","Wash Out",
+                                                                                        ifelse(df_tx_w$WB == "Lincolnshire","Lincs",
+                                                                                               ifelse(df_tx_w$WB == "Yorkshire South","Yorks Sth",
+                                                                                                      ifelse(df_tx_w$WB == "TEES","Tees",
+                                                                                                             ifelse(df_tx_w$WB == "Northumberland North","Nrthmb Nth",
+                                                                                                                    ifelse(df_tx_w$WB == "Farne Islands to Newton Haven","Farne Is",
+                                                                                                                           ifelse(df_tx_w$WB == "Bristol Channel Inner South","Brist Ch In Sth",
+                                                                                                                                  NA)))))))))))
                                               )))))
 df_tx_w$WB_lb <- paste0(df_tx_w$WB_lb1,"_",df_tx_w$WB_lb2)
 df_tx_w$WB_lb1 <- NULL; df_tx_w$WB_lb2 <- NULL
@@ -636,7 +639,7 @@ ggsave(filename = "figs/nmds_by_Region&season_Taxa.pdf",width = 12,height = 12,u
 #### unconstrained ordination ####
 mv_dftmp <- mvabund::mvabund(dftmp)#create mvabund object
 ttl <- "Very strong mean-variance relationship in zooplankton abundance data"
-sbtt <- "Variance within the dataset covers *12 orders of magnitude*. Many multivariate analyses (e.g. ANOSIM, PERMANOVA) assume *no mean-variance relationship*\nThis makes interpretation of such analyses potentially erroneous. Model-based approaches offer an alternative, allowing the mean-variance relationship to be incorporated into the model predictions"
+sbtt <- "Variance within the dataset covers *10 orders of magnitude*. Many multivariate analyses (e.g. ANOSIM, PERMANOVA) assume *no mean-variance relationship*\nThis makes interpretation of such analyses potentially erroneous. Model-based approaches offer an alternative, allowing the mean-variance relationship to be incorporated into the model predictions"
 
 png(file = "figs/zoopMeanVar.png",
     width=12*ppi, height=6*ppi, res=ppi)
@@ -659,7 +662,7 @@ system.time(ord_glmInt1 <- cord(mod1))
 plot(ord_glmInt1, biplot=TRUE)
 srt <- order.single(ord_glmInt1$sigma)
 
-pdf(file = "figs/Unconstr_poisson_corrplot_Jun22_Jul23.pdf",width=12,height=12)
+pdf(file = "figs/Unconstr_poisson_corrplot_Jun22_Sep23.pdf",width=12,height=12)
 # corrplot(ord_glmInt1$sigma[srt,srt],type = "lower",diag = FALSE,method="square",
 corrplot(ord_glmInt1$sigma,type = "lower",diag = FALSE,method="square",
          tl.col = 1,tl.cex=0.35)
@@ -696,7 +699,7 @@ tw <- manyany(mv_dftmp~1,"glm",family=Tweedie(var.power=1.2), var.power=1.2)
 # dfsub <- dfw[dfw$S>0,] ### removes 'empty' samples
 
 #### check distribution ####
-plot(performance::check_distribution(df_tx_w$S)) ### >60% beta-binomial
+plot(performance::check_distribution(df_tx_w$S)) ### beta-binomial
 
 ### taxon richness ####
 summary(m_S_0 <- lm(S~WB_lb, data=df_tx_w));visreg::visreg(m_S_0)
@@ -712,11 +715,11 @@ summary(m_S_nb <- MASS::glm.nb(S~WB_lb,
                                data=df_tx_w));visreg::visreg(m_S_nb)
 performance::check_posterior_predictions(m_S_nb)
 
-AIC(m_S_0,m_S_pois,m_S_nb) ## NBGLM > LM > Poisson
+AIC(m_S_0,m_S_pois,m_S_nb) ## LM > NBGLM > Poisson
 
 #################################################################
-performance::check_model(m_S_0)
-performance::check_model(m_S_nb)## 'best' model
+performance::check_model(m_S_0)## 'best' model
+performance::check_model(m_S_nb)
 performance::check_model(m_S_pois)
 
 ### taxon abundance ####
