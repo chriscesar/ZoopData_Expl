@@ -690,8 +690,6 @@ library(mgcv)
 # tw <- manyany(mv_dftmp~1,"gam",family=tw())
 
 #######################
-#######################
-#######################
 
 ### initial statistical comparisons ####
 ### taxon richness ####
@@ -748,9 +746,9 @@ AIC(m_N_0,m_N_pois,m_N_nb,m_N_lgnm)#log-normal is 'best'
 # plot(df_anosim)
 
 #################################################################
-# GLLVMs #
+# GLLVMs ####
 library(gllvm)
-
+# choose interesting environmental variables
 keep <- c("Ammoniacal Nitrogen, Filtered as N_mg/l",
           "Chlorophyll : Acetone Extract_ug/l",
           "NGR : Easting_NGR",
@@ -768,65 +766,81 @@ keep <- c("Ammoniacal Nitrogen, Filtered as N_mg/l",
           "Turbidity : In Situ_FTU",
           "Water Depth_m")
 
+# keep only interesting variables
 kp <- names(dfw) %in% keep
 df_wims_w_trim <- dfw[,kp]
+rm(kp, keep)
 
 ### replace LESS THAN values with value*0.5
-replace_values <- function(x) { #function to replace "less than" values by  half their value
+# define function to replace "less than" values by  half their value
+replace_values <- function(x) {
   if_else(str_detect(x, "^<"), as.numeric(sub("^<", "", x))/2, as.numeric(x))
 }
 
+# amend < values in wims data
 df_wims_w_trim %>% 
   mutate_all(.,replace_values) -> df_wims_w_trim
 
 # df_tx_w %>% 
 #   dplyr::select(-c(Pot.Number:Category,S,N,WB_lb)) -> df_tx_w_trm
 
+# extract taxon density data
 dfw %>% 
-  dplyr::select(-c(Pot.Number:Category,"WIMS.Code.y":"Zinc, Dissolved_ug/l")) ->df_tx_w_trm
+  dplyr::select(-c(Pot.Number:Category,
+                   "WIMS.Code.y":"Zinc, Dissolved_ug/l")
+                ) ->df_tx_w_trm
 
 ## replace NA values with mean values for respective column
 df_wims_w_trim %>% 
-  mutate(across(everything(), ~replace(., is.na(.), mean(., na.rm = TRUE)))) ->df_wims_w_trim0
+  mutate(across(everything(),
+                ~replace(.,
+                         is.na(.),
+                         mean(.,
+                              na.rm = TRUE)
+                         )
+                )
+         ) -> df_wims_w_trim0
 
-## rename cols
-names(df_wims_w_trim0)
+## rename colums
 df_wims_w_trim0 <- df_wims_w_trim0 %>% 
 rename(
   nh4="Ammoniacal Nitrogen, Filtered as N_mg/l",
-chla ="Chlorophyll : Acetone Extract_ug/l",
-ngr_e="NGR : Easting_NGR",
-ngr_n="NGR : Northing_NGR",
-no3="Nitrate, Filtered as N_mg/l",
-no2="Nitrite, Filtered as N_mg/l",
-din="Nitrogen, Dissolved Inorganic : as N_mg/l",
-ton="Nitrogen, Total Oxidised, Filtered as N_mg/l",
-po4="Orthophosphate, Filtered as P_mg/l",
-o2_dis_mgl="Oxygen, Dissolved as O2_mg/l",
-o2_dis_sat="Oxygen, Dissolved, % Saturation_%",
-sal_ppt="Salinity : In Situ_ppt",
-si="Silicate, Filtered as SiO2_mg/l",
-temp="Temperature of Water_CEL",
-turb="Turbidity : In Situ_FTU",
-depth="Water Depth_m"
-)
+  chla ="Chlorophyll : Acetone Extract_ug/l",
+  ngr_e="NGR : Easting_NGR",
+  ngr_n="NGR : Northing_NGR",
+  no3="Nitrate, Filtered as N_mg/l",
+  no2="Nitrite, Filtered as N_mg/l",
+  din="Nitrogen, Dissolved Inorganic : as N_mg/l",
+  ton="Nitrogen, Total Oxidised, Filtered as N_mg/l",
+  po4="Orthophosphate, Filtered as P_mg/l",
+  o2_dis_mgl="Oxygen, Dissolved as O2_mg/l",
+  o2_dis_sat="Oxygen, Dissolved, % Saturation_%",
+  sal_ppt="Salinity : In Situ_ppt",
+  si="Silicate, Filtered as SiO2_mg/l",
+  temp="Temperature of Water_CEL",
+  turb="Turbidity : In Situ_FTU",
+  depth="Water Depth_m"
+  )
 
-
-m_lvm_0 <- gllvm(y = df_tx_w_trm, # unconstrained model
-                 # family="negative.binomial"
-                 family="tweedie"
-                 )
-saveRDS(m_lvm_0, file="figs/gllvm_uncon_tweed.Rdat")
+### fit models ####
+### using Tweedie distribution ####
+# m_lvm_0 <- gllvm(y = df_tx_w_trm, # unconstrained model
+#                  # family="negative.binomial"
+#                  family="tweedie"
+#                  )
+# saveRDS(m_lvm_0, file="figs/gllvm_uncon_tweed.Rdat")
 m_lvm_0 <- readRDS("figs/gllvm_uncon_tweed.Rdat")
 
-m_lvm_1 <- gllvm(df_tx_w_trm, # model with environmental parameters
-                 df_wims_w_trim0,
-                 formula = ~ nh4 + sal_ppt + chla,
-                 # family="negative.binomial"
-                 family="tweedie"
-                 )
-saveRDS(m_lvm_1, file="figs/gllvm_env_tweed.Rdat")
-m_lvm_1 <- readRDS(gllvm_env_tweed.Rdat)
+# ptm <- Sys.time()
+# m_lvm_1 <- gllvm(df_tx_w_trm, # model with environmental parameters
+#                  df_wims_w_trim0,
+#                  formula = ~ nh4 + sal_ppt + chla,
+#                  # family="negative.binomial"
+#                  family="tweedie"
+#                  )
+# saveRDS(m_lvm_1, file="figs/gllvm_env_tweed.Rdat")
+# Sys.time() - ptm;rm(ptm)
+m_lvm_1 <- readRDS("figs/gllvm_env_tweed.Rdat")
 
 ### to do:
 ### look at functional groups(lifeforms)
