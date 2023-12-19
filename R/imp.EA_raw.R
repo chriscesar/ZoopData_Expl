@@ -841,6 +841,15 @@ m_lvm_0 <- readRDS("figs/gllvm_uncon_tweed.Rdat")
 # saveRDS(m_lvm_1, file="figs/gllvm_env_tweed.Rdat")
 # Sys.time() - ptm;rm(ptm)
 m_lvm_1 <- readRDS("figs/gllvm_env_tweed.Rdat")
+coefplot(m_lvm_1,mfrow = c(1,1))
+
+### compare models
+rcov <- getResidualCov(m_lvm_1, adjust = 0)
+rcov0 <- getResidualCov(m_lvm_0, adjust = 0)
+rcov0$trace; rcov$trace
+1 - rcov$trace / rcov0$trace
+
+AIC(m_lvm_0,m_lvm_1)
 
 ### to do:
 ### look at functional groups(lifeforms)
