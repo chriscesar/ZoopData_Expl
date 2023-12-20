@@ -13,26 +13,26 @@
 # .libPaths(libfolder)
 
 #### check and install required packages ####
-ptm <- Sys.time()
-req_packages <- c("lubridate",# working with dates
-                  "seas", #more dates
-                  "tidyverse",# general data manipulation
-                  "vegan",# NMDS, multivariate analysis of ecological data
-                  "vegan3d",# as above, but with 3D figs
-                  "mvabund", #multivariate abundance data analyses
-                  "ecoCopula",#model based ordination/graphical modelling
-                  "ggthemes",# sensible visualisation styles
-                  "openxlsx",# read data from xlsx
-                  "MASS",# fit a negative binomial glm
-                  "gclus",#clustering of data
-                  "corrplot",#correlation plots
-                  "performance",# model checking
-                  "patchwork"
-)
-
-new_packages <- req_packages[!(req_packages %in% installed.packages()[,"Package"])]
-if(length(new_packages)) install.packages(new_packages,library=libfolder,type="binary")
-Sys.time() - ptm;rm(ptm,req_packages,new_packages)
+# ptm <- Sys.time()
+# req_packages <- c("lubridate",# working with dates
+#                   "seas", #more dates
+#                   "tidyverse",# general data manipulation
+#                   "vegan",# NMDS, multivariate analysis of ecological data
+#                   "vegan3d",# as above, but with 3D figs
+#                   "mvabund", #multivariate abundance data analyses
+#                   "ecoCopula",#model based ordination/graphical modelling
+#                   "ggthemes",# sensible visualisation styles
+#                   "openxlsx",# read data from xlsx
+#                   "MASS",# fit a negative binomial glm
+#                   "gclus",#clustering of data
+#                   "corrplot",#correlation plots
+#                   "performance",# model checking
+#                   "patchwork"
+# )
+# 
+# new_packages <- req_packages[!(req_packages %in% installed.packages()[,"Package"])]
+# if(length(new_packages)) install.packages(new_packages,library=libfolder,type="binary")
+# Sys.time() - ptm;rm(ptm,req_packages,new_packages)
 
 #### load packages ####
 ld_pkgs <- c("tidyverse","MASS","lubridate","vegan","mvabund","seas",
@@ -487,22 +487,22 @@ df_wims_w_trim %>%
 ## rename colums
 df_wims_w_trim0 <- df_wims_w_trim0 %>% 
   rename(
-    nh4="Ammoniacal Nitrogen, Filtered as N_mg/l",
-    chla ="Chlorophyll : Acetone Extract_ug/l",
-    ngr_e="NGR : Easting_NGR",
-    ngr_n="NGR : Northing_NGR",
-    no3="Nitrate, Filtered as N_mg/l",
-    no2="Nitrite, Filtered as N_mg/l",
-    din="Nitrogen, Dissolved Inorganic : as N_mg/l",
-    ton="Nitrogen, Total Oxidised, Filtered as N_mg/l",
-    po4="Orthophosphate, Filtered as P_mg/l",
-    o2_dis_mgl="Oxygen, Dissolved as O2_mg/l",
-    o2_dis_sat="Oxygen, Dissolved, % Saturation_%",
-    sal_ppt="Salinity : In Situ_ppt",
-    si="Silicate, Filtered as SiO2_mg/l",
-    temp="Temperature of Water_CEL",
-    turb="Turbidity : In Situ_FTU",
-    depth="Water Depth_m"
+    nh4 = "Ammoniacal Nitrogen, Filtered as N_mg/l",
+    chla = "Chlorophyll : Acetone Extract_ug/l",
+    ngr_e = "NGR : Easting_NGR",
+    ngr_n = "NGR : Northing_NGR",
+    no3 = "Nitrate, Filtered as N_mg/l",
+    no2 = "Nitrite, Filtered as N_mg/l",
+    din = "Nitrogen, Dissolved Inorganic : as N_mg/l",
+    ton = "Nitrogen, Total Oxidised, Filtered as N_mg/l",
+    po4 = "Orthophosphate, Filtered as P_mg/l",
+    o2_dis_mgl = "Oxygen, Dissolved as O2_mg/l",
+    o2_dis_sat = "Oxygen, Dissolved, % Saturation_%",
+    sal_ppt = "Salinity : In Situ_ppt",
+    si = "Silicate, Filtered as SiO2_mg/l",
+    temp = "Temperature of Water_CEL",
+    turb = "Turbidity : In Situ_FTU",
+    depth = "Water Depth_m"
   )
 
 ### fit models ####
@@ -510,23 +510,35 @@ df_wims_w_trim0 <- df_wims_w_trim0 %>%
 # ptm <- Sys.time()
 # m_lvm_0 <- gllvm(df_tx_w_trm, # unconstrained model
 #                  # family="negative.binomial"
-#                  family="tweedie"
+#                  # family="exponential",starting.val="zero"
+#                  family = "tweedie"
 #                  )
+# # saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_exp.Rdat")
 # saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_tweed.Rdat")
 # Sys.time() - ptm;rm(ptm)#2.9898mins
+### Exponential model very skewed. Stick to Tweedie?
 m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_tweed.Rdat")
 
 # ptm <- Sys.time()
 # m_lvm_3 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
 #                  X=df_wims_w_trim0,
 #                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + Region,
-#                  family="tweedie"
+#                  family="exponential",starting.val="zero"
+#                  # family="tweedie"
 # )
-# saveRDS(m_lvm_3, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat")
-# Sys.time() - ptm;rm(ptm) #11.18143mins
+# # saveRDS(m_lvm_3, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat")
+# saveRDS(m_lvm_3, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_exp.Rdat")
+# Sys.time() - ptm;rm(ptm) #11.18143mins for Tweedie/5.0996mins for Exponential
 m_lvm_3 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat")
 
+cr <- getResidualCor(m_lvm_3)
+pdf(file = "figs/m_lvm_3_trt_corrplot.pdf",width=14,height=14)
+corrplot::corrplot(cr, diag = FALSE, type = "lower", method = "square",
+                   tl.srt = 25)
+dev.off()
+
 AIC(m_lvm_0,m_lvm_3)
+anova(m_lvm_0,m_lvm_3)
 
 # pdf(file = "figs/m_lvm_3_trt_all_ordered.pdf",width=16,height=8)
 # coefplot(m_lvm_3,cex.ylab = 0.3,
