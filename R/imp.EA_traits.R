@@ -515,7 +515,7 @@ df_wims_w_trim0 <- df_wims_w_trim0 %>%
 #                  )
 # # saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_exp.Rdat")
 # saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_tweed.Rdat")
-# Sys.time() - ptm;rm(ptm)#2.9898mins
+# Sys.time() - ptm;rm(ptm) # Tweedie 3.240mins
 ### Exponential model very skewed. Stick to Tweedie?
 m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_tweed.Rdat")
 
@@ -523,12 +523,12 @@ m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_tweed.Rdat")
 # m_lvm_3 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
 #                  X=df_wims_w_trim0,
 #                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + Region,
-#                  family="exponential",starting.val="zero"
-#                  # family="tweedie"
+#                  # family="exponential",starting.val="zero"
+#                  family="tweedie"
 # )
-# # saveRDS(m_lvm_3, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat")
-# saveRDS(m_lvm_3, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_exp.Rdat")
-# Sys.time() - ptm;rm(ptm) #11.18143mins for Tweedie/5.0996mins for Exponential
+# saveRDS(m_lvm_3, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat")
+# # saveRDS(m_lvm_3, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_exp.Rdat")
+# Sys.time() - ptm;rm(ptm) #11.623mins for Tweedie/5.0996mins for Exponential
 m_lvm_3 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat")
 
 cr <- getResidualCor(m_lvm_3)
