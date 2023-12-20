@@ -36,7 +36,7 @@ Sys.time() - ptm;rm(ptm,req_packages,new_packages)
 
 #### load packages ####
 ld_pkgs <- c("tidyverse","MASS","lubridate","vegan","mvabund","seas",
-             "ecoCopula","performance","gclus","corrplot", "patchwork")
+             "ecoCopula","performance","gclus","corrplot", "patchwork","gllvm")
 vapply(ld_pkgs, library, logical(1L),
        character.only = TRUE, logical.return = TRUE);rm(ld_pkgs)
 
@@ -526,42 +526,59 @@ m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_tweed.Rdat")
 # Sys.time() - ptm;rm(ptm) #11.18143mins
 m_lvm_3 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat")
 
+AIC(m_lvm_0,m_lvm_3)
+
 # pdf(file = "figs/m_lvm_3_trt_all_ordered.pdf",width=16,height=8)
 # coefplot(m_lvm_3,cex.ylab = 0.3,
 #          order=TRUE)
 # dev.off()
 # 
-# pdf(file = "figs/m_lvm_3_trt_all_unordered.pdf",width=16,height=8)
-# coefplot(m_lvm_3,cex.ylab = 0.3,
-#          order=FALSE)
-# dev.off()
+pdf(file = "figs/coef_trt_all_unordered.pdf",width=16,height=8)
+coefplot(m_lvm_3,cex.ylab = 0.3,
+         order=FALSE)
+dev.off()
 
 pdf(file = "figs/coef_trt_1.pdf",width=7,height=14)
-coefplot(m_lvm_3,mfrow = c(1,1),which.Xcoef = 1, cex.ylab = 0.3,
+coefplot(m_lvm_3,mfrow = c(1,1),which.Xcoef = 1, cex.ylab = 0.6,
          main="NH4")
 dev.off()
 
 pdf(file = "figs/coef_trt_2.pdf",width=7,height=14)
-coefplot(m_lvm_3,mfrow = c(1,1),which.Xcoef = 2, cex.ylab = 0.3,
+coefplot(m_lvm_3,mfrow = c(1,1),which.Xcoef = 2, cex.ylab = 0.6,
          main="Salinity")
 dev.off()
 
 pdf(file = "figs/coef_trt_3.pdf",width=7,height=14)
-coefplot(m_lvm_3,mfrow = c(1,1),which.Xcoef = 3, cex.ylab = 0.3,
+coefplot(m_lvm_3,mfrow = c(1,1),which.Xcoef = 3, cex.ylab = 0.6,
          main="Chlorophyll")
 dev.off()
 
 pdf(file = "figs/coef_trt_4.pdf",width=7,height=14)
-coefplot(m_lvm_3,mfrow = c(1,2),which.Xcoef = 4:5, cex.ylab = 0.3,
-         order=FALSE)
+coefplot(m_lvm_3,mfrow = c(1,1),which.Xcoef = 4, cex.ylab = 0.6,
+         main="DIN")
 dev.off()
 
 pdf(file = "figs/coef_trt_5.pdf",width=7,height=14)
-coefplot(m_lvm_3,mfrow = c(1,2),which.Xcoef = 6:7, cex.ylab = 0.3,
-         order=FALSE)
+coefplot(m_lvm_3,mfrow = c(1,1),which.Xcoef = 5, cex.ylab = 0.6,
+         main="Depth")
 dev.off()
 
 pdf(file = "figs/coef_trt_6.pdf",width=7,height=14)
-coefplot(m_lvm_3,mfrow = c(1,2),which.Xcoef = 8, cex.ylab = 0.3,
+coefplot(m_lvm_3,mfrow = c(1,1),which.Xcoef = 6, cex.ylab = 0.6,
+         order=TRUE, main="PO4")
+dev.off()
+
+pdf(file = "figs/coef_trt_7.pdf",width=7,height=14)
+coefplot(m_lvm_3,mfrow = c(1,2),which.Xcoef = 7:8, cex.ylab = 0.6,
+         order=FALSE)
+dev.off()
+
+pdf(file = "figs/coef_trt_8.pdf",width=7,height=14)
+coefplot(m_lvm_3,mfrow = c(1,2),which.Xcoef = 9:10, cex.ylab = 0.6,
+         order=FALSE)
+dev.off()
+
+pdf(file = "figs/coef_trt_9.pdf",width=7,height=14)
+coefplot(m_lvm_3,mfrow = c(1,2),which.Xcoef = 11, cex.ylab = 0.6,
          order=FALSE)
 dev.off()
