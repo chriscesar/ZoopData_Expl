@@ -77,7 +77,7 @@ cbPalette2 <- c("#646464", #100/100/100
                 "#9A4775"#154/071/117
 )
 
-### load data ####
+#### load LIFEFORMS data ####
 ### taxon data
 df_tx0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
                                                "processedData/MBA_Returns_Amalgamated_USE.xlsx"),
@@ -85,9 +85,8 @@ df_tx0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
 ### WIMS data
 ### await update of WIMS data
 df_wims0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
-
-
-                                                 "/WIMS_Extract_WaterQuality_Zoop_Samples_230809.xlsx"),
+                                                 # "/WIMS_Extract_WaterQuality_Zoop_Samples_230809.xlsx"),
+                                                 "/WIMS_Extract_WaterQuality_Zoop_Samples_231218.xlsx"),
                                           sheet="allDat"))
 
 ### prep data ####
@@ -132,6 +131,7 @@ dfw <- left_join(df_tx_w,df_wims_w,by="PRN")
 
 # write.csv(dfw,file=paste0(datfol,"processedData/","zoopWideTraitAbund_m3_WIMS_USE.csv"),row.names = FALSE)
 # write.csv(df_tx_w,file=paste0(datfol,"processedData/","zoopWideTraitAbund_m3_taxOnly_USE.csv"),row.names = FALSE)
+# saveRDS(dfw,file=paste0(datfol,"processedData/","zoopWideTraitAbund_m3_taxOnly_USE.RDat"))
 
 ###############################
 ## look at taxon data only ####
@@ -161,20 +161,21 @@ xx$WB_lb1 <- ifelse(xx$Region == "Southern","Sth",
 
 xx$WB_lb2 <- ifelse(xx$WB == "Solent","Solent",
                     ifelse(xx$WB == "SOUTHAMPTON WATER","Soton Wtr",
-                           ifelse(xx$WB == "THAMES LOWER","Thm Low",
-                                  ifelse(xx$WB == "Blackwater Outer","Blckw Out",
-                                         ifelse(xx$WB == "Cornwall North","Cornw Nth",
-                                                ifelse(xx$WB == "Barnstaple Bay","Brnstp B",
-                                                       ifelse(xx$WB == "Kent South","Kent Sth",
-                                                              ifelse(xx$WB == "Mersey Mouth","Mersey Mth",
-                                                                     ifelse(xx$WB == "Wash Outer","Wash Out",
-                                                                            ifelse(xx$WB == "Lincolnshire","Lincs",
-                                                                                   ifelse(xx$WB == "Yorkshire South","Yorks Sth",
-                                                                                          ifelse(xx$WB == "TEES","Tees",
-                                                                                                 ifelse(xx$WB == "Northumberland North","Nrthmb Nth",
-                                                                                                        ifelse(xx$WB == "Farne Islands to Newton Haven","Farne Is",
-                                                                                                               ifelse(xx$WB == "Bristol Channel Inner South","Brist Ch In Sth",
-                                                                                                                      NA))))))))))
+                           ifelse(xx$WB == "Solway Outer South","Solway O",
+                                  ifelse(xx$WB == "THAMES LOWER","Thm Low",
+                                         ifelse(xx$WB == "Blackwater Outer","Blckw Out",
+                                                ifelse(xx$WB == "Cornwall North","Cornw Nth",
+                                                       ifelse(xx$WB == "Barnstaple Bay","Brnstp B",
+                                                              ifelse(xx$WB == "Kent South","Kent Sth",
+                                                                     ifelse(xx$WB == "Mersey Mouth","Mersey Mth",
+                                                                            ifelse(xx$WB == "Wash Outer","Wash Out",
+                                                                                   ifelse(xx$WB == "Lincolnshire","Lincs",
+                                                                                          ifelse(xx$WB == "Yorkshire South","Yorks Sth",
+                                                                                                 ifelse(xx$WB == "TEES","Tees",
+                                                                                                        ifelse(xx$WB == "Northumberland North","Nrthmb Nth",
+                                                                                                               ifelse(xx$WB == "Farne Islands to Newton Haven","Farne Is",
+                                                                                                                      ifelse(xx$WB == "Bristol Channel Inner South","Brist Ch In Sth",
+                                                                                                                      NA)))))))))))
                                          )))))
 xx$WB_lb <- paste0(xx$WB_lb1,"_",xx$WB_lb2)
 xx$WB_lb1 <- NULL; xx$WB_lb2 <- NULL
@@ -423,3 +424,144 @@ for (level in levels(scores_site$DJF)) {
 
 ggsave(filename = "figs/nmds_by_Region&season_Traits.pdf",width = 12,height = 12,units = "in",
        plot=final_plot);rm(final_plot, plot_list)
+
+#############
+# GLLVMs ####
+#############
+
+# choose interesting environmental variables
+keep <- c("Ammoniacal Nitrogen, Filtered as N_mg/l",
+          "Chlorophyll : Acetone Extract_ug/l",
+          "NGR : Easting_NGR",
+          "NGR : Northing_NGR",
+          "Nitrate, Filtered as N_mg/l",
+          "Nitrite, Filtered as N_mg/l",
+          "Nitrogen, Dissolved Inorganic : as N_mg/l",
+          "Nitrogen, Total Oxidised, Filtered as N_mg/l",
+          "Orthophosphate, Filtered as P_mg/l",
+          "Oxygen, Dissolved as O2_mg/l",
+          "Oxygen, Dissolved, % Saturation_%",
+          "Salinity : In Situ_ppt",
+          "Silicate, Filtered as SiO2_mg/l",
+          "Temperature of Water_CEL",
+          "Turbidity : In Situ_FTU",
+          "Water Depth_m")
+
+# keep only interesting variables
+kp <- names(dfw) %in% keep
+df_wims_w_trim <- dfw[,kp]
+rm(kp, keep)
+
+### replace LESS THAN values with value*0.5
+# define function to replace "less than" values by  half their value
+replace_values <- function(x) {
+  if_else(str_detect(x, "^<"), as.numeric(sub("^<", "", x))/2, as.numeric(x))
+}
+
+# amend < values in wims data
+df_wims_w_trim %>% 
+  mutate_all(.,replace_values) -> df_wims_w_trim
+
+### append region & WB
+df_wims_w_trim$Region <- dfw$Region
+df_wims_w_trim$WB <- dfw$WB
+
+# extract taxon density data
+dfw %>% 
+  dplyr::select(-c(Pot.Number:WB,
+                   "WIMS.Code.y":"Zinc, Dissolved_ug/l")
+  ) -> df_tx_w_trm
+
+## replace NA values with mean values for respective column.
+## Leave non-numeric cols unchanged
+df_wims_w_trim %>% 
+  mutate(across(where(is.numeric),
+                ~replace(.,
+                         is.na(.),
+                         mean(.,
+                              na.rm = TRUE)
+                )
+  )
+  ) -> df_wims_w_trim0
+
+## rename colums
+df_wims_w_trim0 <- df_wims_w_trim0 %>% 
+  rename(
+    nh4="Ammoniacal Nitrogen, Filtered as N_mg/l",
+    chla ="Chlorophyll : Acetone Extract_ug/l",
+    ngr_e="NGR : Easting_NGR",
+    ngr_n="NGR : Northing_NGR",
+    no3="Nitrate, Filtered as N_mg/l",
+    no2="Nitrite, Filtered as N_mg/l",
+    din="Nitrogen, Dissolved Inorganic : as N_mg/l",
+    ton="Nitrogen, Total Oxidised, Filtered as N_mg/l",
+    po4="Orthophosphate, Filtered as P_mg/l",
+    o2_dis_mgl="Oxygen, Dissolved as O2_mg/l",
+    o2_dis_sat="Oxygen, Dissolved, % Saturation_%",
+    sal_ppt="Salinity : In Situ_ppt",
+    si="Silicate, Filtered as SiO2_mg/l",
+    temp="Temperature of Water_CEL",
+    turb="Turbidity : In Situ_FTU",
+    depth="Water Depth_m"
+  )
+
+### fit models ####
+### using Tweedie distribution ####
+# ptm <- Sys.time()
+# m_lvm_0 <- gllvm(df_tx_w_trm, # unconstrained model
+#                  # family="negative.binomial"
+#                  family="tweedie"
+#                  )
+# saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_tweed.Rdat")
+# Sys.time() - ptm;rm(ptm)#2.9898mins
+m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_tweed.Rdat")
+
+# ptm <- Sys.time()
+# m_lvm_3 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
+#                  X=df_wims_w_trim0,
+#                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + Region,
+#                  family="tweedie"
+# )
+# saveRDS(m_lvm_3, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat")
+# Sys.time() - ptm;rm(ptm) #11.18143mins
+m_lvm_3 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat")
+
+# pdf(file = "figs/m_lvm_3_trt_all_ordered.pdf",width=16,height=8)
+# coefplot(m_lvm_3,cex.ylab = 0.3,
+#          order=TRUE)
+# dev.off()
+# 
+# pdf(file = "figs/m_lvm_3_trt_all_unordered.pdf",width=16,height=8)
+# coefplot(m_lvm_3,cex.ylab = 0.3,
+#          order=FALSE)
+# dev.off()
+
+pdf(file = "figs/coef_trt_1.pdf",width=7,height=14)
+coefplot(m_lvm_3,mfrow = c(1,1),which.Xcoef = 1, cex.ylab = 0.3,
+         main="NH4")
+dev.off()
+
+pdf(file = "figs/coef_trt_2.pdf",width=7,height=14)
+coefplot(m_lvm_3,mfrow = c(1,1),which.Xcoef = 2, cex.ylab = 0.3,
+         main="Salinity")
+dev.off()
+
+pdf(file = "figs/coef_trt_3.pdf",width=7,height=14)
+coefplot(m_lvm_3,mfrow = c(1,1),which.Xcoef = 3, cex.ylab = 0.3,
+         main="Chlorophyll")
+dev.off()
+
+pdf(file = "figs/coef_trt_4.pdf",width=7,height=14)
+coefplot(m_lvm_3,mfrow = c(1,2),which.Xcoef = 4:5, cex.ylab = 0.3,
+         order=FALSE)
+dev.off()
+
+pdf(file = "figs/coef_trt_5.pdf",width=7,height=14)
+coefplot(m_lvm_3,mfrow = c(1,2),which.Xcoef = 6:7, cex.ylab = 0.3,
+         order=FALSE)
+dev.off()
+
+pdf(file = "figs/coef_trt_6.pdf",width=7,height=14)
+coefplot(m_lvm_3,mfrow = c(1,2),which.Xcoef = 8, cex.ylab = 0.3,
+         order=FALSE)
+dev.off()
