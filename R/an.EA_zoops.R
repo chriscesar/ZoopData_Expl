@@ -48,9 +48,7 @@ cbPalette2 <- c("#646464", #100/100/100
 )
 
 #### load data ####
-
 dfw <- readRDS(paste0(datfol,"processedData/","zoopWIDEAbund_m3_WIMS_USE.RDat"))
-
 
 df_tx_w <- dfw %>% 
   dplyr::select(-c(WIMS.Code.y:"Zinc, Dissolved_ug/l"))
@@ -103,6 +101,7 @@ xx$WB_lb2 <- ifelse(xx$WB == "Solent","Solent",
                                                                                                                       ifelse(xx$WB == "Bristol Channel Inner South","Brist Ch In Sth",
                                                                                                                              NA)))))))))))
                                          )))))
+
 xx$WB_lb <- paste0(xx$WB_lb1,"_",xx$WB_lb2)
 xx$WB_lb1 <- NULL; xx$WB_lb2 <- NULL
 
@@ -699,8 +698,8 @@ df_wims_w_trim$WB <- dfw$WB
 # extract taxon density data
 dfw %>% 
   dplyr::select(-c(Pot.Number:Category,
-                   "WIMS.Code.y":"Zinc, Dissolved_ug/l")
-  ) ->df_tx_w_trm
+                   "WIMS.Code.y":"Zinc, Dissolved_ug/l","mesh")
+  ) -> df_tx_w_trm
 
 ## replace NA values with mean values for respective column.
 ## Leave non-numeric cols unchanged
@@ -737,11 +736,13 @@ df_wims_w_trim0 <- df_wims_w_trim0 %>%
 
 ### fit models ####
 ### using Tweedie distribution ####
-# m_lvm_0 <- gllvm(y = df_tx_w_trm, # unconstrained model
+# ptm <- Sys.time()
+# m_lvm_0 <- gllvm(df_tx_w_trm, # unconstrained model
 #                  # family="negative.binomial"
 #                  family="tweedie"
 #                  )
 # saveRDS(m_lvm_0, file="figs/gllvm_uncon_tweed.Rdat")
+# Sys.time() - ptm;rm(ptm)
 m_lvm_0 <- readRDS("figs/gllvm_uncon_tweed.Rdat")
 
 # ptm <- Sys.time()
@@ -766,33 +767,48 @@ m_lvm_1 <- readRDS("figs/gllvm_env_tweed.Rdat")
 # Sys.time() - ptm;rm(ptm)
 m_lvm_2 <- readRDS("figs/gllvm_envReg_tweed.Rdat")
 
-pdf(file = "figs/coef_1.pdf",width=7,height=14)
-coefplot(m_lvm_2,mfrow = c(1,1),which.Xcoef = 1, cex.ylab = 0.3,
-         main="NH4")
-dev.off()
+# pdf(file = "figs/coef_1.pdf",width=7,height=14)
+# coefplot(m_lvm_2,mfrow = c(1,1),which.Xcoef = 1, cex.ylab = 0.3,
+#          main="NH4")
+# dev.off()
+# 
+# pdf(file = "figs/coef_2.pdf",width=7,height=14)
+# coefplot(m_lvm_2,mfrow = c(1,1),which.Xcoef = 2, cex.ylab = 0.3,
+#          main="Salinity")
+# dev.off()
+# 
+# pdf(file = "figs/coef_3.pdf",width=7,height=14)
+# coefplot(m_lvm_2,mfrow = c(1,1),which.Xcoef = 3, cex.ylab = 0.3,
+#          main="Chlorophyll")
+# dev.off()
+# 
+# pdf(file = "figs/coef_4.pdf",width=7,height=14)
+# coefplot(m_lvm_2,mfrow = c(1,2),which.Xcoef = 4:5, cex.ylab = 0.3,
+#          order=FALSE)
+# dev.off()
+# 
+# pdf(file = "figs/coef_5.pdf",width=7,height=14)
+# coefplot(m_lvm_2,mfrow = c(1,2),which.Xcoef = 6:7, cex.ylab = 0.3,
+#          order=FALSE)
+# dev.off()
+# 
+# pdf(file = "figs/coef_6.pdf",width=7,height=14)
+# coefplot(m_lvm_2,mfrow = c(1,2),which.Xcoef = 8, cex.ylab = 0.3,
+#          order=FALSE)
+# dev.off()
 
-pdf(file = "figs/coef_2.pdf",width=7,height=14)
-coefplot(m_lvm_2,mfrow = c(1,1),which.Xcoef = 2, cex.ylab = 0.3,
-         main="Salinity")
-dev.off()
+# ptm <- Sys.time()
+# m_lvm_3 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
+#                  X=df_wims_w_trim0,
+#                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + Region,
+#                  family="tweedie"
+# )
+# saveRDS(m_lvm_3, file="figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed.Rdat")
+# Sys.time() - ptm;rm(ptm) #37.7332 mins
+m_lvm_3 <- readRDS("figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed.Rdat")
 
-pdf(file = "figs/coef_3.pdf",width=7,height=14)
-coefplot(m_lvm_2,mfrow = c(1,1),which.Xcoef = 3, cex.ylab = 0.3,
-         main="Chlorophyll")
-dev.off()
-
-pdf(file = "figs/coef_4.pdf",width=7,height=14)
-coefplot(m_lvm_2,mfrow = c(1,2),which.Xcoef = 4:5, cex.ylab = 0.3,
-         order=FALSE)
-dev.off()
-
-pdf(file = "figs/coef_5.pdf",width=7,height=14)
-coefplot(m_lvm_2,mfrow = c(1,2),which.Xcoef = 6:7, cex.ylab = 0.3,
-         order=FALSE)
-dev.off()
-
-pdf(file = "figs/coef_6.pdf",width=7,height=14)
-coefplot(m_lvm_2,mfrow = c(1,2),which.Xcoef = 8, cex.ylab = 0.3,
+pdf(file = "figs/m_lvm_3_tx_all.pdf",width=16,height=8)
+coefplot(m_lvm_3,cex.ylab = 0.3,
          order=FALSE)
 dev.off()
 
