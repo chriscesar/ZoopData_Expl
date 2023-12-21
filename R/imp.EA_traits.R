@@ -500,36 +500,73 @@ df_wims_w_trim0 <- df_wims_w_trim0 %>%
     o2_dis_sat = "Oxygen, Dissolved, % Saturation_%",
     sal_ppt = "Salinity : In Situ_ppt",
     si = "Silicate, Filtered as SiO2_mg/l",
-    temp = "Temperature of Water_CEL",
+    tempC = "Temperature of Water_CEL",
     turb = "Turbidity : In Situ_FTU",
     depth = "Water Depth_m"
   )
 
-### fit models ####
-### using Tweedie distribution ####
-# ptm <- Sys.time()
-# m_lvm_0 <- gllvm(df_tx_w_trm, # unconstrained model
-#                  # family="negative.binomial"
-#                  # family="exponential",starting.val="zero"
-#                  family = "tweedie"
-#                  )
-# # saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_exp.Rdat")
-# saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_tweed.Rdat")
-# Sys.time() - ptm;rm(ptm) # Tweedie 3.240mins
-### Exponential model very skewed. Stick to Tweedie?
-m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_tweed.Rdat")
+df_wims_w_trim0$Region <- ifelse(df_wims_w_trim0$Region == "Southern", "Sth",
+                                 ifelse(df_wims_w_trim0$Region == "NEast", "NE",
+                                        ifelse(df_wims_w_trim0$Region == "NWest", "NW",
+                                               ifelse(df_wims_w_trim0$Region == "Anglian", "An",
+                                                      ifelse(df_wims_w_trim0$Region == "Thames", "Th",
+                                                             ifelse(df_wims_w_trim0$Region == "SWest", "SW",NA)
+                                                             )))))
 
+
+### fit models ####
+
+# distribution families (from ?gllvm & https://cran.r-project.org/web/packages/gllvm/vignettes/vignette1.html)
+# COUNTS:
+# "negative.binomial" (with log link), poisson(link = "log"),
+# zero-inflated poisson ("ZIP"), zero-inflated negative-binomial ("ZINB"),
+# BINARY: 
+# binomial(link = "probit") (and also with link = "logit" when method = "LA" or method = "EVA"),
+# NORMAL:
+# gaussian(link = "identity"),
+# BIOMASS:
+# Tweedie ("tweedie") (with log link, for "LA" and "EVA"-method),
+# PERCENTAGE COVER:
+# beta ("beta") (with logit and probit link, for "LA" and "EVA"-method)
+# ORDINAL DATA:
+# "ordinal" (only with "VA"-method).
+# POSITIVE CONTINUOUS:
+# "gamma" (with log link),
+# NON-NEGATIVE CONTINUOUS:
+# "exponential" (with log link),
+
+### Fit models ####
+# Unconstrained
+ptm <- Sys.time()
+m_lvm_0 <- gllvm(df_tx_w_trm, # unconstrained model
+                 # family="negative.binomial"
+                 # family="exponential",starting.val="zero"
+                 # family = "tweedie"
+                 family = gaussian()
+                 )
+saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_norm.Rdat")#33.34192 secs
+# saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_exp.Rdat")
+# saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_tweed.Rdat")#3.240mins
+Sys.time() - ptm;rm(ptm)
+### Exponential model very skewed. Stick to Tweedie?
+# m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_tweed.Rdat")
+m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_norm.Rdat")
+
+# Constrained
 # ptm <- Sys.time()
 # m_lvm_3 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
 #                  X=df_wims_w_trim0,
 #                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + Region,
 #                  # family="exponential",starting.val="zero"
-#                  family="tweedie"
+#                  #family="tweedie"
+#                  family = gaussian()
 # )
-# saveRDS(m_lvm_3, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat")
-# # saveRDS(m_lvm_3, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_exp.Rdat")
-# Sys.time() - ptm;rm(ptm) #11.623mins for Tweedie/5.0996mins for Exponential
-m_lvm_3 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat")
+# saveRDS(m_lvm_3, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_norm.Rdat")#2.502225 mins
+# # saveRDS(m_lvm_3, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat")#11.623mins
+# # saveRDS(m_lvm_3, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_exp.Rdat")#5.0996mins
+# Sys.time() - ptm;rm(ptm) 
+# m_lvm_3 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat")
+m_lvm_3 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_norm.Rdat")
 
 cr <- getResidualCor(m_lvm_3)
 pdf(file = "figs/m_lvm_3_trt_corrplot.pdf",width=14,height=14)
@@ -540,6 +577,21 @@ dev.off()
 AIC(m_lvm_0,m_lvm_3)
 anova(m_lvm_0,m_lvm_3)
 
+# Constrained + Random
+sDsn <- data.frame(Region = df_wims_w_trim0$Region)
+ptm <- Sys.time()
+m_lvm_4 <- gllvm(y=df_tx_w_trm, # model with environmental parameters & random FX
+                 X=df_wims_w_trim0,
+                 formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
+                 # family = gaussian(),
+                 family = "tweedie",
+                 studyDesign = sDsn, row.eff = ~(1|Region)
+)
+# saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Tmp_norm.Rdat")#4.1096 mins
+saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Tmp_tweed.Rdat")#4.1096 mins
+Sys.time() - ptm;rm(ptm) 
+
+#### GLLVM plots ####
 # pdf(file = "figs/m_lvm_3_trt_all_ordered.pdf",width=16,height=8)
 # coefplot(m_lvm_3,cex.ylab = 0.3,
 #          order=TRUE)
@@ -594,3 +646,9 @@ pdf(file = "figs/coef_trt_9.pdf",width=7,height=14)
 coefplot(m_lvm_3,mfrow = c(1,2),which.Xcoef = 11, cex.ylab = 0.6,
          order=FALSE)
 dev.off()
+
+#### GLLVM model explore ####
+ordiplot.gllvm(m_lvm_0)
+ordiplot.gllvm(m_lvm_3)
+
+tail(confint.gllvm(m_lvm_3))
