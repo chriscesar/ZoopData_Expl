@@ -663,3 +663,9 @@ ordiplot.gllvm(m_lvm_4, biplot = TRUE)
 
 # tail(confint.gllvm(m_lvm_3))
 tail(confint.gllvm(m_lvm_4))
+
+## extract 'significant' model/species terms
+sigterms_all <- summary(m_lvm_4)
+sigterms_all <- as.data.frame(sigterms_all$Coef.tableX)
+sigterms_sig <- sigterms_all[sigterms_all$`Pr(>|z|)`>0.05,]
+View(sigterms_sig)
