@@ -591,6 +591,7 @@ m_lvm_4 <- gllvm(y=df_tx_w_trm, # model with environmental parameters & random F
 # saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Tmp_norm.Rdat")#4.1096 mins
 saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Tmp_tweed.Rdat")#4.1096 mins
 Sys.time() - ptm;rm(ptm) 
+m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Tmp_tweed.Rdat")
 
 AIC(m_lvm_0,m_lvm_3,m_lvm_4)
 anova(m_lvm_0,m_lvm_3,m_lvm_4)
@@ -602,7 +603,7 @@ anova(m_lvm_0,m_lvm_3,m_lvm_4)
 # dev.off()
 # 
 pdf(file = "figs/coef_trt_all_unordered.pdf",width=16,height=8)
-coefplot(m_lvm_4,cex.ylab = 0.3,
+coefplot(m_lvm_4,cex.ylab = 0.7,
          order=FALSE)
 dev.off()
 
@@ -646,15 +647,15 @@ dev.off()
 #          order=FALSE)
 # dev.off()
 
-pdf(file = "figs/coef_trt_8.pdf",width=7,height=14)
-coefplot(m_lvm_3,mfrow = c(1,2),which.Xcoef = 9:10, cex.ylab = 0.6,
-         order=FALSE)
-dev.off()
-
-pdf(file = "figs/coef_trt_9.pdf",width=7,height=14)
-coefplot(m_lvm_3,mfrow = c(1,2),which.Xcoef = 11, cex.ylab = 0.6,
-         order=FALSE)
-dev.off()
+# pdf(file = "figs/coef_trt_8.pdf",width=7,height=14)
+# coefplot(m_lvm_3,mfrow = c(1,2),which.Xcoef = 9:10, cex.ylab = 0.6,
+#          order=FALSE)
+# dev.off()
+# 
+# pdf(file = "figs/coef_trt_9.pdf",width=7,height=14)
+# coefplot(m_lvm_3,mfrow = c(1,2),which.Xcoef = 11, cex.ylab = 0.6,
+#          order=FALSE)
+# dev.off()
 
 #### GLLVM model explore ####
 ordiplot.gllvm(m_lvm_0)
@@ -667,5 +668,8 @@ tail(confint.gllvm(m_lvm_4))
 ## extract 'significant' model/species terms
 sigterms_all <- summary(m_lvm_4)
 sigterms_all <- as.data.frame(sigterms_all$Coef.tableX)
+sigterms_all$variable <- sub(":.*","",row.names(sigterms_all))
+sigterms_all$trt <- sub(".*:","",row.names(sigterms_all))
 sigterms_sig <- sigterms_all[sigterms_all$`Pr(>|z|)`>0.05,]
+
 View(sigterms_sig)
