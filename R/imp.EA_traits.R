@@ -89,8 +89,8 @@ df_wims0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
                                                  "/WIMS_Extract_WaterQuality_Zoop_Samples_231218.xlsx"),
                                           sheet="allDat"))
 
-### prep data ####
-### format & widen WIMS data ####
+### prep WIMS data ####
+### format & widen WIMS data ###
 df_wims <- df_wims0
 
 df_wims$PRN <- df_wims$SAMP_SCHEDULE_SAMPLE_ID
@@ -104,6 +104,7 @@ df_wims %>%
                     PRN,det,Result)) %>% ##only keep variables of interest
   tidyr::pivot_wider(.,names_from=det, values_from = Result) -> df_wims_w###widen data
 
+### prep taxon data ####
 ### remove odd data
 df_tx <- as_tibble(df_tx0) ### create new data (keep df0 as 'raw')
 
@@ -119,11 +120,11 @@ df_tx %>%
 
 ###widen data & fill NAs with 0s ####
 df_tx %>% 
-  dplyr::select(.,-c("Aphia.ID","AbundanceRaw","Taxa","Category":"Unallocated")) %>% #drop unneeded cols
-  group_by(across(c(-Abund_m3))) %>% 
-  summarise(Abund_m3=sum(Abund_m3),
+  dplyr::select(.,-c("Aphia.ID","AbundanceRaw","Taxa","Category":"Unallocated","LF0")) %>% #drop unneeded cols
+  group_by(across(c(-Abund_m3))) %>% # group by everything except abundance
+  summarise(Abund_m3=sum(Abund_m3), #sum abundances
             .groups="drop") %>% 
-  pivot_wider(names_from = "LF0",values_from = "Abund_m3",
+  pivot_wider(names_from = "LF02",values_from = "Abund_m3", #widen
               values_fill = 0) -> df_tx_w
 
 ### join & save data ####  
@@ -544,7 +545,7 @@ m_lvm_0 <- gllvm(df_tx_w_trm, # unconstrained model
                  # family = "tweedie"
                  family = gaussian()
                  )
-saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_norm.Rdat")#33.34192 secs
+saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_norm.Rdat")#12.62094 secs
 # saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_exp.Rdat")
 # saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_tweed.Rdat")#3.240mins
 Sys.time() - ptm;rm(ptm)
@@ -553,18 +554,18 @@ Sys.time() - ptm;rm(ptm)
 m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_norm.Rdat")
 
 # Constrained
-# ptm <- Sys.time()
-# m_lvm_3 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
-#                  X=df_wims_w_trim0,
-#                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + Region,
-#                  # family="exponential",starting.val="zero"
-#                  #family="tweedie"
-#                  family = gaussian()
-# )
-# saveRDS(m_lvm_3, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_norm.Rdat")#2.502225 mins
+ptm <- Sys.time()
+m_lvm_3 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
+                 X=df_wims_w_trim0,
+                 formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + Region,
+                 # family="exponential",starting.val="zero"
+                 #family="tweedie"
+                 family = gaussian()
+)
+saveRDS(m_lvm_3, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_norm.Rdat")#28.99271 secs
 # # saveRDS(m_lvm_3, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat")#11.623mins
 # # saveRDS(m_lvm_3, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_exp.Rdat")#5.0996mins
-# Sys.time() - ptm;rm(ptm) 
+Sys.time() - ptm;rm(ptm)
 # m_lvm_3 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat")
 m_lvm_3 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_norm.Rdat")
 
@@ -591,6 +592,9 @@ m_lvm_4 <- gllvm(y=df_tx_w_trm, # model with environmental parameters & random F
 saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Tmp_tweed.Rdat")#4.1096 mins
 Sys.time() - ptm;rm(ptm) 
 
+AIC(m_lvm_0,m_lvm_3,m_lvm_4)
+anova(m_lvm_0,m_lvm_3,m_lvm_4)
+
 #### GLLVM plots ####
 # pdf(file = "figs/m_lvm_3_trt_all_ordered.pdf",width=16,height=8)
 # coefplot(m_lvm_3,cex.ylab = 0.3,
@@ -598,44 +602,49 @@ Sys.time() - ptm;rm(ptm)
 # dev.off()
 # 
 pdf(file = "figs/coef_trt_all_unordered.pdf",width=16,height=8)
-coefplot(m_lvm_3,cex.ylab = 0.3,
+coefplot(m_lvm_4,cex.ylab = 0.3,
          order=FALSE)
 dev.off()
 
 pdf(file = "figs/coef_trt_1.pdf",width=7,height=14)
-coefplot(m_lvm_3,mfrow = c(1,1),which.Xcoef = 1, cex.ylab = 0.6,
+coefplot(m_lvm_4,mfrow = c(1,1),which.Xcoef = 1, cex.ylab = 0.6,
          main="NH4")
 dev.off()
 
 pdf(file = "figs/coef_trt_2.pdf",width=7,height=14)
-coefplot(m_lvm_3,mfrow = c(1,1),which.Xcoef = 2, cex.ylab = 0.6,
+coefplot(m_lvm_4,mfrow = c(1,1),which.Xcoef = 2, cex.ylab = 0.6,
          main="Salinity")
 dev.off()
 
 pdf(file = "figs/coef_trt_3.pdf",width=7,height=14)
-coefplot(m_lvm_3,mfrow = c(1,1),which.Xcoef = 3, cex.ylab = 0.6,
+coefplot(m_lvm_4,mfrow = c(1,1),which.Xcoef = 3, cex.ylab = 0.6,
          main="Chlorophyll")
 dev.off()
 
 pdf(file = "figs/coef_trt_4.pdf",width=7,height=14)
-coefplot(m_lvm_3,mfrow = c(1,1),which.Xcoef = 4, cex.ylab = 0.6,
+coefplot(m_lvm_4,mfrow = c(1,1),which.Xcoef = 4, cex.ylab = 0.6,
          main="DIN")
 dev.off()
 
 pdf(file = "figs/coef_trt_5.pdf",width=7,height=14)
-coefplot(m_lvm_3,mfrow = c(1,1),which.Xcoef = 5, cex.ylab = 0.6,
+coefplot(m_lvm_4,mfrow = c(1,1),which.Xcoef = 5, cex.ylab = 0.6,
          main="Depth")
 dev.off()
 
 pdf(file = "figs/coef_trt_6.pdf",width=7,height=14)
-coefplot(m_lvm_3,mfrow = c(1,1),which.Xcoef = 6, cex.ylab = 0.6,
+coefplot(m_lvm_4,mfrow = c(1,1),which.Xcoef = 6, cex.ylab = 0.6,
          order=TRUE, main="PO4")
 dev.off()
 
 pdf(file = "figs/coef_trt_7.pdf",width=7,height=14)
-coefplot(m_lvm_3,mfrow = c(1,2),which.Xcoef = 7:8, cex.ylab = 0.6,
-         order=FALSE)
+coefplot(m_lvm_4,mfrow = c(1,1),which.Xcoef = 7, cex.ylab = 0.6,
+         order=TRUE, main="Temperature")
 dev.off()
+
+# pdf(file = "figs/coef_trt_7.pdf",width=7,height=14)
+# coefplot(m_lvm_4,mfrow = c(1,2),which.Xcoef = 7:8, cex.ylab = 0.6,
+#          order=FALSE)
+# dev.off()
 
 pdf(file = "figs/coef_trt_8.pdf",width=7,height=14)
 coefplot(m_lvm_3,mfrow = c(1,2),which.Xcoef = 9:10, cex.ylab = 0.6,
@@ -649,6 +658,8 @@ dev.off()
 
 #### GLLVM model explore ####
 ordiplot.gllvm(m_lvm_0)
-ordiplot.gllvm(m_lvm_3)
+# ordiplot.gllvm(m_lvm_3)
+ordiplot.gllvm(m_lvm_4, biplot = TRUE)
 
-tail(confint.gllvm(m_lvm_3))
+# tail(confint.gllvm(m_lvm_3))
+tail(confint.gllvm(m_lvm_4))
