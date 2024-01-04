@@ -473,6 +473,11 @@ dfw %>%
                    "WIMS.Code.y":"Zinc, Dissolved_ug/l")
   ) -> df_tx_w_trm
 
+#OPTIONAL: remove lifeforms which only appear n>=4 times ####
+n <- 4
+df_tx_w_trm <- df_tx_w_trm %>% 
+  dplyr::select(which(apply(., 2, function(x) sum(x != 0) > n)))
+  
 ## replace NA values with mean values for respective column.
 ## Leave non-numeric cols unchanged
 df_wims_w_trim %>% 
@@ -665,7 +670,7 @@ ordiplot.gllvm(m_lvm_4, biplot = TRUE)
 # tail(confint.gllvm(m_lvm_3))
 tail(confint.gllvm(m_lvm_4))
 
-## extract 'significant' model/species terms
+## extract 'significant' model/species terms from model
 ci_mod_all <- as.data.frame(confint(m_lvm_4))
 ci_mod_var <- ci_mod_all[grep("^X", rownames(ci_mod_all)), ]
 rownames(ci_mod_var) <- substring(rownames(ci_mod_var), 7)
@@ -677,8 +682,71 @@ sigterms_all$variable <- sub(":.*","",row.names(sigterms_all))
 sigterms_all$trt <- sub(".*:","",row.names(sigterms_all))
 sigterms_all$varTrt <- rownames(sigterms_all)
 sigterms_all <- left_join(sigterms_all, ci_mod_var, by = "varTrt")
+sigterms_all$sig <- sigterms_all$`2.5 %`*sigterms_all$`97.5 %`>0
 
 sigterms_sig <- sigterms_all[sigterms_all$`Pr(>|z|)`>0.05,]
 
-View(sigterms_sig)
-View(sigterms_all)
+# View(sigterms_sig)
+# View(sigterms_all)
+
+### plot! ####
+## recreate coefplot
+ggplot(sigterms_all[sigterms_all$variable=="nh4",],
+       aes(x=Estimate, y=trt,
+           xmin=`2.5 %`,
+           xmax=`97.5 %`,
+           colour=sig))+
+  geom_vline(xintercept = 0)+
+  geom_errorbar()+
+  geom_point()+
+  scale_y_discrete(limits = rev(levels(as.factor(sigterms_all$trt))))+
+  scale_colour_manual(values = c("grey","black"))+
+  guides(colour="none")
+
+
+
+#############
+plot_list <- list()
+sigterms_all$variable <- as.factor(sigterms_all$variable)
+# Iterate over each level of the factor 'trt'
+for (level in levels(sigterms_all$variable)) {
+  # Subset the data for the current level
+  subset_data <- sigterms_all[sigterms_all$variable == level, ]
+  
+  # Create a plot for the current level
+  current_plot <- ggplot(subset_data,
+                         aes(x=Estimate, y=trt,
+                             xmin=`2.5 %`,
+                             xmax=`97.5 %`,
+                             colour=sig)) +
+    geom_vline(xintercept = 0)+
+    # geom_errorbar()+
+    geom_linerange()+
+    labs(title = paste0(level))+
+    geom_point() +
+    scale_y_discrete(limits = rev(levels(as.factor(sigterms_all$trt))))+
+    scale_colour_manual(values = c("grey","black"))+
+    guides(colour="none")+
+    theme(axis.title = element_blank(),
+          plot.title = element_text(hjust=0.5))
+  
+  # Add the current plot to the list
+  plot_list[[as.character(level)]] <- current_plot
+  
+  # Iterate over each plot in the list
+  for (i in seq_along(plot_list)) {
+    # If it's not the first plot, hide y-axis labels
+    if (i > 1) {
+      plot_list[[i]] <- plot_list[[i]] + theme(axis.text.y = element_blank())
+    }
+  }
+}
+
+# Combine all the individual plots into a single plot
+(final_plot <- wrap_plots(plotlist = plot_list,
+                          ncol = nlevels(sigterms_all$variable))+  # Adjust the number of columns as needed
+    plot_annotation(title="Generalised linear latent variable model outputs",
+                    subtitle = "Based on zooplankton taxon lifeforms",
+                    caption = paste0("Colours indicate lifeform 95% intervals which do (grey) or do not (black) cross zero","\n",
+                                     "Lifeforms recorded in ",n+1," or fewer samples removed from data prior to models estimation"),
+                    theme = theme(plot.title = element_text(size = 16, face="bold"))))
