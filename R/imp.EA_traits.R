@@ -197,10 +197,10 @@ xxprev %>%
   geom_histogram(fill = "lightgrey", colour = 1,bins=40)+
   # facet_wrap(.~Region)+ #plot by Region
   facet_wrap(.~WB_lb)+ #plot by WB
-  # labs(title="Prevalence of zooplankton traits recorded by Region", #by Region
-  labs(title="Prevalence of zooplankton traits recorded by Region_Water body", # by WB
-       # caption=paste0("Prevalence is the number of times that individual traits have been recorded in a given region (at any abundance)\nZero values excluded\n",#Region
-       caption=paste0("Prevalence is the number of times that individual traits have been recorded in a given water body (at any abundance)\nZero values excluded\n",#WB
+  # labs(title="Prevalence of zooplankton lifeforms recorded by Region", #by Region
+  labs(title="Prevalence of zooplankton lifeforms recorded by Region_Water body", # by WB
+       # caption=paste0("Prevalence is the number of times that individual lifeforms have been recorded in a given region (at any abundance)\nZero values excluded\n",#Region
+       caption=paste0("Prevalence is the number of times that individual lifeforms have been recorded in a given water body (at any abundance)\nZero values excluded\n",#WB
                       "Samples gathered between ",min(dfw$sample.date)," & ",max(dfw$sample.date)),
        y = "Count",
        x = "Prevalence")
@@ -666,10 +666,19 @@ ordiplot.gllvm(m_lvm_4, biplot = TRUE)
 tail(confint.gllvm(m_lvm_4))
 
 ## extract 'significant' model/species terms
+ci_mod_all <- as.data.frame(confint(m_lvm_4))
+ci_mod_var <- ci_mod_all[grep("^X", rownames(ci_mod_all)), ]
+rownames(ci_mod_var) <- substring(rownames(ci_mod_var), 7)
+ci_mod_var$varTrt <- rownames(ci_mod_var)
+
 sigterms_all <- summary(m_lvm_4)
 sigterms_all <- as.data.frame(sigterms_all$Coef.tableX)
 sigterms_all$variable <- sub(":.*","",row.names(sigterms_all))
 sigterms_all$trt <- sub(".*:","",row.names(sigterms_all))
+sigterms_all$varTrt <- rownames(sigterms_all)
+sigterms_all <- left_join(sigterms_all, ci_mod_var, by = "varTrt")
+
 sigterms_sig <- sigterms_all[sigterms_all$`Pr(>|z|)`>0.05,]
 
 View(sigterms_sig)
+View(sigterms_all)
