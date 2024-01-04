@@ -708,6 +708,8 @@ ggplot(sigterms_all[sigterms_all$variable=="nh4",],
 #############
 plot_list <- list()
 sigterms_all$variable <- as.factor(sigterms_all$variable)
+ntrt <- length(unique(sigterms_all$trt))-.5
+
 # Iterate over each level of the factor 'trt'
 for (level in levels(sigterms_all$variable)) {
   # Subset the data for the current level
@@ -718,15 +720,19 @@ for (level in levels(sigterms_all$variable)) {
                          aes(x=Estimate, y=trt,
                              xmin=`2.5 %`,
                              xmax=`97.5 %`,
-                             colour=sig)) +
+                             colour=sig,
+                             fill=sig)) +
+    geom_hline(yintercept = seq(1.5,ntrt,by=1),col="lightgrey",lty=3)+
     geom_vline(xintercept = 0)+
     # geom_errorbar()+
     geom_linerange()+
     labs(title = paste0(level))+
-    geom_point() +
+    geom_point(shape=21) +
     scale_y_discrete(limits = rev(levels(as.factor(sigterms_all$trt))))+
     scale_colour_manual(values = c("grey","black"))+
-    guides(colour="none")+
+    scale_fill_manual(values = c("white","black"))+
+    guides(colour="none",
+           fill="none")+
     theme(axis.title = element_blank(),
           plot.title = element_text(hjust=0.5))
   
@@ -750,3 +756,7 @@ for (level in levels(sigterms_all$variable)) {
                     caption = paste0("Colours indicate lifeform 95% intervals which do (grey) or do not (black) cross zero","\n",
                                      "Lifeforms recorded in ",n+1," or fewer samples removed from data prior to models estimation"),
                     theme = theme(plot.title = element_text(size = 16, face="bold"))))
+
+pdf(file = "figs/coef_trt_all_unordered_v2.pdf",width=16,height=8)
+print(final_plot)
+dev.off()
