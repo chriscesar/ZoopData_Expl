@@ -753,8 +753,11 @@ for (level in levels(sigterms_all$variable)) {
                           ncol = nlevels(sigterms_all$variable))+  # Adjust the number of columns as needed
     plot_annotation(title="Generalised linear latent variable model outputs",
                     subtitle = "Based on zooplankton taxon lifeforms",
-                    caption = paste0("Colours indicate lifeform 95% intervals which do (grey) or do not (black) cross zero","\n",
-                                     "Lifeforms recorded in ",n+1," or fewer samples removed from data prior to models estimation"),
+                    caption = paste0("Colours indicate lifeform 95% confidence intervals which do (grey) or do not (black) include zero","\n",
+                                     "Lifeforms recorded in ",n+1," or fewer samples removed from data prior to model estimations","\n",
+                                     "Model call: ~",as.character(m_lvm_4$formula)[2],
+                                     "\nFamily: ",as.character(m_lvm_4$family),". ",
+                                     "Random row effects: ",as.character(m_lvm_4$call)[7]),
                     theme = theme(plot.title = element_text(size = 16, face="bold"))))
 
 pdf(file = "figs/coef_trt_all_unordered_v2.pdf",width=16,height=8)
