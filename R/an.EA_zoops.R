@@ -126,7 +126,7 @@ xxprev %>%
        subtitle ="'Rare' taxa are common. Indicates a high degree of heterogeneity in the data", #For Region
        caption=paste0("Prevalence is the number of times that individual taxa have been recorded in a given region (at any abundance)\nZero values excluded\n",#Region
                       # caption=paste0("Prevalence is the number of times that individual taxa have been recorded in a given water body (at any abundance)\nZero values excluded\n",#WB
-                      "Samples gathered between ",min(dfw$sample.date)," & ",max(dfw$sample.date)),
+                      "Samples gathered between ",format(min(dfw$sample.date), "%d/%m/%Y")," & ",format(max(dfw$sample.date), "%d/%m/%Y")),
        y = "Count",
        x = "Prevalence")
 ggsave(filename = "figs/zoopPrevalence_by_Region.pdf",width = 12,height = 7,units = "in")
@@ -155,7 +155,7 @@ df_tx_w %>%
 # plot(spaccum)
 # dev.off()
 
-#### quick ordinations ####
+### quick ordinations ####
 df_tx_w %>% 
   dplyr::select(-c(1:21)) %>% ###remove metadata info
   dplyr::select(-last_col()) %>% ###remove taxon abundance
@@ -165,7 +165,7 @@ df_tx_w %>%
 
 ### NMDS ####
 ptm <- Sys.time()###
-set.seed(pi+5);ord <-   vegan::metaMDS(dftmp,trymax = 1000)
+set.seed(pi+25);ord <-   vegan::metaMDS(dftmp,trymax = 500)
 Sys.time() - ptm;rm(ptm)
 plot(ord)
 
@@ -251,7 +251,7 @@ geom_segment(data=scores_site,aes(x=NMDS1,y=NMDS2,
   labs(title="Non-metric Multidimensional Scaling of zooplankton taxon abundances",
        subtitle="Colours & shapes indicate region",
        caption=paste0("Stress = ",round(ord$stress,3),"\nSamples gathered between ",
-                      min(dfw$sample.date)," & ",max(dfw$sample.date)))+
+                      format(min(dfw$sample.date),"%d/%m/%Y")," & ",format(max(dfw$sample.date),"%d/%m/%Y")))+
   theme(legend.title = element_blank(),
         axis.title = element_text(face="bold"));pl
 
@@ -365,8 +365,8 @@ pl_S <- df_tx_w[df_tx_w$S>0,] %>%
   labs(title="Zooplankton taxon richness by water body",
        subtitle ="Colours indicate water body Region",
        caption=paste0("Dotted line & shading indicate global mean ±  standard deviation\n",
-                      "Samples gathered between ",min(df_tx_w$sample.date),
-                      " & ", max(df_tx_w$sample.date))) +
+                      "Samples gathered between ",format(min(df_tx_w$sample.date),"%d/%m/%Y"),
+                      " & ", format(max(df_tx_w$sample.date),"%d/%m/%Y"))) +
   xlab("Region_Water Body")+
   ylab("Taxon richness")+
   theme(axis.text.x = element_text(angle=270,hjust=0,vjust=.5));pl_S
@@ -414,8 +414,8 @@ pl_N <- df_tx_w[df_tx_w$N>0,] %>%
   labs(title = bquote('Total zooplankton abundance'~(log~individuals~m^-3)),
        subtitle ="Colours indicate region",
        caption=paste0("Dotted line & shading indicate global mean ±  standard deviation\n",
-                      "Samples gathered between ",min(df_tx_w$sample.date),
-                      " & ", max(df_tx_w$sample.date))) +
+                      "Samples gathered between ",format(min(df_tx_w$sample.date),"%d/%m/%Y"),
+                      " & ", format(max(df_tx_w$sample.date),"%d/%m/%Y"))) +
   xlab("Region_Water Body")+
   ylab("log(abundance)")+
   theme(axis.text.x = element_text(angle=270,hjust=0,vjust=.5)); pl_N
@@ -494,8 +494,8 @@ for (level in levels(scores_site$yymm)) {
                     subtitle = "Based on zooplankton taxon abundance data",
                     caption = paste0("Stress = ",round(ord$stress,3),
                                      "\nSamples gathered between ",
-                                     min(dfw$sample.date)," & ",
-                                     max(dfw$sample.date)),
+                                     format(min(dfw$sample.date),"%d/%m/%Y")," & ",
+                                     format(max(dfw$sample.date),"%d/%m/%Y")),
                     theme = theme(plot.title = element_text(size = 16, face="bold"))))
 
 ggsave(filename = "figs/nmds_by_Region&YYMM_Taxa.pdf",width = 12,height = 12,units = "in",
@@ -538,15 +538,15 @@ for (level in levels(scores_site$DJF)) {
                     subtitle = "Based on zooplankton taxon abundance data",
                     caption = paste0("Stress = ",round(ord$stress,3),
                                      "\nSamples gathered between ",
-                                     min(dfw$sample.date)," & ",
-                                     max(dfw$sample.date),
+                                     format(min(dfw$sample.date),"%d/%m/%Y")," & ",
+                                     format(max(dfw$sample.date),"%d/%m/%Y"),
                                      "\nDJF = December-February; MAM = March-May,\nJJA=June-August,SON=September-November"),
                     theme = theme(plot.title = element_text(size = 16, face="bold"))))
 
 ggsave(filename = "figs/nmds_by_Region&season_Taxa.pdf",width = 12,height = 12,units = "in",
        plot=final_plot);rm(final_plot, plot_list)
 
-########## STATS ###############
+### STATS ###############
 
 ### MVABUND ####
 #### unconstrained ordination ####
@@ -575,7 +575,7 @@ system.time(ord_glmInt1 <- cord(mod1))
 plot(ord_glmInt1, biplot=TRUE)
 srt <- order.single(ord_glmInt1$sigma)
 
-pdf(file = "figs/Unconstr_poisson_corrplot_Jun22_Sep23.pdf",width=12,height=12)
+pdf(file = "figs/Unconstr_poisson_corrplot_Jun22_Nov23.pdf",width=12,height=12)
 # corrplot(ord_glmInt1$sigma[srt,srt],type = "lower",diag = FALSE,method="square",
 corrplot(ord_glmInt1$sigma,type = "lower",diag = FALSE,method="square",
          tl.col = 1,tl.cex=0.35)
@@ -590,7 +590,7 @@ plot(ord_glmInt2, biplot=TRUE)
 srt <- order.single(ord_glmInt2$sigma)
 # pl_cor <- corrplot(ord_glmInt2$sigma[srt,srt],type = "lower",diag = FALSE,method="square")
 
-pdf(file = "figs/Unconstr_negbin_corrplot_Jun22_Jul23.pdf",width=12,height=12)
+pdf(file = "figs/Unconstr_negbin_corrplot_Jun22_Nov23.pdf",width=12,height=12)
 # corrplot(ord_glmInt2$sigma[srt,srt],type = "lower",diag = FALSE,method="square",
 corrplot(ord_glmInt2$sigma,type = "lower",diag = FALSE,method="square",
          tl.col = 1,tl.cex=0.35)
@@ -713,7 +713,7 @@ df_wims_w_trim %>%
   )
   ) -> df_wims_w_trim0
 
-## rename colums
+## rename columns
 df_wims_w_trim0 <- df_wims_w_trim0 %>% 
   rename(
     nh4="Ammoniacal Nitrogen, Filtered as N_mg/l",
@@ -729,7 +729,7 @@ df_wims_w_trim0 <- df_wims_w_trim0 %>%
     o2_dis_sat="Oxygen, Dissolved, % Saturation_%",
     sal_ppt="Salinity : In Situ_ppt",
     si="Silicate, Filtered as SiO2_mg/l",
-    temp="Temperature of Water_CEL",
+    tempC="Temperature of Water_CEL",
     turb="Turbidity : In Situ_FTU",
     depth="Water Depth_m"
   )
@@ -748,7 +748,7 @@ m_lvm_0 <- readRDS("figs/gllvm_uncon_tweed.Rdat")
 # ptm <- Sys.time()
 # m_lvm_1 <- gllvm(df_tx_w_trm, # model with environmental parameters
 #                  df_wims_w_trim0,
-#                  formula = ~ nh4 + sal_ppt + chla,
+#                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC + Region,
 #                  # family="negative.binomial"
 #                  family="tweedie"
 #                  )
@@ -759,7 +759,7 @@ m_lvm_1 <- readRDS("figs/gllvm_env_tweed.Rdat")
 # ptm <- Sys.time()
 # m_lvm_2 <- gllvm(df_tx_w_trm, # model with environmental parameters
 #                  df_wims_w_trim0,
-#                  formula = ~ nh4 + sal_ppt + chla + Region,
+#                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC + Region,
 #                  # family="negative.binomial"
 #                  family="tweedie"
 #                  )
@@ -798,10 +798,12 @@ m_lvm_2 <- readRDS("figs/gllvm_envReg_tweed.Rdat")
 # dev.off()
 
 # ptm <- Sys.time()
+# sDsn <- data.frame(Region = df_wims_w_trim0$Region)
 # m_lvm_3 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
 #                  X=df_wims_w_trim0,
-#                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + Region,
-#                  family="tweedie"
+#                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
+#                  family="tweedie",
+#                  studyDesign = sDsn, row.eff = ~(1|Region)
 # )
 # saveRDS(m_lvm_3, file="figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed.Rdat")
 # Sys.time() - ptm;rm(ptm) #37.7332 mins
@@ -813,7 +815,99 @@ coefplot(m_lvm_3,cex.ylab = 0.3,
 dev.off()
 
 ### compare models
-AIC(m_lvm_0,m_lvm_1,m_lvm_2)
+AIC(m_lvm_0,m_lvm_1,m_lvm_2,m_lvm_3)
+anova(m_lvm_0,m_lvm_1,m_lvm_2,m_lvm_3)
+
+## extract 'significant' model/species terms from model
+ci_mod_all <- as.data.frame(confint(m_lvm_3))
+ci_mod_var <- ci_mod_all[grep("^X", rownames(ci_mod_all)), ]
+rownames(ci_mod_var) <- substring(rownames(ci_mod_var), 7)
+ci_mod_var$varTrt <- rownames(ci_mod_var)
+
+sigterms_all <- summary(m_lvm_3)
+sigterms_all <- as.data.frame(sigterms_all$Coef.tableX)
+sigterms_all$variable <- sub(":.*","",row.names(sigterms_all))
+sigterms_all$trt <- sub(".*:","",row.names(sigterms_all))
+sigterms_all$varTrt <- rownames(sigterms_all)
+sigterms_all <- left_join(sigterms_all, ci_mod_var, by = "varTrt")
+sigterms_all$sig <- sigterms_all$`2.5 %`*sigterms_all$`97.5 %`>0
+
+sigterms_sig <- sigterms_all[sigterms_all$`Pr(>|z|)`>0.05,]
+
+
+### plot! ####
+## recreate coefplot
+ggplot(sigterms_all[sigterms_all$variable=="nh4",],
+       aes(x=Estimate, y=trt,
+           xmin=`2.5 %`,
+           xmax=`97.5 %`,
+           colour=sig))+
+  geom_vline(xintercept = 0)+
+  geom_errorbar()+
+  geom_point()+
+  scale_y_discrete(limits = rev(levels(as.factor(sigterms_all$trt))))+
+  scale_colour_manual(values = c("grey","black"))+
+  guides(colour="none")
+
+#############
+plot_list <- list()
+sigterms_all$variable <- as.factor(sigterms_all$variable)
+ntrt <- length(unique(sigterms_all$trt))-.5
+
+# Iterate over each level of the factor 'trt'
+for (level in levels(sigterms_all$variable)) {
+  # Subset the data for the current level
+  subset_data <- sigterms_all[sigterms_all$variable == level, ]
+  
+  # Create a plot for the current level
+  current_plot <- ggplot(subset_data,
+                         aes(x=Estimate, y=trt,
+                             xmin=`2.5 %`,
+                             xmax=`97.5 %`,
+                             colour=sig,
+                             fill=sig)) +
+    geom_hline(yintercept = seq(1.5,ntrt,by=1),col="lightgrey",lty=3)+
+    geom_vline(xintercept = 0)+
+    # geom_errorbar()+
+    geom_linerange()+
+    labs(title = paste0(level))+
+    geom_point(shape=21) +
+    scale_y_discrete(limits = rev(levels(as.factor(sigterms_all$trt))))+
+    scale_colour_manual(values = c("grey","black"))+
+    scale_fill_manual(values = c("white","black"))+
+    guides(colour="none",
+           fill="none")+
+    theme(axis.title = element_blank(),
+          plot.title = element_text(hjust=0.5))
+  
+  # Add the current plot to the list
+  plot_list[[as.character(level)]] <- current_plot
+  
+  # Iterate over each plot in the list
+  for (i in seq_along(plot_list)) {
+    # If it's not the first plot, hide y-axis labels
+    if (i > 1) {
+      plot_list[[i]] <- plot_list[[i]] + theme(axis.text.y = element_blank())
+    }
+  }
+}
+
+# Combine all the individual plots into a single plot
+final_plot <- wrap_plots(plotlist = plot_list, ncol = nlevels(sigterms_all$variable))+  # Adjust the number of columns as needed
+    plot_annotation(title="Generalised linear latent variable model outputs",
+                    subtitle = "Based on zooplankton taxon abundance data",
+                    # caption = paste0("Colours indicate lifeform 95% confidence intervals which do (grey) or do not (black) include zero","\n",
+                    #                  "Lifeforms recorded in ",n+1," or fewer samples removed from data prior to model estimations","\n",
+                    #                  "Model call: ~",as.character(m_lvm_3$formula)[2],
+                    #                  "\nFamily: ",as.character(m_lvm_3$family),". ",
+                    #                  "Random row effects: ",as.character(m_lvm_3$call)[7]),
+                    theme = theme(plot.title = element_text(size = 16, face="bold")))
+
+pdf(file = "figs/coef_tax_all_unordered_v2.pdf",width=16,height=8)
+print(final_plot)
+dev.off()
+
+
 
 ### to do:
 ### look at functional groups(lifeforms)
