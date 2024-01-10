@@ -749,25 +749,25 @@ m_lvm_0 <- readRDS("figs/gllvm_uncon_tweed.Rdat")
 
 #### gaussian distribution ####
 # ptm <- Sys.time()
-sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-m_lvm_0 <- gllvm(df_tx_w_trm,
-                 family=gaussian(),
-                 studyDesign = sDsn, row.eff = ~(1|Region),
-                 starting.val="random"
-                 )
-saveRDS(m_lvm_0, file="figs/gllvm_uncon_gauss.Rdat")
-Sys.time() - ptm;rm(ptm)
+# sDsn <- data.frame(Region = df_wims_w_trim0$Region)
+# m_lvm_0 <- gllvm(df_tx_w_trm,
+#                  family=gaussian(),
+#                  studyDesign = sDsn, row.eff = ~(1|Region),
+#                  starting.val="random"
+#                  )
+# saveRDS(m_lvm_0, file="figs/gllvm_uncon_gauss.Rdat")
+# Sys.time() - ptm;rm(ptm)
 m_lvm_0 <- readRDS("figs/gllvm_uncon_gauss.Rdat")
 
 #### gamma distribution ####
 # ptm <- Sys.time()
-sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-m_lvm_0 <- gllvm(df_tx_w_trm,
-                 family="gamma",
-                 studyDesign = sDsn, row.eff = ~(1|Region)
-)
-saveRDS(m_lvm_0, file="figs/gllvm_uncon_gamma.Rdat")
-Sys.time() - ptm;rm(ptm)
+# sDsn <- data.frame(Region = df_wims_w_trim0$Region)
+# m_lvm_0 <- gllvm(df_tx_w_trm,
+#                  family="gamma",
+#                  studyDesign = sDsn, row.eff = ~(1|Region)
+# )
+# saveRDS(m_lvm_0, file="figs/gllvm_uncon_gamma.Rdat")
+# Sys.time() - ptm;rm(ptm)
 m_lvm_0 <- readRDS("figs/gllvm_uncon_gamma.Rdat")
 
 ### constrained 1 ####
@@ -826,44 +826,45 @@ m_lvm_2 <- readRDS("figs/gllvm_envReg_tweed.Rdat")
 
 ### constrained 3 ####
 #### Tweedie #####
-ptm <- Sys.time()
-sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-m_lvm_3 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
-                 X=df_wims_w_trim0,
-                 formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
-                 family="tweedie",
-                 studyDesign = sDsn, row.eff = ~(1|Region)
-)
-saveRDS(m_lvm_3, file="figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed.Rdat")
-Sys.time() - ptm;rm(ptm) #37.7332 mins
+# ptm <- Sys.time()
+# sDsn <- data.frame(Region = df_wims_w_trim0$Region)
+# m_lvm_3 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
+#                  X=df_wims_w_trim0,
+#                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
+#                  family="tweedie",
+#                  studyDesign = sDsn, row.eff = ~(1|Region)
+# )
+# saveRDS(m_lvm_3, file="figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed.Rdat")
+# Sys.time() - ptm;rm(ptm) #37.7332 mins
 m_lvm_3 <- readRDS("figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed.Rdat")
 
 #### Gaussian #####
-ptm <- Sys.time()
-sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-m_lvm_3 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
-                 X=df_wims_w_trim0,
-                 formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
-                 family=gaussian(),
-                 studyDesign = sDsn, row.eff = ~(1|Region),
-                 starting.val="random"
-                 )
-saveRDS(m_lvm_3, file="figs/gllvm_nh4SalChlaDinDepPo4Reg_gauss.Rdat")
-Sys.time() - ptm;rm(ptm) #37.7332 mins
-m_lvm_3 <- readRDS("figs/gllvm_nh4SalChlaDinDepPo4Reg_gauss.Rdat")
+# ptm <- Sys.time()
+# sDsn <- data.frame(Region = df_wims_w_trim0$Region)
+# m_lvm_3 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
+#                  X=df_wims_w_trim0,
+#                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
+#                  family=gaussian(),
+#                  studyDesign = sDsn, row.eff = ~(1|Region),
+#                  starting.val="random"
+#                  )
+# saveRDS(m_lvm_3, file="figs/gllvm_nh4SalChlaDinDepPo4Reg_gauss.Rdat")
+# Sys.time() - ptm;rm(ptm) #37.7332 mins
+# m_lvm_3 <- readRDS("figs/gllvm_nh4SalChlaDinDepPo4Reg_gauss.Rdat")
 
 #### Gamma #####
-ptm <- Sys.time()
-sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-m_lvm_3 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
-                 X=df_wims_w_trim0,
-                 formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
-                 family="gamma",
-                 studyDesign = sDsn, row.eff = ~(1|Region)
-)
-saveRDS(m_lvm_3, file="figs/gllvm_nh4SalChlaDinDepPo4Reg_gamma.Rdat")
-Sys.time() - ptm;rm(ptm) #37.7332 mins
-m_lvm_3 <- readRDS("figs/gllvm_nh4SalChlaDinDepPo4Reg_gamma.Rdat")
+# FAILS!!!! ###
+# ptm <- Sys.time()
+# sDsn <- data.frame(Region = df_wims_w_trim0$Region)
+# m_lvm_3 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
+#                  X=df_wims_w_trim0,
+#                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
+#                  family="gamma",
+#                  studyDesign = sDsn, row.eff = ~(1|Region)
+# )
+# saveRDS(m_lvm_3, file="figs/gllvm_nh4SalChlaDinDepPo4Reg_gamma.Rdat")
+# Sys.time() - ptm;rm(ptm) #37.7332 mins
+# m_lvm_3 <- readRDS("figs/gllvm_nh4SalChlaDinDepPo4Reg_gamma.Rdat")
 ##########
 
 pdf(file = "figs/m_lvm_3_tx_all.pdf",width=16,height=8)

@@ -527,7 +527,6 @@ df_wims_w_trim0$Region <- ifelse(df_wims_w_trim0$Region == "Southern", "Sth",
                                                              ifelse(df_wims_w_trim0$Region == "SWest", "SW",NA)
                                                              )))))
 
-
 ### fit models ####
 
 # distribution families (from ?gllvm & https://cran.r-project.org/web/packages/gllvm/vignettes/vignette1.html)
@@ -550,64 +549,86 @@ df_wims_w_trim0$Region <- ifelse(df_wims_w_trim0$Region == "Southern", "Sth",
 # "exponential" (with log link),
 
 ### Fit models ####
-# Unconstrained
-ptm <- Sys.time()
-m_lvm_0 <- gllvm(df_tx_w_trm, # unconstrained model
-                 # family="negative.binomial"
-                 # family="exponential",starting.val="zero"
-                 # family = "tweedie"
-                 family = gaussian()
-                 )
-saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_norm.Rdat")#12.62094 secs
-# saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_exp.Rdat")
-# saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_tweed.Rdat")#3.240mins
-Sys.time() - ptm;rm(ptm)
-### Exponential model very skewed. Stick to Tweedie?
-# m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_tweed.Rdat")
-m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_norm.Rdat")
+# Unconstrained w/ Random ####
+#### Tweedie ####
+# ptm <- Sys.time()
+# sDsn <- data.frame(Region = df_wims_w_trim0$Region)
+# m_lvm_0 <- gllvm(df_tx_w_trm, # unconstrained model
+#                  studyDesign = sDsn, row.eff = ~(1|Region),
+#                  family = "tweedie"
+#                  )
+# saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_tweed.Rdat")
+# Sys.time() - ptm;rm(ptm)
+m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_tweed.Rdat")
 
-# Constrained
-ptm <- Sys.time()
-m_lvm_3 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
-                 X=df_wims_w_trim0,
-                 formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + Region,
-                 # family="exponential",starting.val="zero"
-                 #family="tweedie"
-                 family = gaussian()
-)
-saveRDS(m_lvm_3, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_norm.Rdat")#28.99271 secs
-# # saveRDS(m_lvm_3, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat")#11.623mins
-# # saveRDS(m_lvm_3, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_exp.Rdat")#5.0996mins
-Sys.time() - ptm;rm(ptm)
-# m_lvm_3 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat")
-m_lvm_3 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_norm.Rdat")
+###################
+#### Gaussian ####
+# ptm <- Sys.time()
+# sDsn <- data.frame(Region = df_wims_w_trim0$Region)
+# m_lvm_0 <- gllvm(df_tx_w_trm, # unconstrained model
+#                  studyDesign = sDsn, row.eff = ~(1|Region),
+#                  family = gaussian()
+#                  )
+# saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_gauss.Rdat")
+# Sys.time() - ptm;rm(ptm)
+m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_gauss.Rdat")
 
-cr <- getResidualCor(m_lvm_3)
-pdf(file = "figs/m_lvm_3_trt_corrplot.pdf",width=14,height=14)
+#######################
+
+##########################
+# Constrained w/ Random ####
+#### Tweedie ####
+# ptm <- Sys.time()
+# sDsn <- data.frame(Region = df_wims_w_trim0$Region)
+# m_lvm_4 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
+#                  X=df_wims_w_trim0,
+#                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
+#                  studyDesign = sDsn, row.eff = ~(1|Region),
+#                  family="tweedie"
+#                  )
+# saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat")#11.623mins
+# Sys.time() - ptm;rm(ptm)
+m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat")
+
+#### Gaussian ####
+# ptm <- Sys.time()
+# sDsn <- data.frame(Region = df_wims_w_trim0$Region)
+# m_lvm_4 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
+#                  X=df_wims_w_trim0,
+#                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
+#                  studyDesign = sDsn, row.eff = ~(1|Region),
+#                  family=gaussian()
+#                  )
+# saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_gauss.Rdat")#11.623mins
+# Sys.time() - ptm;rm(ptm)
+# m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_gauss.Rdat")
+
+cr <- getResidualCor(m_lvm_4)
+pdf(file = "figs/m_lvm_4_trt_corrplot.pdf",width=14,height=14)
 corrplot::corrplot(cr, diag = FALSE, type = "lower", method = "square",
                    tl.srt = 25)
 dev.off()
 
-AIC(m_lvm_0,m_lvm_3)
-anova(m_lvm_0,m_lvm_3)
+AIC(m_lvm_0,m_lvm_4)
+anova(m_lvm_0,m_lvm_4)
 
-# Constrained + Random
-sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-ptm <- Sys.time()
-m_lvm_4 <- gllvm(y=df_tx_w_trm, # model with environmental parameters & random FX
-                 X=df_wims_w_trim0,
-                 formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
-                 # family = gaussian(),
-                 family = "tweedie",
-                 studyDesign = sDsn, row.eff = ~(1|Region)
-)
-# saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Tmp_norm.Rdat")#4.1096 mins
-saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Tmp_tweed.Rdat")#4.1096 mins
-Sys.time() - ptm;rm(ptm) 
-m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Tmp_tweed.Rdat")
-
-AIC(m_lvm_0,m_lvm_3,m_lvm_4)
-anova(m_lvm_0,m_lvm_3,m_lvm_4)
+# # Constrained + Random
+# sDsn <- data.frame(Region = df_wims_w_trim0$Region)
+# ptm <- Sys.time()
+# m_lvm_4 <- gllvm(y=df_tx_w_trm, # model with environmental parameters & random FX
+#                  X=df_wims_w_trim0,
+#                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
+#                  # family = gaussian(),
+#                  family = "tweedie",
+#                  studyDesign = sDsn, row.eff = ~(1|Region)
+# )
+# # saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Tmp_norm.Rdat")#4.1096 mins
+# saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Tmp_tweed.Rdat")#4.1096 mins
+# Sys.time() - ptm;rm(ptm) 
+# m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Tmp_tweed.Rdat")
+# 
+# AIC(m_lvm_0,m_lvm_3,m_lvm_4)
+# anova(m_lvm_0,m_lvm_3,m_lvm_4)
 
 #### GLLVM plots ####
 # pdf(file = "figs/m_lvm_3_trt_all_ordered.pdf",width=16,height=8)
@@ -654,21 +675,6 @@ pdf(file = "figs/coef_trt_7.pdf",width=7,height=14)
 coefplot(m_lvm_4,mfrow = c(1,1),which.Xcoef = 7, cex.ylab = 0.6,
          order=TRUE, main="Temperature")
 dev.off()
-
-# pdf(file = "figs/coef_trt_7.pdf",width=7,height=14)
-# coefplot(m_lvm_4,mfrow = c(1,2),which.Xcoef = 7:8, cex.ylab = 0.6,
-#          order=FALSE)
-# dev.off()
-
-# pdf(file = "figs/coef_trt_8.pdf",width=7,height=14)
-# coefplot(m_lvm_3,mfrow = c(1,2),which.Xcoef = 9:10, cex.ylab = 0.6,
-#          order=FALSE)
-# dev.off()
-# 
-# pdf(file = "figs/coef_trt_9.pdf",width=7,height=14)
-# coefplot(m_lvm_3,mfrow = c(1,2),which.Xcoef = 11, cex.ylab = 0.6,
-#          order=FALSE)
-# dev.off()
 
 #### GLLVM model explore ####
 ordiplot.gllvm(m_lvm_0)
@@ -762,7 +768,7 @@ for (level in levels(sigterms_all$variable)) {
     plot_annotation(title="Generalised linear latent variable model outputs",
                     subtitle = "Based on zooplankton taxon lifeforms",
                     caption = paste0("Colours indicate lifeform 95% confidence intervals which do (grey) or do not (black) include zero","\n",
-                                     "Lifeforms recorded in ",n+1," or fewer samples removed from data prior to model estimations","\n",
+                                     "Lifeforms recorded in fewer than ",n+1," samples removed from data prior to model estimations","\n",
                                      "Model call: ~",as.character(m_lvm_4$formula)[2],
                                      "\nFamily: ",as.character(m_lvm_4$family),". ",
                                      "Random row effects: ",as.character(m_lvm_4$call)[7]),
