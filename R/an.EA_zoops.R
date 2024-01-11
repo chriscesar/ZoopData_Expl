@@ -965,11 +965,12 @@ pdf(file = "figs/coef_tax_all_unordered_v2.pdf",width=16,height=8)
 print(final_plot)
 dev.off()
 
-
-
 ### to do:
 ### look at functional groups(lifeforms)
 # master list saved in:
 # \\prodds.ntnl\Shared\AN\KFH\Groups\N_Marine\07 Training & Reference Documents\A&R Technical Guidance\Traits, Lifeforms etc\Plankton Lifeform Extraction Tool
 # consider reproducing ordination in 3 dimensions using rgl (see: https://riffomonas.org/code_club/2021-03-24-rgl)
 
+# PRIORITY : REPRODUCE CODE ####
+## Currently untidy and seems to produce 'issues'
+## Errors alluding to "non-numeric argument to binary operator"

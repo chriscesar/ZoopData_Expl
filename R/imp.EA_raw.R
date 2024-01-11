@@ -161,3 +161,7 @@ detach("package:tidyverse", unload=TRUE)
 rm(list = ls(pattern = "^df"))
 rm(list = ls(pattern = "^cbPalette"))
 rm(datfol,nit,perms, ppi)
+
+# PRIORITY : REPRODUCE CODE ####
+## Currently untidy and seems to produce 'issues'
+## Errors alluding to "non-numeric argument to binary operator"

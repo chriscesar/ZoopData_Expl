@@ -788,3 +788,7 @@ rm(datfol,nit,perms, ppi)
 # pdf(file = "figs/coef_trt_all_unordered_v2.pdf",width=16,height=8)
 # print(final_plot)
 # dev.off()
+
+# PRIORITY : REPRODUCE CODE ####
+## Currently untidy and seems to produce 'issues'
+## Errors alluding to "non-numeric argument to binary operator"
