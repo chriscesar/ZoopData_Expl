@@ -489,7 +489,7 @@ m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_tweed.Rdat")
 #                  )
 # saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_gauss.Rdat")
 # Sys.time() - ptm;rm(ptm)
-m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_gauss.Rdat")
+# m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_gauss.Rdat")
 
 #######################
 #### Gamma TO FIX! ####
@@ -497,13 +497,13 @@ m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_gauss.Rdat")
 ## FOR CODE
 ptm <- Sys.time()
 sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-m_lvm_0 <- gllvm(df_tx_w_trm, # unconstrained model
-                 studyDesign = sDsn, row.eff = ~(1|Region),
-                 family = "tweedie"
+m_lvm_0 <- gllvm(y=df_tx_w_trm[,c(1)], # unconstrained model
+                 # studyDesign = sDsn, row.eff = ~(1|Region),
+                 family = "gamma"
                  )
-saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_tweed.Rdat")
+saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_gamma.Rdat")
 Sys.time() - ptm;rm(ptm)
-m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_tweed.Rdat")
+m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_gamma.Rdat")
 ######################
 
 ##########################
@@ -708,3 +708,7 @@ for (level in levels(sigterms_all$variable)) {
 pdf(file = "figs/coef_trt_all_unordered_v2.pdf",width=16,height=8)
 print(final_plot)
 dev.off()
+
+# PRIORITY : REPRODUCE CODE ####
+## Currently untidy and seems to produce 'issues'
+## Errors alluding to "non-numeric argument to binary operator"
