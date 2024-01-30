@@ -165,7 +165,8 @@ df_tx_w %>%
 
 ### NMDS ####
 ptm <- Sys.time()###
-set.seed(pi+25);ord <-   vegan::metaMDS(dftmp,trymax = 500)
+set.seed(pi+15);ord <-   vegan::metaMDS(dftmp,trymax = 500)
+ord <-   vegan::metaMDS(dftmp,trymax = 500, previous.best = ord)
 Sys.time() - ptm;rm(ptm)
 plot(ord)
 
@@ -551,17 +552,28 @@ ggsave(filename = "figs/nmds_by_Region&season_Taxa.pdf",width = 12,height = 12,u
 ### MVABUND ####
 #### unconstrained ordination ####
 mv_dftmp <- mvabund::mvabund(dftmp)#create mvabund object
-ttl <- "Very strong mean-variance relationship in zooplankton abundance data"
-sbtt <- "Variance within the dataset covers *10 orders of magnitude*. Many multivariate analyses (e.g. ANOSIM, PERMANOVA) assume *no mean-variance relationship*\nThis makes interpretation of such analyses potentially erroneous. Model-based approaches offer an alternative, allowing the mean-variance relationship to be incorporated into the model predictions"
 
 png(file = "figs/zoopMeanVar.png",
     width=12*ppi, height=6*ppi, res=ppi)
-mvabund::meanvar.plot(mv_dftmp,# mean-variance plot
+mvpl <- mvabund::meanvar.plot(mv_dftmp,# mean-variance plot
                       # main = "Mean-variance relationship of zooplankton taxon abundances",
                       # # sub="Many multivariate analyses assume no mean-variance relationship",
                       add.trendline=TRUE,
                       xlab="Mean",
-                      ylab="Variance")
+                      ylab="Variance",
+                      table=TRUE
+                      )
+
+# Find the minimum and maximum values
+min_value <- min(mvpl[,2])
+max_value <- max(mvpl[,2])
+
+min_order <- floor(log10(min_value))
+max_order <- floor(log10(max_value))
+orders_of_magnitude_covered <- max_order - min_order
+
+ttl <- "Very strong mean-variance relationship in zooplankton abundance data"
+sbtt <- paste0("Variance within the dataset covers ",orders_of_magnitude_covered," orders of magnitude*.\nMany multivariate analyses (e.g. ANOSIM, PERMANOVA) assume *no mean-variance relationship*\nThis makes interpretation of such analyses potentially erroneous. Model-based approaches offer an alternative, allowing the mean-variance relationship to be incorporated into the model predictions")
 
 mtext(side=3, line = 3, at =-0.07, adj=0, cex = 1, ttl, font=2)
 mtext(side=3, line = 0.75, at =-0.07, adj=0, cex = 0.7, sbtt)
@@ -632,7 +644,7 @@ performance::check_model(m_S_pois)
 ### taxon abundance ####
 #### check distribution ####
 # plot(performance::check_distribution(dfsub$N)) ### 
-plot(performance::check_distribution(log(df_tx_w$N))) # log ~Weibull distribution 
+plot(performance::check_distribution(log(df_tx_w$N))) # tweedie distribution 
 plot(performance::check_distribution(df_tx_w$N)) # lognormal
 
 ### run models ####
