@@ -145,7 +145,6 @@ dfw <- left_join(df_tx_w,df_wims_w,by="PRN")
 
 ### tidy up ###
 # unload packages
-detach("package:MASS", unload=TRUE)
 detach("package:lubridate", unload=TRUE)
 detach("package:tidyverse", unload=TRUE)
 
