@@ -712,3 +712,35 @@ dev.off()
 # PRIORITY : REPRODUCE CODE ####
 ## Currently untidy and seems to produce 'issues'
 ## Errors alluding to "non-numeric argument to binary operator"
+
+# TIDY UP ####
+# unload packages
+detach("package:seas", unload=TRUE)
+detach("package:patchwork", unload=TRUE)
+detach("package:performance", unload=TRUE)
+detach("package:corrplot", unload=TRUE)
+detach("package:gllvm", unload=TRUE)
+detach("package:ecoCopula", unload=TRUE)
+detach("package:gclus", unload=TRUE)
+detach("package:vegan", unload=TRUE)
+detach("package:mvabund", unload=TRUE)
+detach("package:lubridate", unload=TRUE)
+detach("package:tidyverse", unload=TRUE)
+detach("package:MASS", unload=TRUE)
+
+# remove data
+rm(list = ls(pattern = "^df"))
+rm(list = ls(pattern = "^m_"))
+rm(list = ls(pattern = "^mod"))
+rm(list = ls(pattern = "^cbPalette"))
+rm(list = ls(pattern = "^scores"))
+rm(list = ls(pattern = "^sigt"))
+rm(list = ls(pattern = "^sp"))
+rm(list = ls(pattern = "^logs"))
+rm(list = ls(pattern = "^ci_"))
+rm(list = ls(pattern = "^max_"))
+rm(list = ls(pattern = "^min_"))
+rm(list = ls(pattern = "*plot"))
+rm(list = ls(pattern = "*consiste"))
+rm(datfol,nit,perms, ppi,replace_values,pl_ts_N,sDsn,subset_data,i,level,
+   ntrt,sbtt,srt,ttl,cr,n)
