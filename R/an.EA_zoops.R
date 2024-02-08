@@ -160,13 +160,14 @@ df_tx_w %>%
   dplyr::select(-c(1:21)) %>% ###remove metadata info
   dplyr::select(-last_col()) %>% ###remove taxon abundance
   dplyr::select(-last_col()) %>% ###remove taxon richness
+  #dplyr::select(where(~sum(. !=0)>1)) %>%  ### [OPTIONAL!!!] remove singleton taxa
   dplyr::select_if(~ !is.numeric(.) || sum(.) !=0) %>% ### drop cols summing to 0
   filter(rowSums(across(where(is.numeric)))!=0) -> dftmp ###remove 'empty' rows
 
 ### NMDS ####
 ptm <- Sys.time()###
 set.seed(pi+15);ord <-   vegan::metaMDS(dftmp,trymax = 500)
-ord <-   vegan::metaMDS(dftmp,trymax = 500, previous.best = ord)
+ord <- vegan::metaMDS(dftmp,trymax = 500, previous.best = ord)
 Sys.time() - ptm;rm(ptm)
 plot(ord)
 
@@ -769,7 +770,7 @@ m_lvm_0 <- readRDS("figs/gllvm_uncon_tweed.Rdat")
 #                  )
 # saveRDS(m_lvm_0, file="figs/gllvm_uncon_gauss.Rdat")
 # Sys.time() - ptm;rm(ptm)
-m_lvm_0 <- readRDS("figs/gllvm_uncon_gauss.Rdat")
+# m_lvm_0 <- readRDS("figs/gllvm_uncon_gauss.Rdat")
 
 #### gamma distribution ####
 # ptm <- Sys.time()
@@ -780,7 +781,7 @@ m_lvm_0 <- readRDS("figs/gllvm_uncon_gauss.Rdat")
 # )
 # saveRDS(m_lvm_0, file="figs/gllvm_uncon_gamma.Rdat")
 # Sys.time() - ptm;rm(ptm)
-m_lvm_0 <- readRDS("figs/gllvm_uncon_gamma.Rdat")
+# m_lvm_0 <- readRDS("figs/gllvm_uncon_gamma.Rdat")
 
 ### constrained 1 ####
 # ptm <- Sys.time()
@@ -904,7 +905,6 @@ sigterms_all$sig <- sigterms_all$`2.5 %`*sigterms_all$`97.5 %`>0
 
 sigterms_sig <- sigterms_all[sigterms_all$`Pr(>|z|)`>0.05,]
 
-
 ### plot! ####
 ## recreate coefplot
 ggplot(sigterms_all[sigterms_all$variable=="nh4",],
@@ -959,6 +959,9 @@ for (level in levels(sigterms_all$variable)) {
     if (i > 1) {
       plot_list[[i]] <- plot_list[[i]] + theme(axis.text.y = element_blank())
     }
+    if (i == 1){
+      plot_list[[i]] <- plot_list[[i]] + theme(axis.text.y = element_text(size=2.5))
+    }
   }
 }
 
@@ -966,11 +969,10 @@ for (level in levels(sigterms_all$variable)) {
 final_plot <- wrap_plots(plotlist = plot_list, ncol = nlevels(sigterms_all$variable))+  # Adjust the number of columns as needed
     plot_annotation(title="Generalised linear latent variable model outputs",
                     subtitle = "Based on zooplankton taxon abundance data",
-                    # caption = paste0("Colours indicate lifeform 95% confidence intervals which do (grey) or do not (black) include zero","\n",
-                    #                  "Lifeforms recorded in ",n+1," or fewer samples removed from data prior to model estimations","\n",
-                    #                  "Model call: ~",as.character(m_lvm_3$formula)[2],
-                    #                  "\nFamily: ",as.character(m_lvm_3$family),". ",
-                    #                  "Random row effects: ",as.character(m_lvm_3$call)[7]),
+                    caption = paste0("Colours indicate lifeform 95% confidence intervals which do (grey) or do not (black) include zero",
+                                     "\nModel call: ~",as.character(m_lvm_3$formula)[2],
+                                     "\nFamily: ",as.character(m_lvm_3$family),". ",
+                                     "Random row effects: ",as.character(m_lvm_3$call)[7]),
                     theme = theme(plot.title = element_text(size = 16, face="bold")))
 
 pdf(file = "figs/coef_tax_all_unordered_v2.pdf",width=16,height=8)
@@ -986,3 +988,38 @@ dev.off()
 # PRIORITY : REPRODUCE CODE ####
 ## Currently untidy and seems to produce 'issues'
 ## Errors alluding to "non-numeric argument to binary operator"
+
+# TIDY UP ####
+# unload packages
+detach("package:seas", unload=TRUE)
+detach("package:patchwork", unload=TRUE)
+detach("package:performance", unload=TRUE)
+detach("package:corrplot", unload=TRUE)
+detach("package:gllvm", unload=TRUE)
+detach("package:ecoCopula", unload=TRUE)
+detach("package:gclus", unload=TRUE)
+detach("package:vegan", unload=TRUE)
+detach("package:mvabund", unload=TRUE)
+detach("package:lubridate", unload=TRUE)
+detach("package:tidyverse", unload=TRUE)
+detach("package:MASS", unload=TRUE)
+
+# remove data
+rm(list = ls(pattern = "^df"))
+rm(list = ls(pattern = "^m_"))
+rm(list = ls(pattern = "^mod"))
+rm(list = ls(pattern = "^cbPalette"))
+rm(list = ls(pattern = "^scores"))
+rm(list = ls(pattern = "^sigt"))
+rm(list = ls(pattern = "^sp"))
+rm(list = ls(pattern = "^ord"))
+rm(list = ls(pattern = "^mv"))
+rm(list = ls(pattern = "^xx"))
+rm(list = ls(pattern = "^logs"))
+rm(list = ls(pattern = "^ci_"))
+rm(list = ls(pattern = "^max_"))
+rm(list = ls(pattern = "^min_"))
+rm(list = ls(pattern = "*plot"))
+rm(list = ls(pattern = "*consiste"))
+rm(datfol,nit,perms, ppi,replace_values,pl_ts_N,subset_data,i,level,
+   ntrt,sbtt,srt,ttl)
