@@ -139,9 +139,9 @@ df_tx %>%
 ### join & save data ####  
 dfw <- left_join(df_tx_w,df_wims_w,by="PRN")
 
-# write.csv(dfw,file=paste0(datfol,"processedData/","zoopWideTraitAbund_m3_WIMS_USE.csv"),row.names = FALSE)
-# write.csv(df_tx_w,file=paste0(datfol,"processedData/","zoopWideTraitAbund_m3_taxOnly_USE.csv"),row.names = FALSE)
-# saveRDS(dfw,file=paste0(datfol,"processedData/","zoopWideTraitAbund_m3_taxOnly_USE.RDat"))
+write.csv(dfw,file=paste0(datfol,"processedData/","zoopWideTraitAbund_m3_WIMS_USE.csv"),row.names = FALSE)
+write.csv(df_tx_w,file=paste0(datfol,"processedData/","zoopWideTraitAbund_m3_taxOnly_USE.csv"),row.names = FALSE)
+saveRDS(dfw,file=paste0(datfol,"processedData/","zoopWideTraitAbund_m3_taxOnly_USE.RDat"))
 
 ### tidy up ###
 # unload packages
