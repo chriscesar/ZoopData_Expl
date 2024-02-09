@@ -165,10 +165,12 @@ df_tx_w %>%
   filter(rowSums(across(where(is.numeric)))!=0) -> dftmp ###remove 'empty' rows
 
 ### NMDS ####
-ptm <- Sys.time()###
-set.seed(pi+15);ord <-   vegan::metaMDS(dftmp,trymax = 500)
-ord <- vegan::metaMDS(dftmp,trymax = 500, previous.best = ord)
-Sys.time() - ptm;rm(ptm)
+# ptm <- Sys.time()###
+# set.seed(pi+15);ord <-   vegan::metaMDS(dftmp,trymax = 500)
+# ord <- vegan::metaMDS(dftmp,trymax = 500, previous.best = ord)
+# saveRDS(ord, file="figs/nmds_taxa.Rdat")
+# Sys.time() - ptm;rm(ptm)
+ord <- readRDS("figs/nmds_taxa.Rdat")
 plot(ord)
 
 ### extract site info
@@ -314,7 +316,8 @@ ggsave(filename = "figs/nmds_by_Region.pdf",width = 12,height = 12,units = "in",
 #        plot=pl);rm(pl)
 # rm(pl)
 
-### variability of ntax
+# Variability Plots ####
+### Prep data ####
 ##add 'mesh' to data
 dfw %>% 
   dplyr::mutate(mesh=ifelse(grepl("200um",Sample.comments),"200um",
@@ -348,9 +351,21 @@ df_tx_w$WB_lb2 <- ifelse(df_tx_w$WB == "Solent","Solent",
                                                                                                                            ifelse(df_tx_w$WB == "Bristol Channel Inner South","Brist Ch In Sth",
                                                                                                                                   NA)))))))))))
                                               )))))
+
 df_tx_w$WB_lb <- paste0(df_tx_w$WB_lb1,"_",df_tx_w$WB_lb2)
 df_tx_w$WB_lb1 <- NULL; df_tx_w$WB_lb2 <- NULL
 
+### order factors
+df_tx_w$WB_lb <- factor(df_tx_w$WB_lb,
+                        levels = c(
+                          "NE_Nrthmb Nth", "NE_Farne Is", "NE_Tees",
+                          "Ang_Yorks Sth", "Ang_Lincs", "Ang_Wash Out",
+                          "Ang_Blckw Out", "Thm_Thm Low", "Sth_Kent Sth",
+                          "Sth_Solent", "Sth_Soton Wtr", "SW_Cornw Nth",
+                          "SW_Brnstp B", "SW_Brist Ch In Sth", "NW_Mersey Mth",
+                          "NW_Solway O"
+                        ))
+#### Ntax (S) ####
 meanS <- mean(df_tx_w$S); sdS <- sd(df_tx_w$S)
 sdSmin <- meanS-sdS; sdSmax <- meanS+sdS
 
