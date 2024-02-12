@@ -575,7 +575,7 @@ mvpl <- mvabund::meanvar.plot(mv_dftmp,# mean-variance plot
                       # main = "Mean-variance relationship of zooplankton taxon abundances",
                       # # sub="Many multivariate analyses assume no mean-variance relationship",
                       add.trendline=TRUE,
-                      xlab="Mean",
+                      xlab="Mean taxon abundance",
                       ylab="Variance",
                       table=TRUE
                       )
@@ -589,7 +589,7 @@ max_order <- floor(log10(max_value))
 orders_of_magnitude_covered <- max_order - min_order
 
 ttl <- "Very strong mean-variance relationship in zooplankton abundance data"
-sbtt <- paste0("Variance within the dataset covers ",orders_of_magnitude_covered," orders of magnitude*.\nMany multivariate analyses (e.g. ANOSIM, PERMANOVA) assume *no mean-variance relationship*\nThis makes interpretation of such analyses potentially erroneous. Model-based approaches offer an alternative, allowing the mean-variance relationship to be incorporated into the model predictions")
+sbtt <- paste0("Variance within the dataset covers **",orders_of_magnitude_covered," orders of magnitude**.\nMany multivariate analyses (e.g. ANOSIM, PERMANOVA) assume that ** this relationship does not exist** and that variance is the same at all levels of the mean parameter\nThis makes interpretation of such analyses potentially erroneous. Model-based approaches offer an alternative, allowing the mean-variance relationship to be incorporated into the model predictions")
 
 mtext(side=3, line = 3, at =-0.07, adj=0, cex = 1, ttl, font=2)
 mtext(side=3, line = 0.75, at =-0.07, adj=0, cex = 0.7, sbtt)
