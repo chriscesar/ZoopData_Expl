@@ -767,7 +767,7 @@ df_wims_w_trim0 <- df_wims_w_trim0 %>%
 #### Tweedie distribution ####
 # ptm <- Sys.time()
 sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-# m_lvm_0 <- gllvm(df_tx_w_trm,
+# m_lvm_0 <- gllvm(y=df_tx_w_trm,
 #                  family="tweedie",
 #                  studyDesign = sDsn, row.eff = ~(1|Region)
 #                  )
@@ -994,11 +994,37 @@ pdf(file = "figs/coef_tax_all_unordered_v2.pdf",width=16,height=8)
 print(final_plot)
 dev.off()
 
+### compare models w/ w/out env parameters####
+# based on:
+#https://jenniniku.github.io/gllvm/articles/vignette1.html#studying-co-occurrence-patterns
+# getResidualCov function can be used to quantify the amount of variation in the
+# data that can be explained by environmental variables.
+# Specifically, if we use the trace of the residual covariance matrix Σ as a
+# measure of unexplained variation, then we can compare this quantity before
+# and after environmental variables are included in the model. The ratio of
+# traces suggests that environmental variables explain approximately 40% of
+# the (co)variation in ant species abundances.
+
+rcov0 <- getResidualCov(m_lvm_0, adjust = 1) # 'null' model
+rcov1 <- getResidualCov(m_lvm_3, adjust = 1) # model with env variables
+rcov0$trace; rcov1$trace
+1 - rcov1$trace / rcov0$trace
+AIC(m_lvm_0,m_lvm_3)
+
+# Environmental correlation
+# modelmat <- model.matrix(m_lvm_3$formula, data = df_wims_w_trim0) %>% 
+#   as.matrix %>% 
+#   {.[,-1]} # Remove intercept
+# linpred <- tcrossprod(modelmat, m_lvm_3$params$Xcoef)
+# envircor <- cov2cor(cov(linpred))
+
+
 ### to do:
 ### look at functional groups(lifeforms)
 # master list saved in:
 # \\prodds.ntnl\Shared\AN\KFH\Groups\N_Marine\07 Training & Reference Documents\A&R Technical Guidance\Traits, Lifeforms etc\Plankton Lifeform Extraction Tool
-# consider reproducing ordination in 3 dimensions using rgl (see: https://riffomonas.org/code_club/2021-03-24-rgl)
+# consider reproducing ordination in 3 dimensions using rgl (see:
+# https://riffomonas.org/code_club/2021-03-24-rgl)
 
 # PRIORITY : REPRODUCE CODE ####
 ## Currently untidy and seems to produce 'issues'
