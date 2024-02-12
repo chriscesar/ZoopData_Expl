@@ -106,11 +106,86 @@ df_tx %>%
 ### join & save data ####  
 dfw <- left_join(df_tx_w,df_wims_w,by="PRN")
 
-dftaxa <- df_tx %>% 
-  dplyr::select(.,Kingdom:Species) %>% 
-  distinct()
+dftaxa0 <- df_tx %>% 
+  dplyr::select(.,Kingdom:DisplayName,Taxa) %>% 
+  distinct() %>% 
+  mutate_all(as.character) %>%
+  mutate_all(~ replace_na(., "NA"))
 
 # View(dftaxa)
+# dftaxa <- dftaxa0
+# 
+# dftaxa$Kingdom <- factor(dftaxa$Kingdom)
+# dftaxa$Phylum <- factor(dftaxa$Phylum)
+# dftaxa$Class <- factor(dftaxa$Class)
+# dftaxa$Order <- factor(dftaxa$Order)
+# dftaxa$Family <- factor(dftaxa$Family)
+# dftaxa$Genus <- factor(dftaxa$Genus)
+# dftaxa$Species <- factor(dftaxa$Species)
+# dftaxa$Taxa <- factor(dftaxa$Taxa)
+
+# dftaxa_spp <- dftaxa[!is.na(dftaxa$Species),]
+# dftaxa_spp %>% dplyr::select(.,-Subgenus) -> dftaxa_spp
+# dftaxa_spp0 <- dftaxa[is.na(dftaxa$Species),]
+# dftaxa_spp0 %>% 
+#   dplyr::select(.,-Subgenus) %>% 
+#   rowwise() %>% 
+#   mutate(Species = last(na.omit(c_across()))) %>%
+#   as.data.frame(.) %>% distinct() -> dftaxa_sppx
+# 
+# names(dftaxa_spp);names(dftaxa_sppx)
+# 
+# dftaxa_spp <- rbind(dftaxa_spp,dftaxa_sppx)
+# dftaxa_spp <- dftaxa_spp %>% 
+#   distinct()
+
+## assign GROUPS for colouring
+# #dftaxa$GROUP <- 
+# 
+# ### plot!
+# taxonomicTree = as.phylo(~Kingdom/Phylum/Class/Order/Family/Genus/Species/Taxa,
+#                          # data = dftaxa_spp,
+#                          data = dftaxa,
+#                          collapse = FALSE)
+# taxonomicTree$edge.length = rep(1,length(taxonomicTree$edge))
+# plot(taxonomicTree, cex=0.5)
+
+
+### ver 2 ####
+dftaxa0 <- df_tx %>% 
+  dplyr::select(.,Kingdom:Species,DisplayName, LF02) %>% 
+  distinct() %>% 
+  mutate_all(as.character) %>%
+  mutate_all(~ replace_na(., "NA"))
+
+dftaxa <- dftaxa0
+
+# assign groups
+dftaxa$GROUP <- ifelse(dftaxa$Kingdom=="Chromista","Chromista",
+                       ifelse(grepl("^Fish",dftaxa$LF02),"Fish",
+                              ifelse(grepl("^Cop",dftaxa$LF02),"Copepod",
+                                     ifelse(grepl("^Bryo",dftaxa$LF02),"Bryozoan",
+                                            ifelse(grepl("^Crus",dftaxa$LF02),"Arthropoda",
+                                                   ifelse(grepl("^Clad",dftaxa$LF02),"Arthropoda",
+                                                   ifelse(grepl("^Gast",dftaxa$LF02),"Gastropod",
+                                                          ifelse(grepl("^Poly",dftaxa$LF02),"Annelid",
+                                                                 ifelse(grepl("^Gela",dftaxa$LF02),"Gelatinous",
+                                                                        ifelse(grepl("^Acari",dftaxa$LF02),"Arthropoda","Other")
+                                                                 )))))))))
+dftaxa$cols <- ifelse(dftaxa$GROUP=="Annelid", "burlywood4",
+                      ifelse(dftaxa$GROUP=="Arthropoda", "blueviolet",
+                             ifelse(dftaxa$GROUP=="Bryozoan", "sienna",
+                                    ifelse(dftaxa$GROUP=="Chromista", "dodgerblue",
+                                           ifelse(dftaxa$GROUP=="Copepod", "chartreuse",
+                                                  ifelse(dftaxa$GROUP=="Fish", "cyan3",
+                                                         ifelse(dftaxa$GROUP=="Gastropod", "aquamarine2",
+                                                                ifelse(dftaxa$GROUP=="Gelatinous", "deeppink2",
+                                                                       ifelse(dftaxa$GROUP=="Other", "darkgrey","")
+                                                                ))))))
+                      ))
+dftaxa <- dftaxa %>% 
+  dplyr::select(.,-LF02) %>% 
+  distinct()
 
 dftaxa$Kingdom <- factor(dftaxa$Kingdom)
 dftaxa$Phylum <- factor(dftaxa$Phylum)
@@ -119,143 +194,67 @@ dftaxa$Order <- factor(dftaxa$Order)
 dftaxa$Family <- factor(dftaxa$Family)
 dftaxa$Genus <- factor(dftaxa$Genus)
 dftaxa$Species <- factor(dftaxa$Species)
+dftaxa$DisplayName <- factor(dftaxa$DisplayName)
 
-dftaxa_spp <- dftaxa[!is.na(dftaxa$Species),]
-dftaxa_spp %>% dplyr::select(.,-Subgenus) -> dftaxa_spp
-dftaxa_spp0 <- dftaxa[is.na(dftaxa$Species),]
-dftaxa_spp0 %>% 
-  dplyr::select(.,-Subgenus) %>% 
-  rowwise() %>% 
-  mutate(Species = last(na.omit(c_across()))) %>%
-  as.data.frame(.) %>% distinct() -> dftaxa_sppx
-
-names(dftaxa_spp);names(dftaxa_sppx)
-
-dftaxa_spp <- rbind(dftaxa_spp,dftaxa_sppx)
-dftaxa_spp <- dftaxa_spp %>% 
-  distinct()
-
-taxonomicTree = as.phylo(~Kingdom/Phylum/Class/Order/Family/Genus/Species,
-                         data = dftaxa_spp, collapse = TRUE)
+taxonomicTree = as.phylo(~Kingdom/Phylum/Class/Order/Family/Genus/Species/DisplayName,
+                         data = dftaxa,
+                         collapse = FALSE)
+tbl_taxonomicTree <- as_tibble(taxonomicTree)
 taxonomicTree$edge.length = rep(1,length(taxonomicTree$edge))
-plot(taxonomicTree, cex=0.5)
+
+xx <- taxonomicTree$tip.label
+xz <- dftaxa[,c(9,11)]
+dfcol <- data.frame(DisplayName=xx)
+xy <- left_join(dfcol,xz,by="DisplayName")
+
+plot(taxonomicTree, cex=0.5, tip.color = xy$cols)
+
+
+# col.grp <- dftaxa[,c("Taxa", "GROUP")]
+# cols <- ifelse(col.grp$GROUP == "Annelid", "burlywood4",
+#                ifelse(col.grp$GROUP == "Arthropoda", "blueviolet",
+#                       ifelse(col.grp$GROUP == "Bryozoan", "sienna",
+#                              ifelse(col.grp$GROUP == "Chromista", "dodgerblue",
+#                                     ifelse(col.grp$GROUP == "Copepod","chartreuse",
+#                                            ifelse(col.grp$GROUP == "Fish","cyan3",
+#                                                   ifelse(col.grp$GROUP == "Gastropod","darkolivegreen2",
+#                                                          ifelse(col.grp$GROUP == "Gelatinous","darkorchid",
+#                                                                 ifelse(col.grp$GROUP == "Other","darkgrey","")
+#                                                          ))))))))
+
+png(file = "figs/zooptaxa.png",
+    width=8*ppi, height=16*ppi, res=ppi)
+plot(taxonomicTree, cex=0.5, tip.color = xy$cols)
+dev.off()
 
 
 
 
-
-
-
-
-
-
-
-
-dftaxa %>% 
-  rowwise() %>% 
-  dplyr::select(.,Kingdom:Genus) %>% 
-  mutate(Species = last(na.omit(c_across()))) %>%
-  ungroup() %>% 
-  mutate(Species = factor(Species)) %>% 
-  as.data.frame(.) %>% 
-  distinct() -> dftaxa2
-
-write.csv(dftaxa2,file = "./dftaxa2.csv")
-
-dftaxaTrm <- dftaxa[complete.cases(dftaxa),]
-
-# CONSTRUCT TAXONOMICAL TREE TO BE USED AS PROXY FOR PHYLOGENETIC TREE
-# taxonomicTree = as.phylo(~Kingdom/Phylum/Class/Order/Family/Genus,
-#                          data = dftaxaTrm, collapse = FALSE)
+# dftaxa %>% 
+#   rowwise() %>% 
+#   dplyr::select(.,Kingdom:Genus) %>% 
+#   mutate(Species = last(na.omit(c_across()))) %>%
+#   ungroup() %>% 
+#   mutate(Species = factor(Species)) %>% 
+#   as.data.frame(.) %>% 
+#   distinct() -> dftaxa2
+# 
+# write.csv(dftaxa2,file = "./dftaxa2.csv")
+# 
+# dftaxaTrm <- dftaxa[complete.cases(dftaxa),]
+# 
+# # CONSTRUCT TAXONOMICAL TREE TO BE USED AS PROXY FOR PHYLOGENETIC TREE
+# # taxonomicTree = as.phylo(~Kingdom/Phylum/Class/Order/Family/Genus,
+# #                          data = dftaxaTrm, collapse = FALSE)
+# # taxonomicTree$edge.length = rep(1,length(taxonomicTree$edge))
+# # plot(taxonomicTree, cex=0.5)
+# # ggtree((as.phylo(~Kingdom/Phylum/Class/Order/Family/Genus,
+# #                               data = dftaxaTrm, collapse = FALSE)))
+# 
+# taxonomicTree = as.phylo(~Kingdom/Phylum/Class/Order/Family/Genus/Species,
+#                          data = dftaxa2, collapse = TRUE)
 # taxonomicTree$edge.length = rep(1,length(taxonomicTree$edge))
 # plot(taxonomicTree, cex=0.5)
-# ggtree((as.phylo(~Kingdom/Phylum/Class/Order/Family/Genus,
-#                               data = dftaxaTrm, collapse = FALSE)))
-
-taxonomicTree = as.phylo(~Kingdom/Phylum/Class/Order/Family/Genus/Species,
-                         data = dftaxa2, collapse = TRUE)
-taxonomicTree$edge.length = rep(1,length(taxonomicTree$edge))
-plot(taxonomicTree, cex=0.5)
-
-taxa <- as.phylo(~Kingdom/Phylum/Class/Order/Species, data = dat)
-
-col.grp <- merge(data.frame(Species = taxa$tip.label), dat[c("Species", "Group")], by = "Species", sort = F)
-
-cols <- ifelse(col.grp$Group == "Benthos", "burlywood4", ifelse(col.grp$Group == "Zooplankton", "blueviolet", ifelse(col.grp$Group == "Fish", "dodgerblue", ifelse(col.grp$Group == "Phytoplankton", "darkolivegreen2", ""))))
-
-plot(taxa,, tip.col = cols)
-
-### nonsense: Ignore this! ####
-taxadf <- data.frame("Kingdom" = c(rep("Animalia",4),"Chromista"),
-           "Phylum"=c(rep("Arthropoda",4),"Foraminifera"),
-           "Class" = c(rep("Copepoda",4),NA),
-           "Order" = c(rep("Calanoida",3),"Harpacticoida",NA),
-           "Family" = c("Acartiidae","Centropagidae","Temoridae","Tachidiidae",NA),
-           "Genus"= c("Acartia","Centropages","Temora","Euterpina",NA))#,
-           # "Species" = c(NA, "hamatus", "longicornis", "acutifrons",NA ))
-taxadf %>% 
-  rowwise() %>% 
-  mutate(Species = last(na.omit(c_across()))) %>% ungroup()
-
-# 
-# # Reshape the data into long format
-# taxadf_long <- gather(taxadf, Taxonomic_Level, Name, -Species)
-# 
-# # Replace NA values in Species column with empty strings
-# taxadf_long$Species[is.na(taxadf_long$Species)] <- ""
-# 
-# # Create a new column "Parent" which indicates the parent node for each taxonomic level
-# taxadf_long$Parent <- NA
-# taxadf_long$Parent[!is.na(taxadf_long$Species)] <- taxadf_long$Genus[!is.na(taxadf_long$Species)]
-# taxadf_long$Parent[is.na(taxadf_long$Parent) & !is.na(taxadf_long$Genus)] <- taxadf_long$Family[is.na(taxadf_long$Parent) & !is.na(taxadf_long$Genus)]
-# taxadf_long$Parent[is.na(taxadf_long$Parent) & !is.na(taxadf_long$Family)] <- taxadf_long$Order[is.na(taxadf_long$Parent) & !is.na(taxadf_long$Family)]
-# taxadf_long$Parent[is.na(taxadf_long$Parent) & !is.na(taxadf_long$Order)] <- taxadf_long$Class[is.na(taxadf_long$Parent) & !is.na(taxadf_long$Order)]
-# taxadf_long$Parent[is.na(taxadf_long$Parent) & !is.na(taxadf_long$Class)] <- taxadf_long$Phylum[is.na(taxadf_long$Parent) & !is.na(taxadf_long$Class)]
-# taxadf_long$Parent[is.na(taxadf_long$Parent) & !is.na(taxadf_long$Phylum)] <- taxadf_long$Kingdom[is.na(taxadf_long$Parent) & !is.na(taxadf_long$Phylum)]
-# 
-# taxadf_long$Taxonomic_Level <- factor(taxadf_long$Taxonomic_Level,
-#                                       levels = c("Kingdom", "Phylum", "Class",
-#                                                  "Order", "Family","Genus"))
-# 
-# ggplot(taxadf_long, aes(x = Name, y = Taxonomic_Level, group = Name)) +
-#   geom_point() +
-#   geom_segment(aes(xend = Parent, yend = Taxonomic_Level)) +
-#   theme_minimal() +
-#   theme(axis.text.y = element_text(hjust = 1))+
-#   coord_flip()
-
-###
-# see:
-  # https://stackoverflow.com/questions/9904361/making-simple-phylogenetic-dendrogram-tree-from-a-list-of-species
-
-# Group <- c("Benthos","Benthos","Benthos","Benthos","Benthos","Benthos","Zooplankton","Zooplankton","Zooplankton","Zooplankton",
-#            "Zooplankton","Zooplankton","Fish","Fish","Fish","Fish","Fish","Fish","Phytoplankton","Phytoplankton","Phytoplankton","Phytoplankton")
-# Domain <- rep("Eukaryota", length(Group))
-# Kingdom <- c(rep("Animalia", 18), rep("Chromalveolata", 4))
-# Phylum <- c("Annelida","Annelida","Arthropoda","Arthropoda","Porifera","Sipunculida","Arthropoda","Arthropoda","Arthropoda",
-#             "Arthropoda","Echinoidermata","Chorfata","Chordata","Chordata","Chordata","Chordata","Chordata","Chordata","Heterokontophyta",
-#             "Heterokontophyta","Heterokontophyta","Dinoflagellata")
-# Class <- c("Polychaeta","Polychaeta","Malacostraca","Malacostraca","Demospongiae","NA","Malacostraca","Malacostraca",
-#            "Malacostraca","Maxillopoda","Ophiuroidea","Actinopterygii","Chondrichthyes","Chondrichthyes","Chondrichthyes","Actinopterygii",
-#            "Actinopterygii","Actinopterygii","Bacillariophyceae","Bacillariophyceae","Prymnesiophyceae","NA")
-# Order <- c("NA","NA","Amphipoda","Cumacea","NA","NA","Amphipoda","Decapoda","Euphausiacea","Calanioda","NA","Gadiformes",
-#            "NA","NA","NA","NA","Gadiformes","Gadiformes","NA","NA","NA","NA")                     
-# Species <- c("Nephtys sp.","Nereis sp.","Gammarus sp.","Diastylis sp.","Axinella sp.","Ph. Sipunculida","Themisto abyssorum","Decapod larvae (Zoea)",
-#              "Thysanoessa sp.","Centropages typicus","Ophiuroidea larvae","Gadus morhua eggs / larvae","Etmopterus spinax","Amblyraja radiata",
-#              "Chimaera monstrosa","Clupea harengus","Melanogrammus aeglefinus","Gadus morhua","Thalassiosira sp.","Cylindrotheca closterium",
-#              "Phaeocystis pouchetii","Ph. Dinoflagellata")   
-# dat <- data.frame(Group, Domain, Kingdom, Phylum, Class, Order, Species)
-# 
-# dat
-# 
-# dat$Group <- as.factor(dat$Group)
-# dat$Domain <- as.factor(dat$Domain)
-# dat$Kingdom <- as.factor(dat$Kingdom)
-# dat$Phylum <- as.factor(dat$Phylum)
-# dat$Class <- as.factor(dat$Class)
-# dat$Order <- as.factor(dat$Order)
-# dat$Species <- as.factor(dat$Species)
-# 
 # 
 # taxa <- as.phylo(~Kingdom/Phylum/Class/Order/Species, data = dat)
 # 
@@ -264,3 +263,71 @@ taxadf %>%
 # cols <- ifelse(col.grp$Group == "Benthos", "burlywood4", ifelse(col.grp$Group == "Zooplankton", "blueviolet", ifelse(col.grp$Group == "Fish", "dodgerblue", ifelse(col.grp$Group == "Phytoplankton", "darkolivegreen2", ""))))
 # 
 # plot(taxa,, tip.col = cols)
+# 
+# # 
+# # # Reshape the data into long format
+# # taxadf_long <- gather(taxadf, Taxonomic_Level, Name, -Species)
+# # 
+# # # Replace NA values in Species column with empty strings
+# # taxadf_long$Species[is.na(taxadf_long$Species)] <- ""
+# # 
+# # # Create a new column "Parent" which indicates the parent node for each taxonomic level
+# # taxadf_long$Parent <- NA
+# # taxadf_long$Parent[!is.na(taxadf_long$Species)] <- taxadf_long$Genus[!is.na(taxadf_long$Species)]
+# # taxadf_long$Parent[is.na(taxadf_long$Parent) & !is.na(taxadf_long$Genus)] <- taxadf_long$Family[is.na(taxadf_long$Parent) & !is.na(taxadf_long$Genus)]
+# # taxadf_long$Parent[is.na(taxadf_long$Parent) & !is.na(taxadf_long$Family)] <- taxadf_long$Order[is.na(taxadf_long$Parent) & !is.na(taxadf_long$Family)]
+# # taxadf_long$Parent[is.na(taxadf_long$Parent) & !is.na(taxadf_long$Order)] <- taxadf_long$Class[is.na(taxadf_long$Parent) & !is.na(taxadf_long$Order)]
+# # taxadf_long$Parent[is.na(taxadf_long$Parent) & !is.na(taxadf_long$Class)] <- taxadf_long$Phylum[is.na(taxadf_long$Parent) & !is.na(taxadf_long$Class)]
+# # taxadf_long$Parent[is.na(taxadf_long$Parent) & !is.na(taxadf_long$Phylum)] <- taxadf_long$Kingdom[is.na(taxadf_long$Parent) & !is.na(taxadf_long$Phylum)]
+# # 
+# # taxadf_long$Taxonomic_Level <- factor(taxadf_long$Taxonomic_Level,
+# #                                       levels = c("Kingdom", "Phylum", "Class",
+# #                                                  "Order", "Family","Genus"))
+# # 
+# # ggplot(taxadf_long, aes(x = Name, y = Taxonomic_Level, group = Name)) +
+# #   geom_point() +
+# #   geom_segment(aes(xend = Parent, yend = Taxonomic_Level)) +
+# #   theme_minimal() +
+# #   theme(axis.text.y = element_text(hjust = 1))+
+# #   coord_flip()
+# 
+# ###
+# # see:
+#   # https://stackoverflow.com/questions/9904361/making-simple-phylogenetic-dendrogram-tree-from-a-list-of-species
+# 
+# # Group <- c("Benthos","Benthos","Benthos","Benthos","Benthos","Benthos","Zooplankton","Zooplankton","Zooplankton","Zooplankton",
+# #            "Zooplankton","Zooplankton","Fish","Fish","Fish","Fish","Fish","Fish","Phytoplankton","Phytoplankton","Phytoplankton","Phytoplankton")
+# # Domain <- rep("Eukaryota", length(Group))
+# # Kingdom <- c(rep("Animalia", 18), rep("Chromalveolata", 4))
+# # Phylum <- c("Annelida","Annelida","Arthropoda","Arthropoda","Porifera","Sipunculida","Arthropoda","Arthropoda","Arthropoda",
+# #             "Arthropoda","Echinoidermata","Chorfata","Chordata","Chordata","Chordata","Chordata","Chordata","Chordata","Heterokontophyta",
+# #             "Heterokontophyta","Heterokontophyta","Dinoflagellata")
+# # Class <- c("Polychaeta","Polychaeta","Malacostraca","Malacostraca","Demospongiae","NA","Malacostraca","Malacostraca",
+# #            "Malacostraca","Maxillopoda","Ophiuroidea","Actinopterygii","Chondrichthyes","Chondrichthyes","Chondrichthyes","Actinopterygii",
+# #            "Actinopterygii","Actinopterygii","Bacillariophyceae","Bacillariophyceae","Prymnesiophyceae","NA")
+# # Order <- c("NA","NA","Amphipoda","Cumacea","NA","NA","Amphipoda","Decapoda","Euphausiacea","Calanioda","NA","Gadiformes",
+# #            "NA","NA","NA","NA","Gadiformes","Gadiformes","NA","NA","NA","NA")                     
+# # Species <- c("Nephtys sp.","Nereis sp.","Gammarus sp.","Diastylis sp.","Axinella sp.","Ph. Sipunculida","Themisto abyssorum","Decapod larvae (Zoea)",
+# #              "Thysanoessa sp.","Centropages typicus","Ophiuroidea larvae","Gadus morhua eggs / larvae","Etmopterus spinax","Amblyraja radiata",
+# #              "Chimaera monstrosa","Clupea harengus","Melanogrammus aeglefinus","Gadus morhua","Thalassiosira sp.","Cylindrotheca closterium",
+# #              "Phaeocystis pouchetii","Ph. Dinoflagellata")   
+# # dat <- data.frame(Group, Domain, Kingdom, Phylum, Class, Order, Species)
+# # 
+# # dat
+# # 
+# # dat$Group <- as.factor(dat$Group)
+# # dat$Domain <- as.factor(dat$Domain)
+# # dat$Kingdom <- as.factor(dat$Kingdom)
+# # dat$Phylum <- as.factor(dat$Phylum)
+# # dat$Class <- as.factor(dat$Class)
+# # dat$Order <- as.factor(dat$Order)
+# # dat$Species <- as.factor(dat$Species)
+# # 
+# # 
+# # taxa <- as.phylo(~Kingdom/Phylum/Class/Order/Species, data = dat)
+# # 
+# # col.grp <- merge(data.frame(Species = taxa$tip.label), dat[c("Species", "Group")], by = "Species", sort = F)
+# # 
+# # cols <- ifelse(col.grp$Group == "Benthos", "burlywood4", ifelse(col.grp$Group == "Zooplankton", "blueviolet", ifelse(col.grp$Group == "Fish", "dodgerblue", ifelse(col.grp$Group == "Phytoplankton", "darkolivegreen2", ""))))
+# # 
+# # plot(taxa,, tip.col = cols)
