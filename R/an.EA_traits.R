@@ -445,6 +445,11 @@ df_wims_w_trim0$Region <- ifelse(df_wims_w_trim0$Region == "Southern", "Sth",
                                                              ifelse(df_wims_w_trim0$Region == "SWest", "SW",NA)
                                                       )))))
 
+### create scaled version for comparison of effects on model
+df_wims_w_trim0 %>% 
+  mutate_if(is.numeric,scale) -> df_wims_w_trim0_scale
+
+
 ### fit models ####
 
 # distribution families (from ?gllvm & https://cran.r-project.org/web/packages/gllvm/vignettes/vignette1.html)
@@ -495,31 +500,34 @@ m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_tweed.Rdat")
 #### Gamma TO FIX! ####
 ## LOOK AT https://github.com/JenniNiku/gllvm/discussions/130
 ## FOR CODE
-ptm <- Sys.time()
-sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-m_lvm_0 <- gllvm(y=df_tx_w_trm[,c(1)], # unconstrained model
-                 # studyDesign = sDsn, row.eff = ~(1|Region),
-                 family = "gamma"
-                 )
-saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_gamma.Rdat")
-Sys.time() - ptm;rm(ptm)
-m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_gamma.Rdat")
+# ptm <- Sys.time()
+# sDsn <- data.frame(Region = df_wims_w_trim0$Region)
+# m_lvm_0 <- gllvm(y=df_tx_w_trm[,c(1)], # unconstrained model
+#                  # studyDesign = sDsn, row.eff = ~(1|Region),
+#                  family = "gamma"
+#                  )
+# saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_gamma.Rdat")
+# Sys.time() - ptm;rm(ptm)
+# m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_gamma.Rdat")
 ######################
 
 ##########################
 # Constrained w/ Random ####
 #### Tweedie ####
 # ptm <- Sys.time()
-# sDsn <- data.frame(Region = df_wims_w_trim0$Region)
+sDsn <- data.frame(Region = df_wims_w_trim0$Region)
 # m_lvm_4 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
-#                  X=df_wims_w_trim0,
+#                  # X=df_wims_w_trim0, #unscaled
+#                  X=df_wims_w_trim0_scale, #scaled
 #                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
 #                  studyDesign = sDsn, row.eff = ~(1|Region),
 #                  family="tweedie"
 #                  )
-# saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat")#11.623mins
+# # saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat") #unscaled #11.623mins
+# saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed_scaled.Rdat") #scaled #11.623mins
 # Sys.time() - ptm;rm(ptm)
-m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat")
+# m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat")#unscaled
+m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed_scaled.Rdat")#scaled
 
 #### Gaussian ####
 # ptm <- Sys.time()
@@ -636,19 +644,17 @@ sigterms_sig <- sigterms_all[sigterms_all$`Pr(>|z|)`>0.05,]
 
 ### plot! ####
 ## recreate coefplot
-ggplot(sigterms_all[sigterms_all$variable=="nh4",],
-       aes(x=Estimate, y=trt,
-           xmin=`2.5 %`,
-           xmax=`97.5 %`,
-           colour=sig))+
-  geom_vline(xintercept = 0)+
-  geom_errorbar()+
-  geom_point()+
-  scale_y_discrete(limits = rev(levels(as.factor(sigterms_all$trt))))+
-  scale_colour_manual(values = c("grey","black"))+
-  guides(colour="none")
-
-
+# ggplot(sigterms_all[sigterms_all$variable=="nh4",],
+#        aes(x=Estimate, y=trt,
+#            xmin=`2.5 %`,
+#            xmax=`97.5 %`,
+#            colour=sig))+
+#   geom_vline(xintercept = 0)+
+#   geom_errorbar()+
+#   geom_point()+
+#   scale_y_discrete(limits = rev(levels(as.factor(sigterms_all$trt))))+
+#   scale_colour_manual(values = c("grey","black"))+
+#   guides(colour="none")
 
 #############
 plot_list <- list()
@@ -697,7 +703,8 @@ for (level in levels(sigterms_all$variable)) {
 (final_plot <- wrap_plots(plotlist = plot_list,
                           ncol = nlevels(sigterms_all$variable))+  # Adjust the number of columns as needed
     plot_annotation(title="Generalised linear latent variable model outputs",
-                    subtitle = "Based on zooplankton taxon lifeforms",
+                    # subtitle = "Based on zooplankton taxon lifeforms and water quality parameters",#unscaled
+                    subtitle = "Based on zooplankton taxon lifeforms and scaled water quality parameters",#scaled
                     caption = paste0("Colours indicate lifeform 95% confidence intervals which do (grey) or do not (black) include zero","\n",
                                      "Lifeforms recorded in fewer than ",n+1," samples removed from data prior to model estimations","\n",
                                      "Model call: ~",as.character(m_lvm_4$formula)[2],
@@ -705,9 +712,27 @@ for (level in levels(sigterms_all$variable)) {
                                      "Random row effects: ",as.character(m_lvm_4$call)[7]),
                     theme = theme(plot.title = element_text(size = 16, face="bold"))))
 
-pdf(file = "figs/coef_trt_all_unordered_v2.pdf",width=16,height=8)
+# pdf(file = "figs/coef_trt_all_unordered_v2_unscaled.pdf",width=16,height=8)#unscaled
+pdf(file = "figs/coef_trt_all_unordered_v2_scaled.pdf",width=16,height=8) #scaled
 print(final_plot)
 dev.off()
+
+### compare models w/ w/out env parameters####
+# based on:
+#https://jenniniku.github.io/gllvm/articles/vignette1.html#studying-co-occurrence-patterns
+# getResidualCov function can be used to quantify the amount of variation in the
+# data that can be explained by environmental variables.
+# Specifically, if we use the trace of the residual covariance matrix Σ as a
+# measure of unexplained variation, then we can compare this quantity before
+# and after environmental variables are included in the model. The ratio of
+# traces suggests that environmental variables explain approximately 40% of
+# the (co)variation in ant species abundances.
+
+(rcov0 <- getResidualCov(m_lvm_0, adjust = 0)) # 'null' model
+(rcov1 <- getResidualCov(m_lvm_4, adjust = 0)) # model with env variables
+rcov0$trace; rcov1$trace
+1 - rcov1$trace / rcov0$trace
+AIC(m_lvm_0,m_lvm_4)
 
 # PRIORITY : REPRODUCE CODE ####
 ## Currently untidy and seems to produce 'issues'
@@ -743,4 +768,4 @@ rm(list = ls(pattern = "^min_"))
 rm(list = ls(pattern = "*plot"))
 rm(list = ls(pattern = "*consiste"))
 rm(datfol,nit,perms, ppi,replace_values,pl_ts_N,sDsn,subset_data,i,level,
-   ntrt,sbtt,srt,ttl,cr,n)
+   ntrt,sbtt,srt,ttl,cr,n, rcov0,rcov1)
