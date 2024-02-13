@@ -209,7 +209,6 @@ xy <- left_join(dfcol,xz,by="DisplayName")
 
 plot(taxonomicTree, cex=0.5, tip.color = xy$cols)
 
-
 # col.grp <- dftaxa[,c("Taxa", "GROUP")]
 # cols <- ifelse(col.grp$GROUP == "Annelid", "burlywood4",
 #                ifelse(col.grp$GROUP == "Arthropoda", "blueviolet",
