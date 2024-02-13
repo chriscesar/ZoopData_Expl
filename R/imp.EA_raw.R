@@ -87,6 +87,32 @@ df_tx0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
                                         # sheet="outR02"))
                                         # sheet="outR03"))
                                         sheet="outR04"))
+
+### append updated taxon names
+tx_chk0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
+                                               "processedData/MBA_Returns_Amalgamated_USE.xlsx"),
+                                        sheet="TaxonomicRaw"))
+
+tx_chk <- tx_chk0 %>% 
+  rename(Taxa=ScientificName_accepted,
+         Aphia.ID=AphiaID_accepted) %>% 
+  dplyr::select(.,-ScientificName) %>% 
+  distinct()
+
+tx_chk %>% dplyr::select(., Taxa, Aphia.ID) %>% 
+  distinct() -> tx_chktrm
+
+df_tx0 <- left_join(df_tx0, tx_chktrm, by="Aphia.ID")
+df_tx0$Taxa.x <- df_tx0$Taxa.y;df_tx0$Taxa.y <- NULL
+df_tx0 %>%
+  rename(Taxa=Taxa.x) %>% 
+  dplyr::select(.,-AbundanceRaw) %>% 
+  group_by(across(c(!Abund_m3))) %>% 
+  summarise(.,Abund_m3=sum(Abund_m3),.groups = "drop") %>%
+  ungroup() %>% 
+  as_tibble(.) -> df_tx
+rm(tx_chk,tx_chk0,tx_chktrm)
+
 ### WIMS chemical data
 # WIMS Extract based on:
 # Materials = 2HZZ & 2IZZ; SMPT_TYPE = CD, CC, CE; Dates from 01/06/2022-present
@@ -122,7 +148,7 @@ df_wims %>%
 # write.csv(df_wims_w,file=paste0(datfol,"processedData/WIMS_wide.csv"),row.names = FALSE)
 
 ### remove odd data
-df_tx <- as_tibble(df_tx0) ### create new data (keep df0 as 'raw')
+#df_tx <- as_tibble(df_tx0) ### create new data (keep df0 as 'raw')
 
 ### convert dates
 df_tx$sample.date <- as.Date(df_tx$sample.date, origin = "1899-12-30")
@@ -138,7 +164,7 @@ df_tx %>%
 
 ###widen data & fill NAs with 0s ####
 df_tx %>% 
-  dplyr::select(.,-c("Aphia.ID","AbundanceRaw")) %>% 
+  dplyr::select(.,-c("Aphia.ID")) %>% 
   pivot_wider(names_from = "Taxa",values_from = "Abund_m3",
               values_fill = 0) -> df_tx_w
 
