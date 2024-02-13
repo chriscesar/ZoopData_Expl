@@ -129,7 +129,7 @@ df_tx %>%
 ###widen data & fill NAs with 0s ####
 df_tx %>% 
   dplyr::select(.,-c("Aphia.ID","AbundanceRaw","Taxa","Category":"Unallocated",
-                     "LF0","Kingdom":"Subspecies")) %>% #drop unneeded cols
+                     "LF0","Kingdom":"Subspecies",DisplayName)) %>% #drop unneeded cols
   group_by(across(c(-Abund_m3))) %>% # group by everything except abundance
   summarise(Abund_m3=sum(Abund_m3), #sum abundances
             .groups="drop") %>% 
