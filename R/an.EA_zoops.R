@@ -762,17 +762,21 @@ df_wims_w_trim0 <- df_wims_w_trim0 %>%
     depth="Water Depth_m"
   )
 
+### create scaled version for comparison of effects on model
+df_wims_w_trim0 %>% 
+  mutate_if(is.numeric,scale) -> df_wims_w_trim0_scale
+
 ### fit models ####
 ### unconstrained model ####
 #### Tweedie distribution ####
-# ptm <- Sys.time()
+ptm <- Sys.time()
 sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-# m_lvm_0 <- gllvm(y=df_tx_w_trm,
-#                  family="tweedie",
-#                  studyDesign = sDsn, row.eff = ~(1|Region)
-#                  )
-# saveRDS(m_lvm_0, file="figs/gllvm_uncon_tweed.Rdat")
-# Sys.time() - ptm;rm(ptm)
+m_lvm_0 <- gllvm(y=df_tx_w_trm,
+                 family="tweedie",
+                 studyDesign = sDsn, row.eff = ~(1|Region)
+                 )
+saveRDS(m_lvm_0, file="figs/gllvm_uncon_tweed.Rdat")
+Sys.time() - ptm;rm(ptm)
 m_lvm_0 <- readRDS("figs/gllvm_uncon_tweed.Rdat")
 
 #### gaussian distribution ####
@@ -808,7 +812,7 @@ m_lvm_0 <- readRDS("figs/gllvm_uncon_tweed.Rdat")
 #                  )
 # saveRDS(m_lvm_1, file="figs/gllvm_env_tweed.Rdat")
 # Sys.time() - ptm;rm(ptm)
-m_lvm_1 <- readRDS("figs/gllvm_env_tweed.Rdat")
+# m_lvm_1 <- readRDS("figs/gllvm_env_tweed.Rdat")
 
 ### constrained 2 ####
 # ptm <- Sys.time()
@@ -820,7 +824,7 @@ m_lvm_1 <- readRDS("figs/gllvm_env_tweed.Rdat")
 #                  )
 # saveRDS(m_lvm_2, file="figs/gllvm_envReg_tweed.Rdat")
 # Sys.time() - ptm;rm(ptm)
-m_lvm_2 <- readRDS("figs/gllvm_envReg_tweed.Rdat")
+# m_lvm_2 <- readRDS("figs/gllvm_envReg_tweed.Rdat")
 
 # pdf(file = "figs/coef_1.pdf",width=7,height=14)
 # coefplot(m_lvm_2,mfrow = c(1,1),which.Xcoef = 1, cex.ylab = 0.3,
@@ -854,17 +858,20 @@ m_lvm_2 <- readRDS("figs/gllvm_envReg_tweed.Rdat")
 
 ### constrained 3 ####
 #### Tweedie #####
-# ptm <- Sys.time()
-# sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-# m_lvm_3 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
-#                  X=df_wims_w_trim0,
-#                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
-#                  family="tweedie",
-#                  studyDesign = sDsn, row.eff = ~(1|Region)
-# )
-# saveRDS(m_lvm_3, file="figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed.Rdat")
-# Sys.time() - ptm;rm(ptm) #37.7332 mins
-m_lvm_3 <- readRDS("figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed.Rdat")
+ptm <- Sys.time()
+sDsn <- data.frame(Region = df_wims_w_trim0$Region)
+m_lvm_3 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
+                 # X=df_wims_w_trim0,#unscaled
+                 X=df_wims_w_trim0_scale,#scaled
+                 formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
+                 family="tweedie",
+                 studyDesign = sDsn, row.eff = ~(1|Region)
+)
+# saveRDS(m_lvm_3, file="figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed.Rdat") # unscaled ##37.7332 mins
+saveRDS(m_lvm_3, file="figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed_Scaled.Rdat") # scaled ##26.68 mins
+Sys.time() - ptm;rm(ptm) 
+# m_lvm_3 <- readRDS("figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed.Rdat") #unscaled
+m_lvm_3 <- readRDS("figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed_Scaled.Rdat") #scaled
 
 #### Gaussian #####
 # ptm <- Sys.time()
@@ -904,7 +911,7 @@ dev.off()
 AIC(m_lvm_0,m_lvm_1,m_lvm_2,m_lvm_3)
 anova(m_lvm_0,m_lvm_1,m_lvm_2,m_lvm_3)
 
-## extract 'significant' model/species terms from model
+# extract 'significant' model/species terms from model for plotting ####
 ci_mod_all <- as.data.frame(confint(m_lvm_3))
 ci_mod_var <- ci_mod_all[grep("^X", rownames(ci_mod_all)), ]
 rownames(ci_mod_var) <- substring(rownames(ci_mod_var), 7)
@@ -983,14 +990,16 @@ for (level in levels(sigterms_all$variable)) {
 # Combine all the individual plots into a single plot
 final_plot <- wrap_plots(plotlist = plot_list, ncol = nlevels(sigterms_all$variable))+  # Adjust the number of columns as needed
     plot_annotation(title="Generalised linear latent variable model outputs",
-                    subtitle = "Based on zooplankton taxon abundance data",
+                    # subtitle = "Based on zooplankton taxon abundance data and water quality parameters", #unscaled
+                    subtitle = "Based on zooplankton taxon abundance data and scaled water quality parameters", #scaled
                     caption = paste0("Colours indicate lifeform 95% confidence intervals which do (grey) or do not (black) include zero",
                                      "\nModel call: ~",as.character(m_lvm_3$formula)[2],
                                      "\nFamily: ",as.character(m_lvm_3$family),". ",
                                      "Random row effects: ",as.character(m_lvm_3$call)[7]),
                     theme = theme(plot.title = element_text(size = 16, face="bold")))
 
-pdf(file = "figs/coef_tax_all_unordered_v2.pdf",width=16,height=8)
+# pdf(file = "figs/coef_tax_all_unordered_v2_unscaled.pdf",width=16,height=8)
+pdf(file = "figs/coef_tax_all_unordered_v2_scaled.pdf",width=16,height=8)
 print(final_plot)
 dev.off()
 
@@ -1005,8 +1014,8 @@ dev.off()
 # traces suggests that environmental variables explain approximately 40% of
 # the (co)variation in ant species abundances.
 
-rcov0 <- getResidualCov(m_lvm_0, adjust = 1) # 'null' model
-rcov1 <- getResidualCov(m_lvm_3, adjust = 1) # model with env variables
+rcov0 <- getResidualCov(m_lvm_0, adjust = 0) # 'null' model
+rcov1 <- getResidualCov(m_lvm_3, adjust = 0) # model with env variables
 rcov0$trace; rcov1$trace
 1 - rcov1$trace / rcov0$trace
 AIC(m_lvm_0,m_lvm_3)
@@ -1063,4 +1072,4 @@ rm(list = ls(pattern = "^min_"))
 rm(list = ls(pattern = "*plot"))
 rm(list = ls(pattern = "*consiste"))
 rm(datfol,nit,perms, ppi,replace_values,pl_ts_N,subset_data,i,level,
-   ntrt,sbtt,srt,ttl)
+   ntrt,sbtt,srt,ttl,rcov0,rcov1,sDsn)
