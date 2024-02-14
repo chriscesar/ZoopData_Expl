@@ -96,7 +96,7 @@ tx_chk0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
 tx_chk <- tx_chk0 %>% 
   rename(Taxa=ScientificName_accepted,
          Aphia.ID=AphiaID_accepted) %>% 
-  dplyr::select(.,-ScientificName) %>% 
+  #dplyr::select(.,-ScientificName) %>% 
   distinct()
 
 tx_chk %>% dplyr::select(., Taxa, Aphia.ID) %>% 
