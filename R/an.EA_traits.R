@@ -152,9 +152,11 @@ df_tx_w %>%
   filter(rowSums(across(where(is.numeric)))!=0) -> dftmp ###remove 'empty' rows
 
 ### NMDS ####
-ptm <- Sys.time()###
-set.seed(pi);ord <-   vegan::metaMDS(dftmp,trymax = 500)
-Sys.time() - ptm;rm(ptm)
+# ptm <- Sys.time()###
+# set.seed(pi);ord <-   vegan::metaMDS(dftmp,trymax = 500)
+# saveRDS(ord, file="figs/nmds_trt.Rdat")
+# Sys.time() - ptm;rm(ptm)
+ord <- readRDS("figs/nmds_trt.Rdat")
 plot(ord)
 
 ### extract site info
@@ -474,14 +476,14 @@ df_wims_w_trim0 %>%
 ### Fit models ####
 # Unconstrained w/ Random ####
 #### Tweedie ####
-# ptm <- Sys.time()
-# sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-# m_lvm_0 <- gllvm(df_tx_w_trm, # unconstrained model
-#                  studyDesign = sDsn, row.eff = ~(1|Region),
-#                  family = "tweedie"
-#                  )
-# saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_tweed.Rdat")
-# Sys.time() - ptm;rm(ptm)
+ptm <- Sys.time()
+sDsn <- data.frame(Region = df_wims_w_trim0$Region)
+m_lvm_0 <- gllvm(df_tx_w_trm, # unconstrained model
+                 studyDesign = sDsn, row.eff = ~(1|Region),
+                 family = "tweedie"
+                 )
+saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_tweed.Rdat")
+Sys.time() - ptm;rm(ptm)
 m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_tweed.Rdat")
 
 ###################
@@ -514,21 +516,21 @@ m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_tweed.Rdat")
 ##########################
 # Constrained w/ Random ####
 #### Tweedie ####
-# ptm <- Sys.time()
+ptm <- Sys.time()
 sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-# m_lvm_4 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
-#                  # X=df_wims_w_trim0, #unscaled
-#                  X=df_wims_w_trim0_scale, #scaled
-#                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
-#                  studyDesign = sDsn, row.eff = ~(1|Region),
-#                  family="tweedie"
-#                  )
-# # saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat") #unscaled #11.623mins
-# saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed_scaled.Rdat") #scaled #11.623mins
-# Sys.time() - ptm;rm(ptm)
+m_lvm_4 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
+                 # X=df_wims_w_trim0, #unscaled
+                 X=df_wims_w_trim0_scale, #scaled
+                 formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
+                 studyDesign = sDsn, row.eff = ~(1|Region),
+                 family="tweedie"
+                 )
+# saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat") #unscaled #11.623mins
+saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed_scaled.Rdat") #scaled #11.623mins
+Sys.time() - ptm;rm(ptm)
 # m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat")#unscaled
 m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed_scaled.Rdat")#scaled
-
+#####
 #### Gaussian ####
 # ptm <- Sys.time()
 # sDsn <- data.frame(Region = df_wims_w_trim0$Region)
@@ -616,9 +618,9 @@ coefplot(m_lvm_4,mfrow = c(1,1),which.Xcoef = 7, cex.ylab = 0.6,
 dev.off()
 
 #### GLLVM model explore ####
-ordiplot.gllvm(m_lvm_0)
-# ordiplot.gllvm(m_lvm_3)
-ordiplot.gllvm(m_lvm_4, biplot = TRUE)
+# ordiplot.gllvm(m_lvm_0)
+# # ordiplot.gllvm(m_lvm_3)
+# ordiplot.gllvm(m_lvm_4, biplot = TRUE)
 
 # tail(confint.gllvm(m_lvm_3))
 tail(confint.gllvm(m_lvm_4))
@@ -702,9 +704,9 @@ for (level in levels(sigterms_all$variable)) {
 # Combine all the individual plots into a single plot
 (final_plot <- wrap_plots(plotlist = plot_list,
                           ncol = nlevels(sigterms_all$variable))+  # Adjust the number of columns as needed
-    plot_annotation(title="Generalised linear latent variable model outputs",
+    plot_annotation(title="Caterpillar plot of generalised linear latent variable model outputs",
                     # subtitle = "Based on zooplankton taxon lifeforms and water quality parameters",#unscaled
-                    subtitle = "Based on zooplankton taxon lifeforms and scaled water quality parameters",#scaled
+                    subtitle = bquote("Point estimates & 95% confidence intervals of lifeform-specific coefficients "~italic(hat(beta)[j])~". Based on zooplankton taxon lifeforms and scaled water quality parameters"), #scaled
                     caption = paste0("Colours indicate lifeform 95% confidence intervals which do (grey) or do not (black) include zero","\n",
                                      "Lifeforms recorded in fewer than ",n+1," samples removed from data prior to model estimations","\n",
                                      "Model call: ~",as.character(m_lvm_4$formula)[2],
@@ -731,7 +733,7 @@ dev.off()
 (rcov0 <- getResidualCov(m_lvm_0, adjust = 0)) # 'null' model
 (rcov1 <- getResidualCov(m_lvm_4, adjust = 0)) # model with env variables
 rcov0$trace; rcov1$trace
-1 - rcov1$trace / rcov0$trace
+100 - (rcov1$trace / rcov0$trace*100)
 AIC(m_lvm_0,m_lvm_4)
 
 # PRIORITY : REPRODUCE CODE ####
