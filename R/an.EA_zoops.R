@@ -778,7 +778,7 @@ m_lvm_0 <- gllvm(y=df_tx_w_trm,
 saveRDS(m_lvm_0, file="figs/gllvm_uncon_tweed.Rdat")
 Sys.time() - ptm;rm(ptm)
 m_lvm_0 <- readRDS("figs/gllvm_uncon_tweed.Rdat")
-
+#####
 #### gaussian distribution ####
 # ptm <- Sys.time()
 # sDsn <- data.frame(Region = df_wims_w_trim0$Region)
@@ -869,10 +869,10 @@ m_lvm_3 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
 )
 # saveRDS(m_lvm_3, file="figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed.Rdat") # unscaled ##37.7332 mins
 saveRDS(m_lvm_3, file="figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed_Scaled.Rdat") # scaled ##26.68 mins
-Sys.time() - ptm;rm(ptm) 
+Sys.time() - ptm;rm(ptm)
 # m_lvm_3 <- readRDS("figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed.Rdat") #unscaled
 m_lvm_3 <- readRDS("figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed_Scaled.Rdat") #scaled
-
+#########
 #### Gaussian #####
 # ptm <- Sys.time()
 # sDsn <- data.frame(Region = df_wims_w_trim0$Region)
@@ -908,8 +908,8 @@ coefplot(m_lvm_3,cex.ylab = 0.3,
 dev.off()
 
 ### compare models
-AIC(m_lvm_0,m_lvm_1,m_lvm_2,m_lvm_3)
-anova(m_lvm_0,m_lvm_1,m_lvm_2,m_lvm_3)
+# AIC(m_lvm_0,m_lvm_1,m_lvm_2,m_lvm_3)
+# anova(m_lvm_0,m_lvm_1,m_lvm_2,m_lvm_3)
 
 # extract 'significant' model/species terms from model for plotting ####
 ci_mod_all <- as.data.frame(confint(m_lvm_3))
@@ -989,9 +989,9 @@ for (level in levels(sigterms_all$variable)) {
 
 # Combine all the individual plots into a single plot
 final_plot <- wrap_plots(plotlist = plot_list, ncol = nlevels(sigterms_all$variable))+  # Adjust the number of columns as needed
-    plot_annotation(title="Generalised linear latent variable model outputs",
-                    # subtitle = "Based on zooplankton taxon abundance data and water quality parameters", #unscaled
-                    subtitle = "Based on zooplankton taxon abundance data and scaled water quality parameters", #scaled
+    plot_annotation(title="Caterpillar plot of generalised linear latent variable model outputs",
+                    # subtitle = bquote("Point estimates & 95% confidence intervals of species-specific coefficients "~italic(hat(beta)[j])~". Based on zooplankton taxon abundance data and water quality parameters"), #unscaled
+                    subtitle = bquote("Point estimates & 95% confidence intervals of species-specific coefficients "~italic(hat(beta)[j])~". Based on zooplankton taxon abundance data and scaled water quality parameters"), #scaled
                     caption = paste0("Colours indicate lifeform 95% confidence intervals which do (grey) or do not (black) include zero",
                                      "\nModel call: ~",as.character(m_lvm_3$formula)[2],
                                      "\nFamily: ",as.character(m_lvm_3$family),". ",
@@ -1017,7 +1017,7 @@ dev.off()
 rcov0 <- getResidualCov(m_lvm_0, adjust = 0) # 'null' model
 rcov1 <- getResidualCov(m_lvm_3, adjust = 0) # model with env variables
 rcov0$trace; rcov1$trace
-1 - rcov1$trace / rcov0$trace
+100 - (rcov1$trace / rcov0$trace*100)
 AIC(m_lvm_0,m_lvm_3)
 
 # Environmental correlation
