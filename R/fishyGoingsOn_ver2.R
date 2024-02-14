@@ -113,8 +113,12 @@ dfl$WBlb <- ifelse(
                             "Farne Is",
                             ifelse(
                               dfl$WB == "Bristol Channel Inner South",
-                              "Brist Ch In Sth",NA
-                            )))))))))))))))
+                              "Brist Ch In Sth",
+                              ifelse(
+                                dfl$WB == "Solway Outer South",
+                                "Solway Out S",NA
+                            ))))))))))))))))
+
 dfl$RegSh <- ifelse(dfl$Region == "Southern", "Sth",
                     ifelse(dfl$Region == "Anglian", "Ang",
                            ifelse(dfl$Region == "SWest", "SW",
@@ -162,8 +166,10 @@ dfl$RgSea <- ifelse(
                             "Northern North Sea",
                             ifelse(
                               dfl$WB == "Bristol Channel Inner South",
-                              "Western Channel & Celtic Sea",NA
-                            )))))))))))))))
+                              "Western Channel & Celtic Sea",
+                              ifelse(dfl$WB == "Solway Outer South",
+                              "Irish Sea",NA
+                            ))))))))))))))))
 
 dfl$RgSea <- factor(dfl$RgSea, levels = c(
   "Northern North Sea",
@@ -204,7 +210,8 @@ dfl$RgSeaSh_WB <- factor(dfl$RgSeaSh_WB, levels = c(
   "WCh_Cornw Nth",
   "WCh_Brnst B",
   "WCh_Brist Ch In Sth",
-  "IrS_Mersey Mth"
+  "IrS_Mersey Mth",
+  "IrS_Solway Out S"
 ))
 
 ### append season:
@@ -238,8 +245,8 @@ ggplot(., aes(x = RgSeaSh_WB, y=Abund_m3, fill=as.factor(fish_type)))+
   labs(title = "Fish larvae and egg abundances by WFD water body",
        subtitle = bquote("Values indicate observed abundances " ~m^-3),
        y = bquote("Abundance "~(m^-3)),
-       caption = paste0("Samples gathered between ",min(df0$`sample date`),
-                        " & ",max(df0$`sample date`),".","\nBox widths are proportional to the number of samples.
+       caption = paste0("Samples gathered between ",format(min(dfl$`sample date`), "%d/%m/%Y"),
+                        " & ",format(max(dfl$`sample date`), "%d/%m/%Y"),".","\nBox widths are proportional to the number of samples.
                         Individual sample points overlain (Circles = fish eggs; Triangles = fish larvae).
                         WBs arranged by regional seas and geographic location: clockwise from the Northern North Sea."))+
   theme(legend.title = element_blank(),
@@ -272,8 +279,8 @@ set.seed(pi); dfl %>%
   labs(title = "Fish larvae abundances by WFD water body",
        subtitle = bquote("Values indicate observed abundances " ~m^-3),
        y = bquote("Abundance "~(m^-3)),
-       caption = paste0("Samples gathered between ",min(df0$`sample date`),
-                        " & ",max(df0$`sample date`),".","\nBox widths are proportional to the number of samples.
+       caption = paste0("Samples gathered between ",format(min(dfl$`sample date`), "%d/%m/%Y"),
+                        " & ",format(max(dfl$`sample date`), "%d/%m/%Y"),".","\nBox widths are proportional to the number of samples.
                         Individual sample points overlain.
                         WBs arranged by regional seas and geographic location: clockwise from the Northern North Sea."))+
   theme(legend.title = element_blank(),
@@ -304,8 +311,8 @@ set.seed(pi); dfl %>%
   labs(title = "Fish larvae abundances by WFD water body",
        subtitle = bquote("Values indicate observed abundances " ~m^-3),
        y = bquote("Abundance "~(m^-3)),
-       caption = paste0("Samples gathered between ",min(df0$`sample date`),
-                        " & ",max(df0$`sample date`),".","\nBox widths are proportional to the number of samples.
+       caption = paste0("Samples gathered between ",format(min(dfl$`sample date`), "%d/%m/%Y"),
+                        " & ",format(max(dfl$`sample date`), "%d/%m/%Y"),".","\nBox widths are proportional to the number of samples.
                         Individual sample points overlain with shape/colour indicating sampling month.
                         WBs arranged by regional seas and geographic location: clockwise from the Northern North Sea."))+
   theme(legend.title = element_blank(),
@@ -338,8 +345,8 @@ set.seed(pi); dfl %>%
   labs(title = "Fish egg abundances by WFD water body",
        subtitle = bquote("Values indicate observed abundances " ~m^-3),
        y = bquote("Abundance "~(m^-3)),
-       caption = paste0("Samples gathered between ",min(df0$`sample date`),
-                        " & ",max(df0$`sample date`),".","\nBox widths are proportional to the number of samples.
+       caption = paste0("Samples gathered between ",format(min(dfl$`sample date`), "%d/%m/%Y"),
+                        " & ",format(max(dfl$`sample date`), "%d/%m/%Y"),".","\nBox widths are proportional to the number of samples.
                         Individual sample points overlain.
                         WBs arranged by regional seas and geographic location: clockwise from the Northern North Sea."))+
   theme(legend.title = element_blank(),
@@ -370,8 +377,8 @@ set.seed(pi); dfl %>%
   labs(title = "Fish egg abundances by WFD water body",
        subtitle = bquote("Values indicate observed abundances " ~m^-3),
        y = bquote("Abundance "~(m^-3)),
-       caption = paste0("Samples gathered between ",min(df0$`sample date`),
-                        " & ",max(df0$`sample date`),".","\nBox widths are proportional to the number of samples.
+       caption = paste0("Samples gathered between ",format(min(dfl$`sample date`), "%d/%m/%Y"),
+                        " & ",format(max(dfl$`sample date`), "%d/%m/%Y"),".","\nBox widths are proportional to the number of samples.
                         Individual sample points overlain with shape/colour indicating sampling month.
                         WBs arranged by regional seas and geographic location: clockwise from the Northern North Sea."))+
   theme(legend.title = element_blank(),
