@@ -515,7 +515,8 @@ m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_tweed.Rdat")
 
 ##########################
 # Constrained w/ Random ####
-#### Tweedie ####
+#### Nested by Region ####
+##### Tweedie ####
 # ptm <- Sys.time()
 sDsn <- data.frame(Region = df_wims_w_trim0$Region)
 # m_lvm_4 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
@@ -530,8 +531,9 @@ sDsn <- data.frame(Region = df_wims_w_trim0$Region)
 # Sys.time() - ptm;rm(ptm)
 # m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat")#unscaled
 m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed_scaled.Rdat")#scaled
-#####
-#### Gaussian ####
+
+######
+##### Gaussian ####
 # ptm <- Sys.time()
 # sDsn <- data.frame(Region = df_wims_w_trim0$Region)
 # m_lvm_4 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
@@ -571,7 +573,23 @@ anova(m_lvm_0,m_lvm_4)
 # AIC(m_lvm_0,m_lvm_3,m_lvm_4)
 # anova(m_lvm_0,m_lvm_3,m_lvm_4)
 
-#### GLLVM plots ####
+#### Nested by WB|Region ####
+##### Tweedie ####
+# ptm <- Sys.time()
+# sDsn2 <- data.frame(WB = df_wims_w_trim0$WB)
+# m_lvm_5 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
+#                  # X=df_wims_w_trim0, #unscaled
+#                  X=df_wims_w_trim0_scale, #scaled
+#                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
+#                  studyDesign = sDsn2, row.eff = ~(1|WB),
+#                  family="tweedie"
+#                  )
+# # saveRDS(m_lvm_5, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat") #unscaled #11.623mins
+# saveRDS(m_lvm_5, file="figs/gllvm_traits_nh4SalChlaDinDepPo4WB_tweed_scaled.Rdat") #scaled #6.862054 mins
+# Sys.time() - ptm;rm(ptm)
+# m_lvm_5 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4WB_tweed_scaled.Rdat")#scaled
+
+##### GLLVM plots ####
 # pdf(file = "figs/m_lvm_3_trt_all_ordered.pdf",width=16,height=8)
 # coefplot(m_lvm_3,cex.ylab = 0.3,
 #          order=TRUE)
@@ -731,7 +749,8 @@ dev.off()
 # the (co)variation in ant species abundances.
 
 (rcov0 <- getResidualCov(m_lvm_0, adjust = 0)) # 'null' model
-(rcov1 <- getResidualCov(m_lvm_4, adjust = 0)) # model with env variables
+# (rcov1 <- getResidualCov(m_lvm_4, adjust = 0)) # model with env variables #REGION
+(rcov1 <- getResidualCov(m_lvm_5, adjust = 0)) # model with env variables #WB
 rcov0$trace; rcov1$trace
 100 - (rcov1$trace / rcov0$trace*100)
 AIC(m_lvm_0,m_lvm_4)
