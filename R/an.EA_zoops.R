@@ -365,6 +365,7 @@ df_tx_w$WB_lb <- factor(df_tx_w$WB_lb,
                           "SW_Brnstp B", "SW_Brist Ch In Sth", "NW_Mersey Mth",
                           "NW_Solway O"
                         ))
+
 #### Ntax (S) ####
 meanS <- mean(df_tx_w$S); sdS <- sd(df_tx_w$S)
 sdSmin <- meanS-sdS; sdSmax <- meanS+sdS
@@ -589,40 +590,41 @@ max_order <- floor(log10(max_value))
 orders_of_magnitude_covered <- max_order - min_order
 
 ttl <- "Very strong mean-variance relationship in zooplankton abundance data"
-sbtt <- paste0("Variance within the dataset covers **",orders_of_magnitude_covered," orders of magnitude**.\nMany multivariate analyses (e.g. ANOSIM, PERMANOVA) assume that ** this relationship does not exist** and that variance is the same at all levels of the mean parameter\nThis makes interpretation of such analyses potentially erroneous. Model-based approaches offer an alternative, allowing the mean-variance relationship to be incorporated into the model predictions")
-
+sbtt <- paste0("Variance within the dataset covers **",orders_of_magnitude_covered," orders of magnitude**.\nMany multivariate analyses (e.g. ANOSIM, PERMANOVA) assume that **this relationship does not exist** and that variance is the same at all levels of the mean parameter\nThis makes interpretation of such analyses potentially erroneous*. Model-based approaches offer an alternative, allowing the mean-variance relationship to be incorporated into the model predictions")
+cpt <- "*see Warton et al., 2012. https://doi.org/10.1111/j.2041-210X.2011.00127.x"
 mtext(side=3, line = 3, at =-0.07, adj=0, cex = 1, ttl, font=2)
 mtext(side=3, line = 0.75, at =-0.07, adj=0, cex = 0.7, sbtt)
+mtext(side=1, line = 4.0, at =-0.07, adj=0, cex = 0.5, cpt)
 dev.off()
 
 ## poisson: Intercept only (unconstrained):
-system.time(mod1 <- manyglm(mv_dftmp~1,family="poisson"))
-# summary(mod1)
-plot(mod1)
-system.time(ord_glmInt1 <- cord(mod1))
-plot(ord_glmInt1, biplot=TRUE)
-srt <- order.single(ord_glmInt1$sigma)
-
-pdf(file = "figs/Unconstr_poisson_corrplot_Jun22_Nov23.pdf",width=12,height=12)
-# corrplot(ord_glmInt1$sigma[srt,srt],type = "lower",diag = FALSE,method="square",
-corrplot(ord_glmInt1$sigma,type = "lower",diag = FALSE,method="square",
-         tl.col = 1,tl.cex=0.35)
-dev.off()
+# system.time(mod1 <- manyglm(mv_dftmp~1,family="poisson"))
+# # summary(mod1)
+# plot(mod1)
+# system.time(ord_glmInt1 <- cord(mod1))
+# plot(ord_glmInt1, biplot=TRUE)
+# srt <- order.single(ord_glmInt1$sigma)
+# 
+# pdf(file = "figs/Unconstr_poisson_corrplot_Jun22_Nov23.pdf",width=12,height=12)
+# # corrplot(ord_glmInt1$sigma[srt,srt],type = "lower",diag = FALSE,method="square",
+# corrplot(ord_glmInt1$sigma,type = "lower",diag = FALSE,method="square",
+#          tl.col = 1,tl.cex=0.35)
+# dev.off()
 
 ## negative binomial
-system.time(mod2 <- manyglm(mv_dftmp~1,family="negative_binomial"))
-# summary(mod2)
-plot(mod2)
-system.time(ord_glmInt2 <- cord(mod2))
-plot(ord_glmInt2, biplot=TRUE)
-srt <- order.single(ord_glmInt2$sigma)
-# pl_cor <- corrplot(ord_glmInt2$sigma[srt,srt],type = "lower",diag = FALSE,method="square")
-
-pdf(file = "figs/Unconstr_negbin_corrplot_Jun22_Nov23.pdf",width=12,height=12)
-# corrplot(ord_glmInt2$sigma[srt,srt],type = "lower",diag = FALSE,method="square",
-corrplot(ord_glmInt2$sigma,type = "lower",diag = FALSE,method="square",
-         tl.col = 1,tl.cex=0.35)
-dev.off()
+# system.time(mod2 <- manyglm(mv_dftmp~1,family="negative_binomial"))
+# # summary(mod2)
+# plot(mod2)
+# system.time(ord_glmInt2 <- cord(mod2))
+# plot(ord_glmInt2, biplot=TRUE)
+# srt <- order.single(ord_glmInt2$sigma)
+# # pl_cor <- corrplot(ord_glmInt2$sigma[srt,srt],type = "lower",diag = FALSE,method="square")
+# 
+# pdf(file = "figs/Unconstr_negbin_corrplot_Jun22_Nov23.pdf",width=12,height=12)
+# # corrplot(ord_glmInt2$sigma[srt,srt],type = "lower",diag = FALSE,method="square",
+# corrplot(ord_glmInt2$sigma,type = "lower",diag = FALSE,method="square",
+#          tl.col = 1,tl.cex=0.35)
+# dev.off()
 ###
 
 #######################
@@ -654,8 +656,8 @@ AIC(m_S_0,m_S_pois,m_S_nb) ## LM > NBGLM > Poisson
 
 #################################################################
 performance::check_model(m_S_0)## 'best' model
-performance::check_model(m_S_nb)
-performance::check_model(m_S_pois)
+# performance::check_model(m_S_nb)
+# performance::check_model(m_S_pois)
 
 ### taxon abundance ####
 #### check distribution ####
@@ -769,14 +771,14 @@ df_wims_w_trim0 %>%
 ### fit models ####
 ### unconstrained model ####
 #### Tweedie distribution ####
-ptm <- Sys.time()
-sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-m_lvm_0 <- gllvm(y=df_tx_w_trm,
-                 family="tweedie",
-                 studyDesign = sDsn, row.eff = ~(1|Region)
-                 )
-saveRDS(m_lvm_0, file="figs/gllvm_uncon_tweed.Rdat")
-Sys.time() - ptm;rm(ptm)
+# ptm <- Sys.time()
+# sDsn <- data.frame(Region = df_wims_w_trim0$Region)
+# m_lvm_0 <- gllvm(y=df_tx_w_trm,
+#                  family="tweedie",
+#                  studyDesign = sDsn, row.eff = ~(1|Region)
+#                  )
+# saveRDS(m_lvm_0, file="figs/gllvm_uncon_tweed.Rdat")
+# Sys.time() - ptm;rm(ptm)
 m_lvm_0 <- readRDS("figs/gllvm_uncon_tweed.Rdat")
 #####
 #### gaussian distribution ####
@@ -858,18 +860,18 @@ m_lvm_0 <- readRDS("figs/gllvm_uncon_tweed.Rdat")
 
 ### constrained 3 ####
 #### Tweedie #####
-ptm <- Sys.time()
+# ptm <- Sys.time()
 sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-m_lvm_3 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
-                 # X=df_wims_w_trim0,#unscaled
-                 X=df_wims_w_trim0_scale,#scaled
-                 formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
-                 family="tweedie",
-                 studyDesign = sDsn, row.eff = ~(1|Region)
-)
-# saveRDS(m_lvm_3, file="figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed.Rdat") # unscaled ##37.7332 mins
-saveRDS(m_lvm_3, file="figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed_Scaled.Rdat") # scaled ##26.68 mins
-Sys.time() - ptm;rm(ptm)
+# m_lvm_3 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
+#                  # X=df_wims_w_trim0,#unscaled
+#                  X=df_wims_w_trim0_scale,#scaled
+#                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
+#                  family="tweedie",
+#                  studyDesign = sDsn, row.eff = ~(1|Region)
+# )
+# # saveRDS(m_lvm_3, file="figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed.Rdat") # unscaled ##37.7332 mins
+# saveRDS(m_lvm_3, file="figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed_Scaled.Rdat") # scaled ##26.68 mins
+# Sys.time() - ptm;rm(ptm)
 # m_lvm_3 <- readRDS("figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed.Rdat") #unscaled
 m_lvm_3 <- readRDS("figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed_Scaled.Rdat") #scaled
 #########
@@ -902,6 +904,23 @@ m_lvm_3 <- readRDS("figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed_Scaled.Rdat") #scale
 # m_lvm_3 <- readRDS("figs/gllvm_nh4SalChlaDinDepPo4Reg_gamma.Rdat")
 ##########
 
+#### Nested by WB|Region ####
+##### Tweedie ####
+# ptm <- Sys.time()
+# sDsn2 <- data.frame(WB = df_wims_w_trim0$WB)
+# m_lvm_5 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
+#                  # X=df_wims_w_trim0, #unscaled
+#                  X=df_wims_w_trim0_scale, #scaled
+#                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
+#                  studyDesign = sDsn2, row.eff = ~(1|WB),
+#                  family="tweedie"
+#                  )
+# # saveRDS(m_lvm_5, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat") #unscaled #11.623mins
+# saveRDS(m_lvm_5, file="figs/gllvm_traits_nh4SalChlaDinDepPo4WB_tweed_scaled.Rdat") #scaled #6.862054 mins
+# Sys.time() - ptm;rm(ptm)
+# m_lvm_5 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4WB_tweed_scaled.Rdat")#scaled
+
+##
 pdf(file = "figs/m_lvm_3_tx_all.pdf",width=16,height=8)
 coefplot(m_lvm_3,cex.ylab = 0.3,
          order=FALSE)
