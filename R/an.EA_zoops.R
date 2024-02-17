@@ -777,7 +777,7 @@ df_wims_w_trim0 %>%
 #                  family="tweedie",
 #                  studyDesign = sDsn, row.eff = ~(1|Region)
 #                  )
-# saveRDS(m_lvm_0, file="figs/gllvm_uncon_tweed.Rdat")
+# saveRDS(m_lvm_0, file="figs/gllvm_uncon_tweed.Rdat") #12.647 mins
 # Sys.time() - ptm;rm(ptm)
 m_lvm_0 <- readRDS("figs/gllvm_uncon_tweed.Rdat")
 #####
@@ -870,9 +870,9 @@ sDsn <- data.frame(Region = df_wims_w_trim0$Region)
 #                  studyDesign = sDsn, row.eff = ~(1|Region)
 # )
 # # saveRDS(m_lvm_3, file="figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed.Rdat") # unscaled ##37.7332 mins
-# saveRDS(m_lvm_3, file="figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed_Scaled.Rdat") # scaled ##26.68 mins
+# saveRDS(m_lvm_3, file="figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed_Scaled.Rdat") # scaled ##24.45231 mins
 # Sys.time() - ptm;rm(ptm)
-# m_lvm_3 <- readRDS("figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed.Rdat") #unscaled
+# ## m_lvm_3 <- readRDS("figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed.Rdat") #unscaled
 m_lvm_3 <- readRDS("figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed_Scaled.Rdat") #scaled
 #########
 #### Gaussian #####
