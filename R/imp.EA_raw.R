@@ -123,7 +123,8 @@ rm(tx_chk,tx_chk0,tx_chktrm)
 # PTTR0026, WA560349, Y0004367, Y0017477, YC536426
 
 df_wims0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
-                                                 "/WIMS_Extract_WaterQuality_Zoop_Samples_240108.xlsx"),
+                                                 # "/WIMS_Extract_WaterQuality_Zoop_Samples_240108.xlsx"),
+                                                 "/WIMS_Extract_WaterQuality_Zoop_Samples_240216.xlsx"),
                                           sheet="allDat"))
 
 ### counts for pots 1&2 have been summed as to have those for pots 3&4
