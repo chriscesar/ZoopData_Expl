@@ -749,8 +749,8 @@ dev.off()
 # the (co)variation in ant species abundances.
 
 (rcov0 <- getResidualCov(m_lvm_0, adjust = 0)) # 'null' model
-# (rcov1 <- getResidualCov(m_lvm_4, adjust = 0)) # model with env variables #REGION
-(rcov1 <- getResidualCov(m_lvm_5, adjust = 0)) # model with env variables #WB
+(rcov1 <- getResidualCov(m_lvm_4, adjust = 0)) # model with env variables #REGION
+# (rcov1 <- getResidualCov(m_lvm_5, adjust = 0)) # model with env variables #WB
 rcov0$trace; rcov1$trace
 100 - (rcov1$trace / rcov0$trace*100)
 AIC(m_lvm_0,m_lvm_4)
