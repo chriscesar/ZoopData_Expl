@@ -570,8 +570,10 @@ ggsave(filename = "figs/nmds_by_Region&season_Taxa.pdf",width = 12,height = 12,u
 #### unconstrained ordination ####
 mv_dftmp <- mvabund::mvabund(dftmp)#create mvabund object
 
-png(file = "figs/zoopMeanVar.png",
-    width=12*ppi, height=6*ppi, res=ppi)
+# png(file = "figs/zoopMeanVar.png",
+#     width=12*ppi, height=6*ppi, res=ppi)
+pdf(file = "figs/zoopMeanVar.pdf",
+    width=12, height=6)
 mvpl <- mvabund::meanvar.plot(mv_dftmp,# mean-variance plot
                       # main = "Mean-variance relationship of zooplankton taxon abundances",
                       # # sub="Many multivariate analyses assume no mean-variance relationship",
@@ -596,6 +598,7 @@ mtext(side=3, line = 3, at =-0.07, adj=0, cex = 1, ttl, font=2)
 mtext(side=3, line = 0.75, at =-0.07, adj=0, cex = 0.7, sbtt)
 mtext(side=1, line = 4.0, at =-0.07, adj=0, cex = 0.5, cpt)
 dev.off()
+
 
 ## poisson: Intercept only (unconstrained):
 # system.time(mod1 <- manyglm(mv_dftmp~1,family="poisson"))
