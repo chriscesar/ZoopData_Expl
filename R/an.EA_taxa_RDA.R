@@ -147,7 +147,7 @@ plot(rda1)
 vegan::RsquareAdj(rda1)
 vegan::anova.cca(rda1) #'full' model is significant
 vegan::anova.cca(rda1,by="term") #variables: chla, NGR_n, DIN, O2, Si & Region are significant
-vegan::anova.cca(rda1,by="axis") #[WARNING: Takes ages!] No axes are significant (RDA1 P = 0.052)
+# vegan::anova.cca(rda1,by="axis") #[WARNING: Takes ages!] No axes are significant (RDA1 P = 0.052)
 
 # Custom triplot code!
 
@@ -171,10 +171,11 @@ st_scores$WB <- df_tx_w$WB
 st_scores$Region <- df_tx_w$Region
 rda_terms <- as.data.frame(scores(rda1)$biplot)
 
-
 # Set up a blank plot with scaling, axes, and labels
 
-png(file = "figs/zoopRDA_taxa.png",
+# png(file = "figs/zoopRDA_taxa.png",
+#     width=12*ppi, height=10*ppi, res=ppi)
+png(file = "figs/zoopRDA_taxa.pdf",
     width=12*ppi, height=10*ppi, res=ppi)
 pl <- plot(rda1,
      scaling = 1, # set scaling type 
