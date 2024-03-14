@@ -227,7 +227,7 @@ plot(taxonomicTree, cex=0.5, tip.color = xy$cols)
 dev.off()
 
 
-
+# un-needed ####
 
 # dftaxa %>% 
 #   rowwise() %>% 
@@ -330,3 +330,27 @@ dev.off()
 # # cols <- ifelse(col.grp$Group == "Benthos", "burlywood4", ifelse(col.grp$Group == "Zooplankton", "blueviolet", ifelse(col.grp$Group == "Fish", "dodgerblue", ifelse(col.grp$Group == "Phytoplankton", "darkolivegreen2", ""))))
 # # 
 # # plot(taxa,, tip.col = cols)
+
+# tidy up ####
+### unload packages
+detach("package:tidyverse", unload=TRUE)
+detach("package:vegan", unload=TRUE)
+detach("package:gllvm", unload=TRUE)
+detach("package:ecoCopula", unload=TRUE)
+detach("package:mvabund", unload=TRUE)
+detach("package:performance", unload=TRUE)
+detach("package:patchwork", unload=TRUE)
+detach("package:ggtree", unload=TRUE)
+detach("package:corrplot", unload=TRUE)
+detach("package:ape", unload=TRUE)
+detach("package:gclus", unload=TRUE)
+detach("package:seas", unload=TRUE)
+detach("package:lubridate", unload=TRUE)
+detach("package:MASS", unload=TRUE)
+
+### unload objects
+rm(list = ls(pattern = "^df"))
+rm(list = ls(pattern = "^cbP"))
+rm(list = ls(pattern = "^x"))
+rm(list = ls(pattern = "taxon"))
+rm(datfol,nit,perms,ppi)
