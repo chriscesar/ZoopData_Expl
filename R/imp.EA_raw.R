@@ -176,6 +176,12 @@ write.csv(dfw,file=paste0(datfol,"processedData/","zoopWIDEAbund_m3_WIMS_USE.csv
 write.csv(df_tx_w,file=paste0(datfol,"processedData/","zoopWIDEAbund_m3_taxOnly_USE.csv"),row.names = FALSE)
 saveRDS(dfw, file=paste0(datfol,"processedData/","zoopWIDEAbund_m3_WIMS_USE.RDat"))
 
+### generate LONG version WITH zero values (for calculation of means)
+df_tx_w %>% 
+  pivot_longer(., cols = Acartia:Diaixis) -> df_tx_l
+write.csv(df_tx_l,file=paste0(datfol,"processedData/","zoopLONG.csv"),row.names = FALSE)
+
+
 ### tidy up ###
 # unload packages
 # detach("package:MASS", unload=TRUE)
