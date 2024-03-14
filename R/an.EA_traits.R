@@ -152,10 +152,10 @@ df_tx_w %>%
   filter(rowSums(across(where(is.numeric)))!=0) -> dftmp ###remove 'empty' rows
 
 ### NMDS ####
-# ptm <- Sys.time()###
-# set.seed(pi);ord <-   vegan::metaMDS(dftmp,trymax = 500)
-# saveRDS(ord, file="figs/nmds_trt.Rdat")
-# Sys.time() - ptm;rm(ptm)
+ptm <- Sys.time()###
+set.seed(pi);ord <-   vegan::metaMDS(dftmp,trymax = 500)
+saveRDS(ord, file="figs/nmds_trt.Rdat")
+Sys.time() - ptm;rm(ptm)
 ord <- readRDS("figs/nmds_trt.Rdat")
 plot(ord)
 
@@ -451,7 +451,6 @@ df_wims_w_trim0$Region <- ifelse(df_wims_w_trim0$Region == "Southern", "Sth",
 df_wims_w_trim0 %>% 
   mutate_if(is.numeric,scale) -> df_wims_w_trim0_scale
 
-
 ### fit models ####
 
 # distribution families (from ?gllvm & https://cran.r-project.org/web/packages/gllvm/vignettes/vignette1.html)
@@ -476,14 +475,14 @@ df_wims_w_trim0 %>%
 ### Fit models ####
 # Unconstrained w/ Random ####
 #### Tweedie ####
-# ptm <- Sys.time()
+ptm <- Sys.time()
 sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-# m_lvm_0 <- gllvm(df_tx_w_trm, # unconstrained model
-#                  studyDesign = sDsn, row.eff = ~(1|Region),
-#                  family = "tweedie"
-#                  )
-# saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_tweed.Rdat") #3.265326 mins
-# Sys.time() - ptm;rm(ptm)
+m_lvm_0 <- gllvm(df_tx_w_trm, # unconstrained model
+                 studyDesign = sDsn, row.eff = ~(1|Region),
+                 family = "tweedie"
+                 )
+saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_tweed.Rdat") #3.265326 mins
+Sys.time() - ptm;rm(ptm)
 m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_tweed.Rdat")
 
 ###################
@@ -517,18 +516,18 @@ m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_tweed.Rdat")
 # Constrained w/ Random ####
 #### Nested by Region ####
 ##### Tweedie ####
-# ptm <- Sys.time()
+ptm <- Sys.time()
 sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-# m_lvm_4 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
-#                  # X=df_wims_w_trim0, #unscaled
-#                  X=df_wims_w_trim0_scale, #scaled
-#                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
-#                  studyDesign = sDsn, row.eff = ~(1|Region),
-#                  family="tweedie"
-#                  )
+m_lvm_4 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
+                 # X=df_wims_w_trim0, #unscaled
+                 X=df_wims_w_trim0_scale, #scaled
+                 formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
+                 studyDesign = sDsn, row.eff = ~(1|Region),
+                 family="tweedie"
+                 )
 # # saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat") #unscaled #11.623mins
-# saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed_scaled.Rdat") #scaled #6.862054 mins
-# Sys.time() - ptm;rm(ptm)
+saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed_scaled.Rdat") #scaled #6.862054 mins
+Sys.time() - ptm;rm(ptm)
 # m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat")#unscaled
 m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed_scaled.Rdat")#scaled
 
