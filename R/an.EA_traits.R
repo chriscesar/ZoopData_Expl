@@ -152,10 +152,10 @@ df_tx_w %>%
   filter(rowSums(across(where(is.numeric)))!=0) -> dftmp ###remove 'empty' rows
 
 ### NMDS ####
-ptm <- Sys.time()###
-set.seed(pi);ord <-   vegan::metaMDS(dftmp,trymax = 500)
-saveRDS(ord, file="figs/nmds_trt.Rdat")
-Sys.time() - ptm;rm(ptm)
+# ptm <- Sys.time()###
+# set.seed(pi);ord <-   vegan::metaMDS(dftmp,trymax = 500)
+# saveRDS(ord, file="figs/nmds_trt.Rdat")
+# Sys.time() - ptm;rm(ptm)
 ord <- readRDS("figs/nmds_trt.Rdat")
 plot(ord)
 
@@ -475,14 +475,14 @@ df_wims_w_trim0 %>%
 ### Fit models ####
 # Unconstrained w/ Random ####
 #### Tweedie ####
-ptm <- Sys.time()
-sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-m_lvm_0 <- gllvm(df_tx_w_trm, # unconstrained model
-                 studyDesign = sDsn, row.eff = ~(1|Region),
-                 family = "tweedie"
-                 )
-saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_tweed.Rdat") #3.265326 mins
-Sys.time() - ptm;rm(ptm)
+# ptm <- Sys.time()
+# sDsn <- data.frame(Region = df_wims_w_trim0$Region)
+# m_lvm_0 <- gllvm(df_tx_w_trm, # unconstrained model
+#                  studyDesign = sDsn, row.eff = ~(1|Region),
+#                  family = "tweedie"
+#                  )
+# saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_tweed.Rdat") #3.265326 mins
+# Sys.time() - ptm;rm(ptm)
 m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_tweed.Rdat")
 
 ###################
@@ -516,18 +516,18 @@ m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_tweed.Rdat")
 # Constrained w/ Random ####
 #### Nested by Region ####
 ##### Tweedie ####
-ptm <- Sys.time()
-sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-m_lvm_4 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
-                 # X=df_wims_w_trim0, #unscaled
-                 X=df_wims_w_trim0_scale, #scaled
-                 formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
-                 studyDesign = sDsn, row.eff = ~(1|Region),
-                 family="tweedie"
-                 )
-# # saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat") #unscaled #11.623mins
-saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed_scaled.Rdat") #scaled #6.862054 mins
-Sys.time() - ptm;rm(ptm)
+# ptm <- Sys.time()
+# sDsn <- data.frame(Region = df_wims_w_trim0$Region)
+# m_lvm_4 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
+#                  # X=df_wims_w_trim0, #unscaled
+#                  X=df_wims_w_trim0_scale, #scaled
+#                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
+#                  studyDesign = sDsn, row.eff = ~(1|Region),
+#                  family="tweedie"
+#                  )
+# # # saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat") #unscaled #11.623mins
+# saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed_scaled.Rdat") #scaled #6.862054 mins
+# Sys.time() - ptm;rm(ptm)
 # m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat")#unscaled
 m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed_scaled.Rdat")#scaled
 
@@ -640,7 +640,7 @@ dev.off()
 # ordiplot.gllvm(m_lvm_4, biplot = TRUE)
 
 # tail(confint.gllvm(m_lvm_3))
-tail(confint.gllvm(m_lvm_4))
+# tail(confint.gllvm(m_lvm_4))
 
 ## extract 'significant' model/species terms from model
 ci_mod_all <- as.data.frame(confint(m_lvm_4))
@@ -679,28 +679,47 @@ sigterms_sig <- sigterms_all[sigterms_all$`Pr(>|z|)`>0.05,]
 plot_list <- list()
 sigterms_all$variable <- as.factor(sigterms_all$variable)
 ntrt <- length(unique(sigterms_all$trt))-.5
+sigterms_all %>% 
+  mutate(flag = case_when(
+    !sig ~ "NONE",
+    sig & Estimate >0 ~ "pos",
+    sig & Estimate <0 ~ "neg"
+  )) -> sigterms_all
 
 # Iterate over each level of the factor 'trt'
 for (level in levels(sigterms_all$variable)) {
   # Subset the data for the current level
   subset_data <- sigterms_all[sigterms_all$variable == level, ]
   
+  # Calculate the mean value of 'Estimate' for the current level
+  mean_estimate <- mean(subset_data$Estimate)
+  
+  # Determine the color of the vertical line based on the mean estimate
+  line_color <- ifelse(mean_estimate > 0, "blue", ifelse(mean_estimate < 0, "red", "grey"))
+  
   # Create a plot for the current level
   current_plot <- ggplot(subset_data,
                          aes(x=Estimate, y=trt,
                              xmin=`2.5 %`,
                              xmax=`97.5 %`,
-                             colour=sig,
-                             fill=sig)) +
+                             colour=flag,
+                             fill=flag)) +
     geom_hline(yintercept = seq(1.5,ntrt,by=1),col="lightgrey",lty=3)+
     geom_vline(xintercept = 0)+
-    # geom_errorbar()+
+    # Add vertical line for mean estimate
+    geom_vline(xintercept = mean_estimate, color = line_color,linetype="dashed") +
     geom_linerange()+
     labs(title = paste0(level))+
     geom_point(shape=21) +
     scale_y_discrete(limits = rev(levels(as.factor(sigterms_all$trt))))+
-    scale_colour_manual(values = c("grey","black"))+
-    scale_fill_manual(values = c("white","black"))+
+    scale_colour_manual(values = c("red",#negative
+                                         "grey",#null
+                                         "blue"#positive
+                                         ))+
+    scale_fill_manual(values = c("red",#negative
+                                        "white",#null
+                                        "blue"#positive
+                                        ))+
     guides(colour="none",
            fill="none")+
     theme(axis.title = element_blank(),
@@ -723,11 +742,11 @@ for (level in levels(sigterms_all$variable)) {
                           ncol = nlevels(sigterms_all$variable))+  # Adjust the number of columns as needed
     plot_annotation(title="Caterpillar plot of generalised linear latent variable model outputs",
                     # subtitle = "Based on zooplankton taxon lifeforms and water quality parameters",#unscaled
-                    subtitle = bquote("Point estimates & 95% confidence intervals of lifeform-specific coefficients "~italic(hat(beta)[j])~". Based on zooplankton taxon lifeforms and scaled water quality parameters"), #scaled
-                    caption = paste0("Colours indicate lifeform 95% confidence intervals which do (grey) or do not (black) include zero","\n",
-                                     "Lifeforms recorded in fewer than ",n+1," samples removed from data prior to model estimations","\n",
+                    subtitle = bquote("Point estimates & 95% confidence intervals of lifeform-specific model coefficients "~italic(hat(beta)[j])~". Based on zooplankton taxon lifeform densities and scaled water quality parameters"), #scaled
+                    caption = paste0("Colours indicate lifeform 95% confidence intervals which do (grey) or do not (red/blue) include zero","\n",
+                                     "Dashed vertical lines indicate mean point estimate values\n","Lifeforms recorded in fewer than ",n+1," samples removed from data prior to model estimations","\n",
                                      "Model call: ~",as.character(m_lvm_4$formula)[2],
-                                     "\nFamily: ",as.character(m_lvm_4$family),". ",
+                                     "\nDistribution family: ",as.character(m_lvm_4$family),". ",
                                      "Random row effects: ",as.character(m_lvm_4$call)[7]),
                     theme = theme(plot.title = element_text(size = 16, face="bold"))))
 
