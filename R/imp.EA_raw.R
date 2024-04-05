@@ -124,7 +124,8 @@ rm(tx_chk,tx_chk0,tx_chktrm)
 
 df_wims0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
                                                  # "/WIMS_Extract_WaterQuality_Zoop_Samples_240108.xlsx"),
-                                                 "/WIMS_Extract_WaterQuality_Zoop_Samples_240216.xlsx"),
+                                                 # "/WIMS_Extract_WaterQuality_Zoop_Samples_240216.xlsx"),
+                                                 "/WIMS_Extract_WaterQuality_Zoop_Samples_240405.xlsx"),
                                           sheet="allDat"))
 
 ### counts for pots 1&2 have been summed as to have those for pots 3&4
@@ -153,8 +154,6 @@ df_wims %>%
 
 ### convert dates
 df_tx$sample.date <- as.Date(df_tx$sample.date, origin = "1899-12-30")
-
-### sites now matched to WBs in Excel doc
 
 # Remove 100 µm data [OPTIONAL] ####
 df_tx_100um <- df_tx %>% 
@@ -192,7 +191,3 @@ detach("package:tidyverse", unload=TRUE)
 rm(list = ls(pattern = "^df"))
 rm(list = ls(pattern = "^cbPalette"))
 rm(datfol,nit,perms, ppi)
-
-# PRIORITY : REPRODUCE CODE ####
-## Currently untidy and seems to produce 'issues'
-## Errors alluding to "non-numeric argument to binary operator"
