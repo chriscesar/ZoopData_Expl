@@ -967,28 +967,47 @@ ggplot(sigterms_all[sigterms_all$variable=="nh4",],
 plot_list <- list()
 sigterms_all$variable <- as.factor(sigterms_all$variable)
 ntrt <- length(unique(sigterms_all$trt))-.5
+sigterms_all %>% 
+  mutate(flag = case_when(
+    !sig ~ "NONE",
+    sig & Estimate >0 ~ "pos",
+    sig & Estimate <0 ~ "neg"
+  )) -> sigterms_all
 
 # Iterate over each level of the factor 'trt'
 for (level in levels(sigterms_all$variable)) {
   # Subset the data for the current level
   subset_data <- sigterms_all[sigterms_all$variable == level, ]
   
+  # Calculate the mean value of 'Estimate' for the current level
+  mean_estimate <- mean(subset_data$Estimate)
+  
+  # Determine the color of the vertical line based on the mean estimate
+  line_color <- ifelse(mean_estimate > 0, "blue", ifelse(mean_estimate < 0, "red", "grey"))
+  
   # Create a plot for the current level
   current_plot <- ggplot(subset_data,
                          aes(x=Estimate, y=trt,
                              xmin=`2.5 %`,
                              xmax=`97.5 %`,
-                             colour=sig,
-                             fill=sig)) +
+                             colour=flag,
+                             fill=flag)) +
     geom_hline(yintercept = seq(1.5,ntrt,by=1),col="lightgrey",lty=3)+
     geom_vline(xintercept = 0)+
-    # geom_errorbar()+
+    # Add vertical line for mean estimate
+    geom_vline(xintercept = mean_estimate, color = line_color,linetype="dashed") +
     geom_linerange()+
     labs(title = paste0(level))+
     geom_point(shape=21) +
     scale_y_discrete(limits = rev(levels(as.factor(sigterms_all$trt))))+
-    scale_colour_manual(values = c("grey","black"))+
-    scale_fill_manual(values = c("white","black"))+
+    scale_colour_manual(values = c("red",#negative
+                                        "grey",#null
+                                        "blue"#positive
+    ))+
+    scale_fill_manual(values = c("red",#negative
+                                      "white",#null
+                                      "blue"#positive
+    ))+
     guides(colour="none",
            fill="none")+
     theme(axis.title = element_blank(),
@@ -1003,12 +1022,8 @@ for (level in levels(sigterms_all$variable)) {
     if (i > 1) {
       plot_list[[i]] <- plot_list[[i]] + theme(axis.text.y = element_blank())
     }
-    if (i == 1){
-      plot_list[[i]] <- plot_list[[i]] + theme(axis.text.y = element_text(size=2.5))
-    }
   }
 }
-
 # Combine all the individual plots into a single plot
 final_plot <- wrap_plots(plotlist = plot_list, ncol = nlevels(sigterms_all$variable))+  # Adjust the number of columns as needed
     plot_annotation(title="Caterpillar plot of generalised linear latent variable model outputs",
