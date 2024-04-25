@@ -2,11 +2,12 @@
 #### Generate wordckouds of life forms and taxon data
 
 #### load packages ####
-ld_pkgs <- c("tidyverse","ggwordcloud")
+ld_pkgs <- c("tidyverse","ggwordcloud", "tictoc")
 vapply(ld_pkgs, library, logical(1L),
        character.only = TRUE, logical.return = TRUE);rm(ld_pkgs)
 
 #### set universals ####
+tic()
 source("R/folder.links.R") ## data folders
 theme_set(ggthemes::theme_few())###set theme for all ggplot objects
 ppi <- 300 #image resolution
@@ -79,45 +80,53 @@ rm(tx_chk,tx_chk0,tx_chktrm)
 ###############
 ## summarise by counts & plot cloud
 ## LF
-set.seed(21);df_LF0 %>% 
-  group_by(Region) %>% 
+tic();set.seed(271);df_LF0 %>% 
+  # group_by(Region) %>% 
   count(.,LF02) %>% 
   mutate(tot=sum(n)) %>% 
   mutate(prop=n/tot) %>% ungroup() %>% 
   ggplot(.,aes(label=LF02, size=prop))+
-  geom_text_wordcloud()+
-  facet_wrap(.~Region, scales = "free")+
-  scale_size_area(max_size = 20) +
+  # geom_text_wordcloud()+
+  geom_text_wordcloud_area()+
+  scale_size_area(max_size = 150,
+                  trans = power_trans(1/.7)) + #trans = power_trans(1/.7) "better fit human area perception"
+  # facet_wrap(.~Region, scales = "free")+
+  # scale_size_area(max_size = 20) +
   theme_minimal()+
   theme(strip.text = element_text(face="bold",
                                   size=14,
                                   colour="red")) -> pl_LF_wc
 
-png(file = "figs/wordcloud_LF.png",
+png(file = "figs/wordcloud_LF_v3.png",
     width=16*ppi, height=10*ppi, res=ppi)
 print(pl_LF_wc)
-dev.off()
+dev.off();toc()
 
 ### taxon version
-set.seed(21);df_tx %>% 
-  group_by(Region) %>% 
+tic();set.seed(21);df_tx %>% 
+  # group_by(Region) %>% 
   count(.,Taxa) %>% 
   mutate(tot=sum(n)) %>% 
   mutate(prop=n/tot) %>% ungroup() %>% 
   ggplot(.,aes(label=Taxa, size=prop))+
-  geom_text_wordcloud()+
-  facet_wrap(.~Region, scales = "free")+
+  # geom_text_wordcloud()+
+  geom_text_wordcloud_area()+
+  # scale_size_area(max_size = 50, trans = power_trans(1/.7)) +
+  # facet_wrap(.~Region, scales = "free")+
   # scale_size_area(max_size = 20) +
+  scale_size_area(max_size = 70,
+                  trans = power_trans(1/.7)) + #trans = power_trans(1/.7) "better fit human area perception"
   theme_minimal()+
   theme(strip.text = element_text(face="bold",
                                   size=14,
                                   colour="red")) -> pl_tx_wc
 
-png(file = "figs/wordcloud_tx.png",
-    width=16*ppi, height=10*ppi, res=ppi)
+png(file = "figs/wordcloud_tx_v3.png",
+    width=16*ppi,
+    height=10*ppi,
+    res=ppi)
 print(pl_tx_wc)
-dev.off()
-
+dev.off();toc()
 
 ### prep taxon data ####
 ### remove odd data
@@ -151,3 +160,4 @@ dftaxa0 <- df_tx %>%
   distinct() %>% 
   mutate_all(as.character) %>%
   mutate_all(~ replace_na(., "NA"))
+toc()
