@@ -4,10 +4,10 @@
 ## set up ####
 #### load packages ####
 ld_pkgs <- c("tidyverse","MASS","lubridate","vegan","mvabund","seas","patchwork",
-             "ecoCopula","performance","gclus","corrplot","gllvm")
+             "ecoCopula","performance","gclus","corrplot","gllvm","tictoc")
 vapply(ld_pkgs, library, logical(1L),
        character.only = TRUE, logical.return = TRUE);rm(ld_pkgs)
-
+tic()
 #### set universals ####
 ### set up folders & import functions ###
 source("R/folder.links.R")
@@ -599,7 +599,6 @@ mtext(side=3, line = 0.75, at =-0.07, adj=0, cex = 0.7, sbtt)
 mtext(side=1, line = 4.0, at =-0.07, adj=0, cex = 0.5, cpt)
 dev.off()
 
-
 ## poisson: Intercept only (unconstrained):
 # system.time(mod1 <- manyglm(mv_dftmp~1,family="poisson"))
 # # summary(mod1)
@@ -688,6 +687,7 @@ AIC(m_N_0,m_N_pois,m_N_nb,m_N_lgnm)#log-normal is 'best'
 
 #################################################################
 # GLLVMs ####
+tic("Model set up")
 # choose interesting environmental variables
 keep <- c("Ammoniacal Nitrogen, Filtered as N_mg/l",
           "Chlorophyll : Acetone Extract_ug/l",
@@ -770,18 +770,19 @@ df_wims_w_trim0 <- df_wims_w_trim0 %>%
 ### create scaled version for comparison of effects on model
 df_wims_w_trim0 %>% 
   mutate_if(is.numeric,scale) -> df_wims_w_trim0_scale
+toc()
 
 ### fit models ####
 ### unconstrained model ####
 #### Tweedie distribution ####
-# ptm <- Sys.time()
-# sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-# m_lvm_0 <- gllvm(y=df_tx_w_trm,
-#                  family="tweedie",
-#                  studyDesign = sDsn, row.eff = ~(1|Region)
-#                  )
-# saveRDS(m_lvm_0, file="figs/gllvm_uncon_tweed.Rdat") #12.647 mins
-# Sys.time() - ptm;rm(ptm)
+tic("gllvm_uncon_tweed: Unconstrained Tweedie");ptm <- Sys.time()
+sDsn <- data.frame(Region = df_wims_w_trim0$Region)
+m_lvm_0 <- gllvm(y=df_tx_w_trm,
+                 family="tweedie",
+                 studyDesign = sDsn, row.eff = ~(1|Region)
+                 )
+saveRDS(m_lvm_0, file="figs/gllvm_uncon_tweed.Rdat") #12.647 mins
+Sys.time() - ptm;rm(ptm);toc()
 m_lvm_0 <- readRDS("figs/gllvm_uncon_tweed.Rdat")
 #####
 #### gaussian distribution ####
@@ -863,18 +864,18 @@ m_lvm_0 <- readRDS("figs/gllvm_uncon_tweed.Rdat")
 
 ### constrained 3 ####
 #### Tweedie #####
-# ptm <- Sys.time()
-sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-# m_lvm_3 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
-#                  # X=df_wims_w_trim0,#unscaled
-#                  X=df_wims_w_trim0_scale,#scaled
-#                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
-#                  family="tweedie",
-#                  studyDesign = sDsn, row.eff = ~(1|Region)
-# )
-# # saveRDS(m_lvm_3, file="figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed.Rdat") # unscaled ##37.7332 mins
-# saveRDS(m_lvm_3, file="figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed_Scaled.Rdat") # scaled ##24.45231 mins
-# Sys.time() - ptm;rm(ptm)
+ptm <- Sys.time()
+tic("gllvm_nh4SalChlaDinDepPo4Reg_tweed_Scaled: Constrained & scaled");sDsn <- data.frame(Region = df_wims_w_trim0$Region)
+m_lvm_3 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
+                 # X=df_wims_w_trim0,#unscaled
+                 X=df_wims_w_trim0_scale,#scaled
+                 formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
+                 family="tweedie",
+                 studyDesign = sDsn, row.eff = ~(1|Region)
+)
+# saveRDS(m_lvm_3, file="figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed.Rdat") # unscaled ##37.7332 mins
+saveRDS(m_lvm_3, file="figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed_Scaled.Rdat") # scaled ##24.45231 mins
+Sys.time() - ptm;rm(ptm);toc()
 # ## m_lvm_3 <- readRDS("figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed.Rdat") #unscaled
 m_lvm_3 <- readRDS("figs/gllvm_nh4SalChlaDinDepPo4Reg_tweed_Scaled.Rdat") #scaled
 #########
@@ -933,6 +934,7 @@ dev.off()
 # AIC(m_lvm_0,m_lvm_1,m_lvm_2,m_lvm_3)
 # anova(m_lvm_0,m_lvm_1,m_lvm_2,m_lvm_3)
 
+tic("Extract & plot model estimated")
 # extract 'significant' model/species terms from model for plotting ####
 ci_mod_all <- as.data.frame(confint(m_lvm_3))
 ci_mod_var <- ci_mod_all[grep("^X", rownames(ci_mod_all)), ]
@@ -1075,7 +1077,7 @@ AIC(m_lvm_0,m_lvm_3)
 # PRIORITY : REPRODUCE CODE ####
 ## Currently untidy and seems to produce 'issues'
 ## Errors alluding to "non-numeric argument to binary operator"
-
+toc()
 # TIDY UP ####
 # unload packages
 detach("package:seas", unload=TRUE)
