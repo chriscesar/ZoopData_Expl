@@ -47,7 +47,7 @@
 # Sys.time() - ptm;rm(ptm,req_packages,new_packages)
 
 #### load packages ####
-ld_pkgs <- c("tidyverse","MASS","lubridate")
+ld_pkgs <- c("tidyverse","MASS","lubridate", "tictoc")
 vapply(ld_pkgs, library, logical(1L),
        character.only = TRUE, logical.return = TRUE);rm(ld_pkgs)
 
@@ -94,9 +94,6 @@ cbPalette2 <- c("#646464", #100/100/100
 ### taxon data
 df_tx0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
                                                "processedData/MBA_Returns_Amalgamated_USE.xlsx"),
-                                        # sheet="outR01"))
-                                        # sheet="outR02"))
-                                        # sheet="outR03"))
                                         sheet="outR04"))
 
 ### append updated taxon names
@@ -134,8 +131,6 @@ rm(tx_chk,tx_chk0,tx_chktrm)
 # PTTR0026, WA560349, Y0004367, Y0017477, YC536426
 
 df_wims0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
-                                                 # "/WIMS_Extract_WaterQuality_Zoop_Samples_240108.xlsx"),
-                                                 # "/WIMS_Extract_WaterQuality_Zoop_Samples_240216.xlsx"),
                                                  "/WIMS_Extract_WaterQuality_Zoop_Samples_240405.xlsx"),
                                           sheet="allDat"))
 
