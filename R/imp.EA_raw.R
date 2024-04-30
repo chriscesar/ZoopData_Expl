@@ -183,7 +183,9 @@ saveRDS(dfw, file=paste0(datfol,"processedData/","zoopWIDEAbund_m3_WIMS_USE.RDat
 
 ### generate LONG version WITH zero values (for calculation of means)
 df_tx_w %>% 
-  pivot_longer(., cols = Acartia:Diaixis) -> df_tx_l
+  pivot_longer(.,
+               cols = Acartia:"Subeucalanus crassus" #check this
+               ) -> df_tx_l
 write.csv(df_tx_l,file=paste0(datfol,"processedData/","zoopLONG.csv"),row.names = FALSE)
 
 
