@@ -52,6 +52,7 @@ vapply(ld_pkgs, library, logical(1L),
        character.only = TRUE, logical.return = TRUE);rm(ld_pkgs)
 
 #### set universals ####
+tictoc::tic.clearlog();tic("set universals");print("set universals")
 ### set up folders & import functions ###
 source("R/folder.links.R")
 
@@ -89,8 +90,11 @@ cbPalette2 <- c("#646464", #100/100/100
                 "#A32C00",#163/044/000
                 "#9A4775"#154/071/117
 )
+toc(log=TRUE)
 
 ### load data ####
+tic("Load taxon data and correct taxon names")
+print("Load taxon data and correct taxon names")
 ### taxon data
 df_tx0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
                                                "processedData/MBA_Returns_Amalgamated_USE.xlsx"),
@@ -120,8 +124,11 @@ df_tx0 %>%
   ungroup() %>% 
   as_tibble(.) -> df_tx
 rm(tx_chk,tx_chk0,tx_chktrm)
+toc(log=TRUE)
 
 ### WIMS chemical data
+tic("Load WIMS data")
+print("Load WIMS data")
 # WIMS Extract based on:
 # Materials = 2HZZ & 2IZZ; SMPT_TYPE = CD, CC, CE; Dates from 01/06/2022-present
 # SMP_Code:
@@ -154,9 +161,11 @@ df_wims %>%
 
 ## write WIMS wide csv
 # write.csv(df_wims_w,file=paste0(datfol,"processedData/WIMS_wide.csv"),row.names = FALSE)
+toc(log=TRUE)
 
 ### remove odd data
 #df_tx <- as_tibble(df_tx0) ### create new data (keep df0 as 'raw')
+tic("Prep for export & export data");print("Prep for export & export data")
 
 ### convert dates
 df_tx$sample.date <- as.Date(df_tx$sample.date, origin = "1899-12-30")
@@ -167,6 +176,13 @@ df_tx_100um <- df_tx %>%
 
 df_tx %>% 
   filter(!str_starts(Sample.comments,"100um")) -> df_tx
+
+## export taxa data for upload to PLET ####
+### this version does not retain 0's unlike the zoopLONG version below
+write.csv(df_tx, file = paste0(datfol,
+                               "processedData/",
+                               "zooplong_no_zero.csv"),
+          row.names = FALSE)
 
 ###widen data & fill NAs with 0s ####
 df_tx %>% 
@@ -187,8 +203,10 @@ df_tx_w %>%
                cols = Acartia:"Subeucalanus crassus" #check this
                ) -> df_tx_l
 write.csv(df_tx_l,file=paste0(datfol,"processedData/","zoopLONG.csv"),row.names = FALSE)
+toc(log=TRUE)
 
 ### tidy up ###
+tic("tidy up")
 # unload packages
 # detach("package:MASS", unload=TRUE)
 detach("package:lubridate", unload=TRUE)
@@ -198,3 +216,4 @@ detach("package:tidyverse", unload=TRUE)
 rm(list = ls(pattern = "^df"))
 rm(list = ls(pattern = "^cbPalette"))
 rm(datfol,nit,perms, ppi)
+toc(log=TRUE);unlist(tictoc::tic.log())
