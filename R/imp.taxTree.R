@@ -61,7 +61,8 @@ df_tx0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
 df_wims0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
                                                  # "/WIMS_Extract_WaterQuality_Zoop_Samples_230809.xlsx"),
                                                  # "/WIMS_Extract_WaterQuality_Zoop_Samples_231218.xlsx"),
-                                                 "/WIMS_Extract_WaterQuality_Zoop_Samples_240108.xlsx"),
+                                                 # "/WIMS_Extract_WaterQuality_Zoop_Samples_240108.xlsx"),
+                                                 "/WIMS_Extract_WaterQuality_Zoop_Samples_240405.xlsx"),
                                           sheet="allDat"))
 
 ### prep WIMS data ####
