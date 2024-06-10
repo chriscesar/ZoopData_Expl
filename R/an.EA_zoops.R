@@ -1013,7 +1013,8 @@ for (level in levels(sigterms_all$variable)) {
     guides(colour="none",
            fill="none")+
     theme(axis.title = element_blank(),
-          plot.title = element_text(hjust=0.5))
+          plot.title = element_text(hjust=0.5),
+          axis.text.y = element_text(size=3))
   
   # Add the current plot to the list
   plot_list[[as.character(level)]] <- current_plot
@@ -1031,7 +1032,7 @@ final_plot <- wrap_plots(plotlist = plot_list, ncol = nlevels(sigterms_all$varia
     plot_annotation(title="Caterpillar plot of generalised linear latent variable model outputs",
                     # subtitle = bquote("Point estimates & 95% confidence intervals of species-specific coefficients "~italic(hat(beta)[j])~". Based on zooplankton taxon abundance data and water quality parameters"), #unscaled
                     subtitle = bquote("Point estimates & 95% confidence intervals of species-specific coefficients "~italic(hat(beta)[j])~". Based on zooplankton taxon abundance data and scaled water quality parameters"), #scaled
-                    caption = paste0("Colours indicate lifeform 95% confidence intervals which do (grey) or do not (black) include zero",
+                    caption = paste0("Colours indicate lifeform 95% confidence intervals which do (grey) or do not (red/blue) include zero",
                                      "\nModel call: ~",as.character(m_lvm_3$formula)[2],
                                      "\nFamily: ",as.character(m_lvm_3$family),". ",
                                      "Random row effects: ",as.character(m_lvm_3$call)[7]),
