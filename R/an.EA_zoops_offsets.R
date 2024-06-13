@@ -151,14 +151,15 @@ rm(df_tx_w)
 ###########
 ### GLLVMs ####
 ## create taxon data
+tic("Model set up")
 dfw %>% 
   dplyr::select(-c(1:21)) %>% ###remove metadata info
   dplyr::select_if(~ !is.numeric(.) || sum(.) !=0) %>% ### drop cols summing to 0
-  dplyr::select_if(~ !is.numeric(.) || sum(. != 0) >= 10) %>%  # Drop numeric columns with <10 non-zero values
+  dplyr::select_if(~ !is.numeric(.) || sum(. != 0) >= 100) %>%  # Drop numeric columns with <10 non-zero values
   filter(rowSums(across(where(is.numeric)))!=0) -> dftmp ###remove 'empty' rows
 
 
-tic("Model set up")
+
 # choose interesting environmental variables
 keep <- c("Ammoniacal Nitrogen, Filtered as N_mg/l",
           "Chlorophyll : Acetone Extract_ug/l",
@@ -232,11 +233,12 @@ df_wims_w_trim0 <- df_wims_w_trim0 %>%
 ### create scaled version for comparison of effects on model
 df_wims_w_trim0 %>% 
   mutate_if(is.numeric,scale) -> df_wims_w_trim0_scale
-toc()
+toc(log=TRUE)
 
 ### fit models ####
-Y <- dftmp[,c(1:100)]
+Y <- dftmp %>% dplyr::select(.,-c(WIMS.Code.y:"Zinc, Dissolved_ug/l"))
 names(Y) <- vegan::make.cepnames(names(Y))
+X <- df_wims_w_trim0_scale
 
 ### unconstrained model ####
 #### Poisson distribution ####
@@ -263,16 +265,16 @@ sDsn <- data.frame(Region = df_wims_w_trim0$Region)
 # saveRDS(m_lvm_0nb0, file="figs/gllvm_offset_uncon_nb.Rdat") #12.647 mins
 # m_lvm_0nb0 <- readRDS("figs/gllvm_offset_uncon_nb.Rdat") #12.647 mins
 
-m_lvm_0nb <- gllvm(y=Y,
-                   family="negative.binomial",
-                   offset = log(dfw$`Net.volume.sampled.(m3)`),#logging offset to match poisson link
-                   studyDesign = sDsn, row.eff = ~(1|Region)
-)
-saveRDS(m_lvm_0nb, file="figs/gllvm_logOffset_uncon_nb.Rdat") #12.647 mins
-toc(log=TRUE)
+# m_lvm_0nb <- gllvm(y=Y,
+#                    family="negative.binomial",
+#                    offset = log(dfw$`Net.volume.sampled.(m3)`),#logging offset to match poisson link
+#                    studyDesign = sDsn, row.eff = ~(1|Region)
+# )
+# saveRDS(m_lvm_0nb, file="figs/gllvm_logOffset_uncon_nb.Rdat") #12.647 mins
 m_lvm_0nb <- readRDS("figs/gllvm_logOffset_uncon_nb.Rdat")
 par(mfrow=c(2,2));plot(m_lvm_0nb,which = 1:4);par(mfrow=c(1,1))
 ordiplot.gllvm(m_lvm_0nb,biplot=TRUE)
+toc(log=TRUE)
 
 ### constrained model ####
 #### NB distribution #####
@@ -290,21 +292,40 @@ sDsn <- data.frame(Region = df_wims_w_trim0$Region)
 # 
 # m_lvm_1nb0 <- readRDS("figs/gllvm_Offset_nh4SalChlaDinDepPo4Reg_nb_Scaled.Rdat") #scaled
 
+# m_lvm_1nb <- gllvm(y=Y,
+#                     X=X,#scaled
+#                     formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
+#                     family="negative.binomial",
+#                     offset = log(dfw$`Net.volume.sampled.(m3)`), #logging offset to match NB link
+#                     studyDesign = sDsn, row.eff = ~(1|Region),
+#                     num.lv = 2,
+#                    n.init=5, trace=TRUE
+#                    )
+
+# updated model with lv.formula
 m_lvm_1nb <- gllvm(y=Y,
-                    X=df_wims_w_trim0_scale,#scaled
-                    formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
-                    family="negative.binomial",
-                    offset = log(dfw$`Net.volume.sampled.(m3)`), #logging offset to match NB link
-                    studyDesign = sDsn, row.eff = ~(1|Region),
-                    num.lv = 2
+                   X=X,
+                   # formula = ~ tempC+sal_ppt+din+chla,
+                   lv.formula = ~ tempC+sal_ppt+din+chla,#latent variables
+                   family="negative.binomial",
+                   offset = log(dfw$`Net.volume.sampled.(m3)`),
+                   studyDesign = sDsn,
+                   row.eff = ~(1|Region),
+                   num.lv.c = 2,#latent variables in current ordination
+                   # num.RR = 2,#latent variables in constrained ordination
+                   n.init=5, trace=TRUE,randomB = "LV",
                    )
+## NO PREDICTOR EFFECTS IN CURRENT MODEL ##
 
-saveRDS(m_lvm_1nb, file="figs/gllvm_logOffset_nh4SalChlaDinDepPo4Reg_nb_Scaled.Rdat") # scaled
-toc(log=TRUE)
-m_lvm_1nb <- readRDS("figs/gllvm_logOffset_nh4SalChlaDinDepPo4Reg_nb_Scaled.Rdat") #scaled
 
+saveRDS(m_lvm_1nb, file="figs/gllvm_logOffset_nh4SalChlaDinDepPo4Reg_nb_Scaled_constrained.Rdat") # scaled
+m_lvm_1nb <- readRDS("figs/gllvm_logOffset_nh4SalChlaDinDepPo4Reg_nb_Scaled_constrained.Rdat") #scaled
+hist(m_lvm_1nb$TMBfn$gr())
+summary(m_lvm_1nb)
 par(mfrow=c(2,2));plot(m_lvm_1nb,which = 1:4);par(mfrow=c(1,1))
+ordiplot.gllvm(m_lvm_1nb,biplot=TRUE,symbols = TRUE)
 #summary(m_lvm_1nb, by="all")
+toc(log=TRUE)
 
 pdf(file = "figs/m_lvm_1nb_tx_all.pdf",width=16,height=8)
 coefplot(m_lvm_1nb,cex.ylab = 0.3,
@@ -432,11 +453,17 @@ dev.off()
 # traces suggests that environmental variables explain approximately 40% of
 # the (co)variation in ant species abundances.
 
+## no adjust (for poisson?)
 rcov0 <- getResidualCov(m_lvm_0nb, adjust = 0) # 'null' model
 rcov1 <- getResidualCov(m_lvm_1nb, adjust = 0) # model with env variables
+
+rcov0 <- getResidualCov(m_lvm_0nb, adjust = 1) # 'null' model
+rcov1 <- getResidualCov(m_lvm_1nb, adjust = 1) # model with env variables
 rcov0$trace; rcov1$trace
 100 - (rcov1$trace / rcov0$trace*100)
 AIC(m_lvm_0nb,m_lvm_1nb)
+
+ordiplot(m_lvm_1nb, biplot=TRUE, symbols = TRUE)
 
 # Environmental correlation
 # modelmat <- model.matrix(m_lvm_3$formula, data = df_wims_w_trim0) %>% 
