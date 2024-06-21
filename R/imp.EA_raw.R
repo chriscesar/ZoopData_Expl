@@ -1,14 +1,3 @@
-#####################################################################
-#####################################################################
-#####################################################################
-# TO DO: ####
-# Check import and appending/correcting of taxon names: Some taxa reading
-# as NA values since update on 05/04/24
-#####################################################################
-#####################################################################
-#####################################################################
-
-
 ### imp.EA_raw.R ####
 #### Import EA data, attach WIMS data & create a block for later analysis ####
 #### analysed Jul 2023
@@ -138,7 +127,7 @@ print("Load WIMS data")
 # PTTR0026, WA560349, Y0004367, Y0017477, YC536426
 
 df_wims0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
-                                                 "/WIMS_Extract_WaterQuality_Zoop_Samples_240405.xlsx"),
+                                                 "/WIMS_Extract_WaterQuality_Zoop_Samples_240618.xlsx"),
                                           sheet="allDat"))
 
 ### counts for pots 1&2 have been summed as to have those for pots 3&4
