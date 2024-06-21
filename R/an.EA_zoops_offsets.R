@@ -90,7 +90,7 @@ print("Load WIMS data")
 # PTTR0026, WA560349, Y0004367, Y0017477, YC536426
 
 df_wims0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
-                                                 "/WIMS_Extract_WaterQuality_Zoop_Samples_240405.xlsx"),
+                                                 "/WIMS_Extract_WaterQuality_Zoop_Samples_240618.xlsx"),
                                           sheet="allDat"))
 
 ### counts for pots 1&2 have been summed as to have those for pots 3&4
@@ -143,11 +143,23 @@ dfw <- left_join(df_tx_w,df_wims_w,by="PRN")
 ### generate LONG version WITH zero values (for calculation of means)
 df_tx_w %>% 
   pivot_longer(.,
-               cols = Acartia:"Subeucalanus crassus" #check this
+               cols = !(Pot.Number:Category)
   ) -> df_tx_l
 toc(log=TRUE)
-rm(df_tx_w)
 
+##### look at mean-variance relationship ####
+## throw away wims stuff
+mn <- apply(df_tx_w %>% dplyr::select(.,-c(Pot.Number:Category)),2,mean)
+v <- apply(df_tx_w %>% dplyr::select(.,-c(Pot.Number:Category)),2,var)
+x <- data.frame(mn,v);rm(mn,v)
+
+x %>% 
+  ggplot(.,aes(x=log(mn),y=log(v)))+
+  # geom_abline(slope = 1, linetype="dashed")+
+  xlab("Mean")+ylab("Variance")+
+  geom_point()
+  
+rm(df_tx_w)
 ###########
 ### GLLVMs ####
 ## create taxon data
@@ -239,58 +251,142 @@ toc(log=TRUE)
 Y <- dftmp %>% dplyr::select(.,-c(WIMS.Code.y:"Zinc, Dissolved_ug/l"))
 names(Y) <- vegan::make.cepnames(names(Y))
 X <- df_wims_w_trim0_scale
+runs <- 3 #set number of reruns for model fitting
 
 ### unconstrained model ####
-#### Poisson distribution ####
-# tic("gllvm_uncon_offset_pois: Unconstrained Poisson with offset")
-# sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-# m_lvm_0p <- gllvm(y=dftmp[,c(1:100)],
-#                  family="poisson",
-#                  offset = dfw$`Net.volume.sampled.(m3)`,
-#                  studyDesign = sDsn, row.eff = ~(1|Region)
-#                  )
-# saveRDS(m_lvm_0p, file="figs/gllvm_offset_uncon_pois.Rdat") #12.647 mins
-# toc(log=TRUE)
-# m_lvm_0p <- readRDS("figs/gllvm_offset_uncon_pois.Rdat")
-# par(mfrow=c(2,2));plot(m_lvm_0p, which = 1:4);par(mfrow=c(1,1))
-
 #### Unconstrained NB distribution ####
 tic("gllvm_uncon_offset_pois: Unconstrained NB with offset")
 sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-# m_lvm_0nb0 <- gllvm(y=Y,
-#                  family="negative.binomial",
-#                  offset = dfw$`Net.volume.sampled.(m3)`,
-#                  studyDesign = sDsn, row.eff = ~(1|Region)
-#                  )
-# saveRDS(m_lvm_0nb0, file="figs/gllvm_offset_uncon_nb.Rdat") #12.647 mins
-# m_lvm_0nb0 <- readRDS("figs/gllvm_offset_uncon_nb.Rdat") #12.647 mins
 
-# m_lvm_0nb <- gllvm(y=Y,
-#                    family="negative.binomial",
-#                    offset = log(dfw$`Net.volume.sampled.(m3)`),#logging offset to match poisson link
-#                    studyDesign = sDsn, row.eff = ~(1|Region)
-# )
-# saveRDS(m_lvm_0nb, file="figs/gllvm_logOffset_uncon_nb.Rdat") #12.647 mins
+set.seed(pi);m_lvm_0nb <- gllvm(y=Y,
+                   family="negative.binomial",
+                   offset = log(dfw$`Net.volume.sampled.(m3)`),#logging offset to match poisson link
+                   studyDesign = sDsn, row.eff = ~(1|Region),
+                   num.lv = 2,
+                   starting.val="random",
+                   n.init=runs,#re-run model to get best fit
+                   trace=TRUE
+                   )
+saveRDS(m_lvm_0nb, file="figs/gllvm_logOffset_uncon_nb.Rdat") #12.647 mins
+toc(log=TRUE)
+
 m_lvm_0nb <- readRDS("figs/gllvm_logOffset_uncon_nb.Rdat")
 par(mfrow=c(2,2));plot(m_lvm_0nb,which = 1:4);par(mfrow=c(1,1))
 ordiplot.gllvm(m_lvm_0nb,biplot=TRUE)
+gllvm::ordiplot(m_lvm_0nb,predict.region=TRUE)
+
+### extract variables ###
+LVs <- getLV(m_lvm_0nb)
+
+unscaledLoadings <- coef(m_lvm_0nb, "loadings")
+scaleLoadings <- coef(m_lvm_0nb, "sigma.lv")
+sppLoadings <- unscaledLoadings%*%diag(scaleLoadings)
+colnames(sppLoadings) <- c("LV1","LV2")
+# sppLoadings <- as.data.frame(sppLoadings)
+# sppLoadings$spp <- row.names(sppLoadings)
+
+range(LVs[,1]);range(sppLoadings[,1])
+range(LVs[,2]);range(sppLoadings[,2])
+
+# ggplot(LVs,aes(x=LVs[,1],y=LVs[,2],col=df_wims_w_trim0_scale$Region))+
+#   geom_point()+
+#   geom_hline(yintercept = 0,linetype=2,col="grey")+
+#   geom_vline(xintercept = 0,linetype=2,col="grey")+
+#   xlim(-3.1,3.0)+
+#   ylim(-2.5,2.73)+
+#   geom_text(data=sppLoadings,aes(x=LV1,y=LV2,label=spp),col=4)+
+#   xlab("LV1")+ylab("LV2")+
+#   theme(legend.title = element_blank(),
+#         axis.title = element_text(face=2))
+
+# Calculate covariances
+covariances <- getResidualCov(m_lvm_0nb)
+correlations <- getResidualCor(m_lvm_0nb)
+## visualise covariance
+p1 <- ggplot(reshape2::melt(correlations))+
+  geom_tile(aes(x=Var1, y=Var2, fill = value))+
+  scale_fill_gradient2(low="red",high="blue",mid = "white")+
+  theme_bw()+
+  theme(
+    axis.text.x = element_text(angle = 90, vjust = 1, size = 12, hjust = 1),
+    axis.text.y = element_text(size = 12)) +
+  ggplot2::coord_fixed()+xlab(NULL)+ylab(NULL)
+
+do_svd <- svd(LVs)
+rotation <- do_svd$v
+scales <- sapply(1:ncol(LVs), function(q)sqrt(sum(LVs[,q]^2))*sqrt(sum(sppLoadings[,q]^2)))
+newLVs <- apply(LVs,2,function(x)x/sqrt(sum(x^2))*scales^0.5)
+newRotatedLVs <- newLVs%*%do_svd$v
+newLoadings <- apply(sppLoadings,2,function(x)x/sqrt(sum(x^2))*scales^0.5)
+newRotatedLoadings <- sppLoadings%*%do_svd$v
+
+p2 <- ggplot()+
+  geom_hline(yintercept = 0,linetype=2,col="grey")+
+  geom_vline(xintercept = 0,linetype=2,col="grey")+
+  geom_point(data=LVs, aes(y=LV2,x=LV1, col=df_wims_w_trim0_scale$Region))+
+  geom_text(data=sppLoadings, aes(y = LV2, x = LV1, label = colnames(Y)),col=4)+
+  ggthemes::theme_few()+coord_fixed()+
+    theme(legend.title = element_blank(),
+          axis.title = element_text(face=2))
+  guides(col="none")
+
+p1|p2
+
+#### Unconstrained unimodal NB distribution ####
+# following guidance in:
+# https://github.com/BertvanderVeen/GLLVM-workshop/blob/main/Practicals/5Practical.html
+tic("gllvm_uncon_offset_pois: Unconstrained unimodal NB with offset")
+sDsn <- data.frame(Region = df_wims_w_trim0$Region)
+
+set.seed(pi);m_lvm_0nbUnim <- gllvm(y=Y,
+                                family="negative.binomial",
+                                offset = log(dfw$`Net.volume.sampled.(m3)`),#logging offset to match poisson link
+                                num.lv = 2,
+                                n.init=runs,#re-run model to get best fit
+                                trace=TRUE,
+                                quadratic = TRUE
+                                )
+saveRDS(m_lvm_0nbUnim, file="figs/gllvm_logOffset_uncon_nb_Unim.Rdat")
+toc(log=TRUE)
+
+ordiplot(m_lvm_0nbUnim,biplot=TRUE)
+
+## make turnover predictions (NOT WORKING!!!!!)
+LVs = getLV(m_lvm_0nbUnim)
+newLV = cbind(LV1 = seq(min(LVs[,1]), max(LVs[,1]), length.out=1000), LV2 = 0)
+preds <- predict(m_lvm_0nbUnim, type = "response", newLV = newLV)
+plot(NA, ylim = range(preds), xlim = c(range(getLV(m_lvm_0nbUnim))), ylab  = "Predicted response", xlab = "LV1")
+segments(x0=optima(m_lvm_0nbUnim, sd.errors = FALSE)[,1],x1 = optima(m_lvm_0nbUnim, sd.errors = FALSE)[,1], y0 = rep(0, ncol(model1$y)), y1 = apply(preds,2,max), col = "red", lty = "dashed", lwd = 2)
+rug(getLV(m_lvm_0nbUnim)[,1])
+sapply(1:ncol(m_lvm_0nbUnim$y), function(j)lines(sort(newLV[,1]), preds[order(newLV[,1]),j], lwd = 2))
+
+newLV = cbind(LV1 = 0, LV2 =  seq(min(LVs[,2]), max(LVs[,2]), length.out=1000))
+preds <- predict(m_lvm_0nbUnim, type = "response", newLV = newLV)
+plot(NA, ylim = range(preds), xlim = c(range(getLV(model1))), ylab  = "Predicted response", xlab = "LV2")
+segments(x0=optima(model1, sd.errors = FALSE)[,2],x1 = optima(model1, sd.errors = FALSE)[,2], y0 = rep(0, ncol(model1$y)), y1 = apply(preds,2,max), col = "red", lty = "dashed", lwd = 2)
+rug(getLV(model1)[,2])
+sapply(1:ncol(model1$y), function(j)lines(sort(newLV[,2]), preds[order(newLV[,2]),j], lwd = 2))
+
+##### create DHARMa object ####
+# simulate the model x1000
+sim.uncon <- do.call("cbind", replicate(1000,
+                                        c(as.matrix(
+                                          gllvm::simulate(m_lvm_0nb,conditional=TRUE))),
+                                        simplify = FALSE))
+preds <- c(predict(m_lvm_0nb))
+obs <- c(as.matrix(Y))
+dharma <- DHARMa::createDHARMa(
+  simulatedResponse = sim.uncon,
+  observedResponse = obs,
+  integerResponse = TRUE,
+  fittedPredictedResponse = preds)
+plot(dharma)
 toc(log=TRUE)
 
 ### constrained model ####
 #### NB distribution #####
 tic("gllvm_offset_nh4SalChlaDinDepPo4Reg_NB_Scaled: Constrained & scaled with offset")
 sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-# m_lvm_1nb0 <- gllvm(y=Y,
-#                    X=df_wims_w_trim0_scale,#scaled
-#                    formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
-#                    family="negative.binomial",
-#                    offset = dfw$`Net.volume.sampled.(m3)`,
-#                    studyDesign = sDsn, row.eff = ~(1|Region),
-#                    num.lv = 2
-#                    )
-# saveRDS(m_lvm_1nb0, file="figs/gllvm_Offset_nh4SalChlaDinDepPo4Reg_nb_Scaled.Rdat") # scaled
-# 
-# m_lvm_1nb0 <- readRDS("figs/gllvm_Offset_nh4SalChlaDinDepPo4Reg_nb_Scaled.Rdat") #scaled
 
 # m_lvm_1nb <- gllvm(y=Y,
 #                     X=X,#scaled
@@ -305,16 +401,20 @@ sDsn <- data.frame(Region = df_wims_w_trim0$Region)
 # updated model with lv.formula
 m_lvm_1nb <- gllvm(y=Y,
                    X=X,
-                   # formula = ~ tempC+sal_ppt+din+chla,
-                   lv.formula = ~ tempC+sal_ppt+din+chla,#latent variables
+                   formula = ~ (tempC+sal_ppt+din+chla),
+                   #lv.formula = ~ tempC+sal_ppt+din+chla,#latent variables
                    family="negative.binomial",
                    offset = log(dfw$`Net.volume.sampled.(m3)`),
                    studyDesign = sDsn,
                    row.eff = ~(1|Region),
-                   num.lv.c = 2,#latent variables in current ordination
+                   # num.lv.c = 2,#latent variables in current ordination
                    # num.RR = 2,#latent variables in constrained ordination
-                   n.init=5, trace=TRUE,randomB = "LV",
+                   num.lv=2,
+                   n.init=runs,#re-run model to get best fit
+                   trace=TRUE,
+                   randomB = "LV"
                    )
+toc(log=TRUE)
 ## NO PREDICTOR EFFECTS IN CURRENT MODEL ##
 
 
