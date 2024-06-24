@@ -72,11 +72,11 @@ df_tx_w %>%
   filter(rowSums(across(where(is.numeric)))!=0) -> dftmp ###remove 'empty' rows
 
 ### NMDS ####
-tic("Run NMDS")
-set.seed(pi);ord <-   vegan::metaMDS(dftmp,trymax = 500)
-saveRDS(ord, file="figs/nmds_trt.Rdat")
+# tic("Run NMDS")
+# set.seed(pi);ord <-   vegan::metaMDS(dftmp,trymax = 500)
+# saveRDS(ord, file="figs/nmds_trt.Rdat")
+# toc(log=TRUE)
 ord <- readRDS("figs/nmds_trt.Rdat")
-toc(log=TRUE)
 plot(ord)
 
 ### extract site info
@@ -272,14 +272,25 @@ for (level in levels(scores_site$DJF)) {
 ggsave(filename = "figs/nmds_by_Region&season_Traits.pdf",width = 12,height = 12,units = "in",
        plot=final_plot);rm(final_plot, plot_list)
 
-rm(ord, scores_site, scores_species, subset_data,current_plot)
+rm(ord, scores_site, scores_species, subset_data,current_plot, df_tx_w,dftmp)
 
 #############
 # GLLVMs ####
 #############
+dfw0 <- dfw
+### remove samples without net volume measurements
+dfw %>% filter(.,!is.na(`Net.volume.sampled.(m3)`)) -> dfw
+
+### set number of iterations
+runs <- 5
+
+Y <- dfw %>% dplyr::select(.,-c(Pot.Number:WB,WIMS.Code.y:"Zinc, Dissolved_ug/l"))
+X <- dfw %>% dplyr::select(.,c(Pot.Number:WB,WIMS.Code.y:"Zinc, Dissolved_ug/l"))
 
 # choose interesting environmental variables
-keep <- c("Ammoniacal Nitrogen, Filtered as N_mg/l",
+keep <- c(
+          "Net.volume.sampled.(m3)",
+          "Ammoniacal Nitrogen, Filtered as N_mg/l",
           "Chlorophyll : Acetone Extract_ug/l",
           "NGR : Easting_NGR",
           "NGR : Northing_NGR",
@@ -297,8 +308,8 @@ keep <- c("Ammoniacal Nitrogen, Filtered as N_mg/l",
           "Water Depth_m")
 
 # keep only interesting variables
-kp <- names(dfw) %in% keep
-df_wims_w_trim <- dfw[,kp]
+kp <- names(X) %in% keep
+X <- X[,kp]
 rm(kp, keep)
 
 ### replace LESS THAN values with value*0.5
@@ -308,27 +319,20 @@ replace_values <- function(x) {
 }
 
 # amend < values in wims data
-df_wims_w_trim %>% 
-  mutate_all(.,replace_values) -> df_wims_w_trim
+X %>% 
+  mutate_all(.,replace_values) -> X
 
-### append region & WB
-df_wims_w_trim$Region <- dfw$Region
-df_wims_w_trim$WB <- dfw$WB
-
-# extract taxon density data
-dfw %>% 
-  dplyr::select(-c(Pot.Number:WB,
-                   "WIMS.Code.y":"Zinc, Dissolved_ug/l")
-  ) -> df_tx_w_trm
+##append region and wb names
+X$WB <- dfw$WB
+X$Region <- dfw$Region
 
 #OPTIONAL: remove lifeforms which only appear n>=4 times ####
 n <- 4
-df_tx_w_trm <- df_tx_w_trm %>% 
-  dplyr::select(which(apply(., 2, function(x) sum(x != 0) > n)))
+Y <- Y[,colSums(ifelse(Y==0,0,1))>n]
 
 ## replace NA values with mean values for respective column.
 ## Leave non-numeric cols unchanged
-df_wims_w_trim %>% 
+X %>% 
   mutate(across(where(is.numeric),
                 ~replace(.,
                          is.na(.),
@@ -336,11 +340,14 @@ df_wims_w_trim %>%
                               na.rm = TRUE)
                 )
   )
-  ) -> df_wims_w_trim0
+  ) -> X
 
 ## rename colums
-df_wims_w_trim0 <- df_wims_w_trim0 %>% 
+X <- X %>% 
   rename(
+    wb="WB",
+    region="Region",
+    net_vol_m3 = "Net.volume.sampled.(m3)",
     nh4 = "Ammoniacal Nitrogen, Filtered as N_mg/l",
     chla = "Chlorophyll : Acetone Extract_ug/l",
     ngr_e = "NGR : Easting_NGR",
@@ -359,17 +366,17 @@ df_wims_w_trim0 <- df_wims_w_trim0 %>%
     depth = "Water Depth_m"
   )
 
-df_wims_w_trim0$Region <- ifelse(df_wims_w_trim0$Region == "Southern", "Sth",
-                                 ifelse(df_wims_w_trim0$Region == "NEast", "NE",
-                                        ifelse(df_wims_w_trim0$Region == "NWest", "NW",
-                                               ifelse(df_wims_w_trim0$Region == "Anglian", "An",
-                                                      ifelse(df_wims_w_trim0$Region == "Thames", "Th",
-                                                             ifelse(df_wims_w_trim0$Region == "SWest", "SW",NA)
+X$gn <- ifelse(X$region == "Southern", "Sth",
+                                 ifelse(X$region == "NEast", "NE",
+                                        ifelse(X$region == "NWest", "NW",
+                                               ifelse(X$region == "Anglian", "An",
+                                                      ifelse(X$region == "Thames", "Th",
+                                                             ifelse(X$region == "SWest", "SW",NA)
                                                       )))))
 
 ### create scaled version for comparison of effects on model
-df_wims_w_trim0 %>% 
-  mutate_if(is.numeric,scale) -> df_wims_w_trim0_scale
+X %>% 
+  mutate_if(is.numeric,scale) -> X_scaled
 
 ### fit models ####
 
@@ -395,49 +402,44 @@ df_wims_w_trim0 %>%
 ### Fit models ####
 # Unconstrained w/ Random ####
 #### Negbin ####
+
 tic("Fit Unconstrained Negative binomial model")
-sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-m_lvm_0 <- gllvm(df_tx_w_trm, # unconstrained model
-                 offset = log(`Net.volume.sampled.(m3)`),#set model offset
-                 studyDesign = sDsn, row.eff = ~(1|Region),
-                 family = "negative.binomial"
+sDsn <- data.frame(Region = X$region)
+m_lvm_0 <- gllvm(Y, # unconstrained model
+                 offset = log(X$net_vol_m3),#set model offset
+                 studyDesign = sDsn,
+                 row.eff = ~(1|Region),
+                 family = "negative.binomial",
+                 starting.val="zero",
+                 n.init=runs,#re-run model to get best fit
+                 trace=TRUE
                  )
 saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_negbin.Rdat") #3.265326 mins
 toc(log=TRUE)
 m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_negbin.Rdat")
+par(mfrow=c(2,2));plot(m_lvm_0, which=1:4);par(mfrow=c(1,1))
+ordiplot(m_lvm_0,biplot = TRUE,symbols=TRUE)
 
 ##########################
 # Constrained w/ Random ####
 #### Nested by Region ####
-##### Tweedie ####
-# ptm <- Sys.time()
-# sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-# m_lvm_4 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
-#                  # X=df_wims_w_trim0, #unscaled
-#                  X=df_wims_w_trim0_scale, #scaled
-#                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
-#                  studyDesign = sDsn, row.eff = ~(1|Region),
-#                  family="tweedie"
-#                  )
-# # # saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat") #unscaled #11.623mins
-# saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed_scaled.Rdat") #scaled #6.862054 mins
-# Sys.time() - ptm;rm(ptm)
-# m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat")#unscaled
-m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed_scaled.Rdat")#scaled
+##### Negbin ####
+tic("Fit Constrained Negative binomial model")
+sDsn <- data.frame(region = X$region)
+m_lvm_4 <- gllvm(y=Y, # model with environmental parameters
+                 X=X_scaled, #scaled
+                 offset = log(X$net_vol_m3),#set model offset
+                 formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
+                 studyDesign = sDsn, row.eff = ~(1|region),
+                 family="negative.binomial",
+                 starting.val="zero",
+                 n.init=runs,#re-run model to get best fit
+                 trace=TRUE
+                 )
 
-######
-##### Gaussian ####
-# ptm <- Sys.time()
-# sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-# m_lvm_4 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
-#                  X=df_wims_w_trim0,
-#                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
-#                  studyDesign = sDsn, row.eff = ~(1|Region),
-#                  family=gaussian()
-#                  )
-# saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_gauss.Rdat")#11.623mins
-# Sys.time() - ptm;rm(ptm)
-# m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_gauss.Rdat")
+saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_negbin_scaled.Rdat") #scaled #6.862054 mins
+toc(log=TRUE)
+m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed_scaled.Rdat")#scaled
 
 cr <- getResidualCor(m_lvm_4)
 pdf(file = "figs/m_lvm_4_trt_corrplot.pdf",width=14,height=14)
@@ -448,46 +450,7 @@ dev.off()
 AIC(m_lvm_0,m_lvm_4)
 anova(m_lvm_0,m_lvm_4)
 
-# # Constrained + Random
-# sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-# ptm <- Sys.time()
-# m_lvm_4 <- gllvm(y=df_tx_w_trm, # model with environmental parameters & random FX
-#                  X=df_wims_w_trim0,
-#                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
-#                  # family = gaussian(),
-#                  family = "tweedie",
-#                  studyDesign = sDsn, row.eff = ~(1|Region)
-# )
-# # saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Tmp_norm.Rdat")#4.1096 mins
-# saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Tmp_tweed.Rdat")#4.1096 mins
-# Sys.time() - ptm;rm(ptm) 
-# m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Tmp_tweed.Rdat")
-# 
-# AIC(m_lvm_0,m_lvm_3,m_lvm_4)
-# anova(m_lvm_0,m_lvm_3,m_lvm_4)
-
-#### Nested by WB|Region ####
-##### Tweedie ####
-# ptm <- Sys.time()
-# sDsn2 <- data.frame(WB = df_wims_w_trim0$WB)
-# m_lvm_5 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
-#                  # X=df_wims_w_trim0, #unscaled
-#                  X=df_wims_w_trim0_scale, #scaled
-#                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
-#                  studyDesign = sDsn2, row.eff = ~(1|WB),
-#                  family="tweedie"
-#                  )
-# # saveRDS(m_lvm_5, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed.Rdat") #unscaled #11.623mins
-# saveRDS(m_lvm_5, file="figs/gllvm_traits_nh4SalChlaDinDepPo4WB_tweed_scaled.Rdat") #scaled #6.862054 mins
-# Sys.time() - ptm;rm(ptm)
-# m_lvm_5 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4WB_tweed_scaled.Rdat")#scaled
-
 ##### GLLVM plots ####
-# pdf(file = "figs/m_lvm_3_trt_all_ordered.pdf",width=16,height=8)
-# coefplot(m_lvm_3,cex.ylab = 0.3,
-#          order=TRUE)
-# dev.off()
-# 
 pdf(file = "figs/coef_trt_all_unordered.pdf",width=16,height=8)
 coefplot(m_lvm_4,cex.ylab = 0.7,
          order=FALSE)
@@ -644,7 +607,6 @@ for (level in levels(sigterms_all$variable)) {
                                      "Random row effects: ",as.character(m_lvm_4$call)[7]),
                     theme = theme(plot.title = element_text(size = 16, face="bold"))))
 
-# pdf(file = "figs/coef_trt_all_unordered_v2_unscaled.pdf",width=16,height=8)#unscaled
 pdf(file = "figs/coef_trt_all_unordered_v2_scaled.pdf",width=16,height=8) #scaled
 print(final_plot)
 dev.off()
