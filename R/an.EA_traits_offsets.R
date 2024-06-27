@@ -327,7 +327,7 @@ X$WB <- dfw$WB
 X$Region <- dfw$Region
 
 #OPTIONAL: remove lifeforms which only appear n>=4 times ####
-n <- 4
+n <- 7 # 7 terms in 'full' X-model
 Y <- Y[,colSums(ifelse(Y==0,0,1))>n]
 
 ## replace NA values with mean values for respective column.
@@ -412,7 +412,9 @@ m_lvm_0 <- gllvm(Y, # unconstrained model
                  family = "negative.binomial",
                  starting.val="zero",
                  n.init=runs,#re-run model to get best fit
-                 trace=TRUE
+                 trace=TRUE,
+                 seed = pi,
+                 num.lv = 2
                  )
 saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_negbin.Rdat") #3.265326 mins
 toc(log=TRUE)
@@ -434,12 +436,13 @@ m_lvm_4 <- gllvm(y=Y, # model with environmental parameters
                  family="negative.binomial",
                  starting.val="zero",
                  n.init=runs,#re-run model to get best fit
-                 trace=TRUE
+                 trace=TRUE,
+                 num.lv = 2
                  )
 
 saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_negbin_scaled.Rdat") #scaled #6.862054 mins
 toc(log=TRUE)
-m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed_scaled.Rdat")#scaled
+m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_negbin_scaled.Rdat")#scaled
 
 cr <- getResidualCor(m_lvm_4)
 pdf(file = "figs/m_lvm_4_trt_corrplot.pdf",width=14,height=14)
@@ -604,7 +607,7 @@ for (level in levels(sigterms_all$variable)) {
                                      "Dashed vertical lines indicate mean point estimate values\n","Lifeforms recorded in fewer than ",n+1," samples removed from data prior to model estimations","\n",
                                      "Model call: ~",as.character(m_lvm_4$formula)[2],
                                      "\nDistribution family: ",as.character(m_lvm_4$family),". ",
-                                     "Random row effects: ",as.character(m_lvm_4$call)[7]),
+                                     "Random row effects: ",as.character(m_lvm_4$call)[8]),
                     theme = theme(plot.title = element_text(size = 16, face="bold"))))
 
 pdf(file = "figs/coef_trt_all_unordered_v2_scaled.pdf",width=16,height=8) #scaled
@@ -622,11 +625,12 @@ dev.off()
 # traces suggests that environmental variables explain approximately 40% of
 # the (co)variation in ant species abundances.
 
-(rcov0 <- getResidualCov(m_lvm_0, adjust = 0)) # 'null' model
-(rcov1 <- getResidualCov(m_lvm_4, adjust = 0)) # model with env variables #REGION
+(rcov0 <- getResidualCov(m_lvm_0, adjust = 1)) # 'null' model
+(rcov1 <- getResidualCov(m_lvm_4, adjust = 1)) # model with env variables #REGION
 # (rcov1 <- getResidualCov(m_lvm_5, adjust = 0)) # model with env variables #WB
 rcov0$trace; rcov1$trace
-100 - (rcov1$trace / rcov0$trace*100)
+btwn <- 100 - (rcov1$trace / rcov0$trace*100)
+print(paste0("Including environmental parameters in the model explains ",round(btwn,2),"% of the (co)variation in zooplankton abundances"))
 AIC(m_lvm_0,m_lvm_4)
 
 # PRIORITY : REPRODUCE CODE ####
@@ -664,3 +668,5 @@ rm(list = ls(pattern = "*plot"))
 rm(list = ls(pattern = "*consiste"))
 rm(datfol,nit,perms, ppi,replace_values,pl_ts_N,sDsn,subset_data,i,level,
    ntrt,sbtt,srt,ttl,cr,n, rcov0,rcov1)
+rm(list = ls(pattern = "^X"))
+rm(Y,runs,mean_estimate,line_color,btwn)
