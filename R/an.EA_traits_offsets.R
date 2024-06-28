@@ -51,18 +51,24 @@ toc(log=TRUE)
 
 #### load data ####
 tic("Load and format data")
-dfw <- readRDS(paste0(datfol,"processedData/","zoopWideTraitAbund_m3_taxOnly_USE.RDat"))
+dfw0 <- readRDS(paste0(datfol,"processedData/","zoopWideTraitAbund_m3_taxOnly_USE.RDat"))
+
+##coalesce to replace NA net volume values with volume = 1
+dfw <- dfw0 %>% 
+  mutate(NetUse = coalesce(`Net.volume.sampled.(m3)`, 1)) %>% 
+  relocate(NetUse,.after = `Net.volume.sampled.(m3)`)
 
 df_tx_w <- dfw %>% # remove WIMS data from object
   dplyr::select(-c(WIMS.Code.y:"Zinc, Dissolved_ug/l"))
 toc(log=TRUE)
 
 # Quick ordination ####
+tic("NMDS ordination prep")
 ### weight abundances by net volume
 df_tx_w %>% 
   pivot_longer(cols = -c(Pot.Number:WB),names_to = "taxon",values_to = "abund") %>% 
   filter(abund >0) %>% 
-  mutate(NetUse = coalesce(`Net.volume.sampled.(m3)`, 1)) %>% 
+  # mutate(NetUse = coalesce(`Net.volume.sampled.(m3)`, 1)) %>% 
   mutate(abund_m3=NetUse*abund) %>% ## weight abundances by net volume
   dplyr::select(.,-c(abund)) %>% 
   # names(.) #%>% 
@@ -70,7 +76,7 @@ df_tx_w %>%
   dplyr::select(-c(Pot.Number:WB)) %>% ###remove metadata info
   dplyr::select_if(~ !is.numeric(.) || sum(.) !=0) %>% ### drop cols summing to 0
   filter(rowSums(across(where(is.numeric)))!=0) -> dftmp ###remove 'empty' rows
-
+toc(log=TRUE)
 ### NMDS ####
 # tic("Run NMDS")
 # set.seed(pi);ord <-   vegan::metaMDS(dftmp,trymax = 500)
@@ -80,6 +86,7 @@ ord <- readRDS("figs/nmds_trt.Rdat")
 plot(ord)
 
 ### extract site info
+tic("Export ggplots for NMDS")
 df_tx_w %>% 
   mutate_at(c("Net.volume.sampled.(m3)",
               "Time.of.sampling.(GMT)?"),
@@ -192,6 +199,9 @@ for (level in levels(scores_site$yymm)) {
   # Subset the data for the current 'yymm' level
   subset_data <- scores_site[scores_site$yymm == level, ]
   
+  # Force 'Region' to be a factor with specific levels
+  subset_data$Region <- factor(subset_data$Region, levels = names(consistent_palette))
+  
   # Create a plot for the current level
   current_plot <- ggplot() +
     geom_hline(colour="grey",yintercept = 0, lty=2)+
@@ -215,7 +225,7 @@ for (level in levels(scores_site$yymm)) {
 }
 
 # Combine all the individual plots into a single plot
-(final_plot <- wrap_plots(plotlist = plot_list, ncol = 4)+  # Adjust the number of columns as needed
+(final_plot <- wrap_plots(plotlist = plot_list, ncol = 6)+  # Adjust the number of columns as needed
     plot_annotation(title="Non-metric Multidimensional Scaling Plots by sampling Year-Month",
                     subtitle = "Based on zooplankton taxon lifeforms",
                     caption = paste0("Stress = ",round(ord$stress,3),
@@ -273,13 +283,14 @@ ggsave(filename = "figs/nmds_by_Region&season_Traits.pdf",width = 12,height = 12
        plot=final_plot);rm(final_plot, plot_list)
 
 rm(ord, scores_site, scores_species, subset_data,current_plot, df_tx_w,dftmp)
+toc(log = TRUE)
 
 #############
 # GLLVMs ####
 #############
-dfw0 <- dfw
+tic("gllvm model setup")
 ### remove samples without net volume measurements
-dfw %>% filter(.,!is.na(`Net.volume.sampled.(m3)`)) -> dfw
+#dfw %>% filter(.,!is.na(`Net.volume.sampled.(m3)`)) -> dfw
 
 ### set number of iterations
 runs <- 5
@@ -377,6 +388,7 @@ X$gn <- ifelse(X$region == "Southern", "Sth",
 ### create scaled version for comparison of effects on model
 X %>% 
   mutate_if(is.numeric,scale) -> X_scaled
+toc(log=TRUE)
 
 ### fit models ####
 
@@ -442,6 +454,8 @@ m_lvm_4 <- gllvm(y=Y, # model with environmental parameters
 
 saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_negbin_scaled.Rdat") #scaled #6.862054 mins
 toc(log=TRUE)
+
+tic("Model summaries & comparisons")
 m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_negbin_scaled.Rdat")#scaled
 
 cr <- getResidualCor(m_lvm_4)
@@ -597,23 +611,6 @@ for (level in levels(sigterms_all$variable)) {
   }
 }
 
-# Combine all the individual plots into a single plot
-(final_plot <- wrap_plots(plotlist = plot_list,
-                          ncol = nlevels(sigterms_all$variable))+  # Adjust the number of columns as needed
-    plot_annotation(title="Caterpillar plot of generalised linear latent variable model outputs",
-                    # subtitle = "Based on zooplankton taxon lifeforms and water quality parameters",#unscaled
-                    subtitle = bquote("Point estimates & 95% confidence intervals of lifeform-specific model coefficients "~italic(hat(beta)[j])~". Based on zooplankton taxon lifeform densities and scaled water quality parameters"), #scaled
-                    caption = paste0("Colours indicate lifeform 95% confidence intervals which do (grey) or do not (red/blue) include zero","\n",
-                                     "Dashed vertical lines indicate mean point estimate values\n","Lifeforms recorded in fewer than ",n+1," samples removed from data prior to model estimations","\n",
-                                     "Model call: ~",as.character(m_lvm_4$formula)[2],
-                                     "\nDistribution family: ",as.character(m_lvm_4$family),". ",
-                                     "Random row effects: ",as.character(m_lvm_4$call)[8]),
-                    theme = theme(plot.title = element_text(size = 16, face="bold"))))
-
-pdf(file = "figs/coef_trt_all_unordered_v2_scaled.pdf",width=16,height=8) #scaled
-print(final_plot)
-dev.off()
-
 ### compare models w/ w/out env parameters####
 # based on:
 #https://jenniniku.github.io/gllvm/articles/vignette1.html#studying-co-occurrence-patterns
@@ -625,17 +622,113 @@ dev.off()
 # traces suggests that environmental variables explain approximately 40% of
 # the (co)variation in ant species abundances.
 
-(rcov0 <- getResidualCov(m_lvm_0, adjust = 1)) # 'null' model
-(rcov1 <- getResidualCov(m_lvm_4, adjust = 1)) # model with env variables #REGION
-# (rcov1 <- getResidualCov(m_lvm_5, adjust = 0)) # model with env variables #WB
-rcov0$trace; rcov1$trace
+rcov0 <- getResidualCov(m_lvm_0, adjust = 1) # 'null' model
+rcov1 <- getResidualCov(m_lvm_4, adjust = 1) # model with env variables #REGION
 btwn <- 100 - (rcov1$trace / rcov0$trace*100)
 print(paste0("Including environmental parameters in the model explains ",round(btwn,2),"% of the (co)variation in zooplankton abundances"))
 AIC(m_lvm_0,m_lvm_4)
 
-# PRIORITY : REPRODUCE CODE ####
-## Currently untidy and seems to produce 'issues'
-## Errors alluding to "non-numeric argument to binary operator"
+# Combine all the individual plots into a single plot
+(final_plot <- wrap_plots(plotlist = plot_list,
+                          ncol = nlevels(sigterms_all$variable))+  # Adjust the number of columns as needed
+    plot_annotation(title="Caterpillar plot of generalised linear latent variable model outputs",
+                    # subtitle = "Based on zooplankton taxon lifeforms and water quality parameters",#unscaled
+                    #subtitle = bquote("Model including environmental variables explains "~round(btwn,2)~"% of the (co)variation in lifeform abundances compared to the null (lifeforms-only) model"),#Point estimates & 95% confidence intervals of lifeform-specific model coefficients "~italic(hat(beta)[j])~". Based on zooplankton taxon lifeform densities and scaled water quality parameters"), #scaled
+                    subtitle = paste0("Model including environmental variables explains ",round(btwn,2),"% of the (co)variation in lifeform abundances compared to the null (lifeforms-only) model"),
+                    caption = paste0("Colours indicate lifeform 95% confidence intervals which do (grey) or do not (red/blue) include zero","\n",
+                                     "Dashed vertical lines indicate mean point estimate values\n","Lifeforms recorded in fewer than ",n+1," samples removed from data prior to model estimations","\n",
+                                     "Model call: ~",as.character(m_lvm_4$formula)[2],
+                                     "\nDistribution family: ",as.character(m_lvm_4$family),". ",
+                                     "Random row effects: ",as.character(m_lvm_4$call)[8]),
+                    theme = theme(plot.title = element_text(size = 16, face="bold"))))
+
+pdf(file = "figs/coef_trt_all_unordered_v2_scaled.pdf",width=16,height=8) #scaled
+print(final_plot)
+dev.off()
+
+toc(log=TRUE)
+
+# fun & games with unimodal QUADRATIC model ####
+# model is processor-hungry and needs lots of data.  Trim Y
+YQuad <- Y[,colSums(ifelse(Y==0,0,1))>100]
+
+#### Nested by Region ####
+##### Negbin ####
+tic("Fit QUADRATIC unconstrained Negative binomial model")
+sDsn <- data.frame(region = X$region)
+m_lvm_quad_0 <- gllvm(y = YQuad, 
+                      # X = X_scaled, #scaled
+                      offset = log(X$net_vol_m3),#set model offset
+                      # formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
+                      studyDesign = sDsn, row.eff = ~(1 | region), 
+                      family = "negative.binomial", 
+                      starting.val = "zero", 
+                      n.init = 100, n.init.max = 10,
+                      trace = TRUE, 
+                      num.lv = 2,
+                      quadratic = TRUE,
+                      seed = pi,
+                      #sd.errors = FALSE#quicker fitting for model testing only
+                      )
+saveRDS(m_lvm_quad_0, file="figs/gllvm_traits_unconstrainedQuadraticNegBin.Rdat")
+m_lvm_quad_0 <- readRDS("figs/gllvm_traits_unconstrainedQuadraticNegBin.Rdat")
+toc(log=TRUE)
+
+ordiplot(m_lvm_quad_0,biplot=TRUE,symbols = TRUE)#species optima are far away from the gradient (hence arrows)
+optima(m_lvm_quad_0,sd.errors = FALSE)## inspect optima
+tolerances(m_lvm_quad_0,sd.errors = FALSE)## inspect tolerances
+
+# some very large values in the optima and tolerances, indicating linear responses
+## Use model to predict some values for visualisation
+#LV1
+LVs = getLV(m_lvm_quad_0)
+newLV <- cbind(LV1=seq(min(LVs[,1]), max(LVs[,1]),length.out=1000),LV2=0)
+### causes error:
+preds <- gllvm::predict.gllvm(m_lvm_quad_0,
+    type = "response", newLV = newLV,
+    newX = cbind(Region = rep(0, nrow(newLV))))
+plot(NA,
+  ylim = range(preds), xlim = c(range(getLV(m_lvm_quad_0))),
+  ylab  = "Predicted response", xlab = "LV1")
+segments(
+  x0 = optima(m_lvm_quad_0, sd.errors = FALSE)[, 1],
+  x1 = optima(m_lvm_quad_0, sd.errors = FALSE)[, 1],
+  y0 = rep(0, ncol(m_lvm_quad_0$y)),
+  y1 = apply(preds, 2, max),
+  col = "red", lty = "dashed", lwd = 2)
+rug(getLV(m_lvm_quad_0))[,1]
+sapply(1:ncol(m_lvm_quad_0$y), function(j)
+  lines(sort(newLV[, 1]), preds[order(newLV[, 1]), j], lwd = 2))
+
+## LV2
+newLV = cbind(LV1 = 0, LV2 =  seq(min(LVs[, 2]), max(LVs[, 2]),
+                                  length.out = 1000))
+preds <- gllvm::predict.gllvm(m_lvm_quad_0,
+    type = "response", newLV = newLV,
+    newX = cbind(Region = rep(0, nrow(newLV))))
+plot( NA,
+  ylim = range(preds), xlim = c(range(getLV(m_lvm_quad_0))),
+  ylab  = "Predicted response", xlab = "LV2")
+segments(
+  x0 = optima(m_lvm_quad_0, sd.errors = FALSE)[, 2],
+  x1 = optima(m_lvm_quad_0, sd.errors = FALSE)[, 2],
+  y0 = rep(0, ncol(m_lvm_quad_0$y)),
+  y1 = apply(preds, 2, max),
+  col = "red", lty = "dashed", lwd = 2)
+rug(getLV(m_lvm_quad_0)[, 2])
+sapply(1:ncol(m_lvm_quad_0$y), function(j)
+  lines(sort(newLV[, 2]), preds[order(newLV[, 2]), j], lwd = 2))
+
+# calculate turnover for these two estimated gradients
+# Extract tolerances
+tol <- tolerances(m_lvm_quad_0, sd.errors = FALSE)
+gradLength <- 4/apply(tol, 2, median)
+cat("Gradient length:", gradLength)
+turn <- 2*qnorm(.999, sd = apply(tol, 2, median))
+cat("Turnover rate:", turn)
+
+paste0("LV1 tunrover rate = ",round(2*qnorm(.999,sd=1/sqrt(-2*m_lvm_quad_0$params$theta[1,3]*m_lvm_quad_0$params$sigma.lv[1]^2)),2))
+paste0("LV2 tunrover rate = ",round(2*qnorm(.999,sd=1/sqrt(-2*m_lvm_quad_0$params$theta[1,4]*m_lvm_quad_0$params$sigma.lv[2]^2)),2))
 
 # TIDY UP ####
 # unload packages
