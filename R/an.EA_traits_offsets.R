@@ -763,3 +763,4 @@ rm(datfol,nit,perms, ppi,replace_values,pl_ts_N,sDsn,subset_data,i,level,
    ntrt,sbtt,srt,ttl,cr,n, rcov0,rcov1)
 rm(list = ls(pattern = "^X"))
 rm(Y,runs,mean_estimate,line_color,btwn)
+rm(LVs, newLV,preds,tol,YQuad,gradLength,turn)
