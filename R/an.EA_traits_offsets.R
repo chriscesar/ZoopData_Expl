@@ -338,7 +338,7 @@ X$WB <- dfw$WB
 X$Region <- dfw$Region
 
 #OPTIONAL: remove lifeforms which only appear n>=4 times ####
-n <- 7 # 7 terms in 'full' X-model
+n <- 10 # 7 terms in 'full' X-model
 Y <- Y[,colSums(ifelse(Y==0,0,1))>n]
 
 ## replace NA values with mean values for respective column.
@@ -388,6 +388,7 @@ X$gn <- ifelse(X$region == "Southern", "Sth",
 ### create scaled version for comparison of effects on model
 X %>% 
   mutate_if(is.numeric,scale) -> X_scaled
+X_scaled$net_vol_m3 <- X$net_vol_m3
 toc(log=TRUE)
 
 ### fit models ####
@@ -414,22 +415,21 @@ toc(log=TRUE)
 ### Fit models ####
 # Unconstrained w/ Random ####
 #### Negbin ####
-
-tic("Fit Unconstrained Negative binomial model")
-sDsn <- data.frame(Region = X$region)
-m_lvm_0 <- gllvm(Y, # unconstrained model
-                 offset = log(X$net_vol_m3),#set model offset
-                 studyDesign = sDsn,
-                 row.eff = ~(1|Region),
-                 family = "negative.binomial",
-                 starting.val="zero",
-                 n.init=runs,#re-run model to get best fit
-                 trace=TRUE,
-                 seed = pi,
-                 num.lv = 2
-                 )
-saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_negbin.Rdat") #3.265326 mins
-toc(log=TRUE)
+# tic("Fit Unconstrained Negative binomial model")
+# sDsn <- data.frame(Region = X$region)
+# m_lvm_0 <- gllvm(Y, # unconstrained model
+#                  offset = log(X$net_vol_m3),#set model offset
+#                  studyDesign = sDsn,
+#                  row.eff = ~(1|Region),
+#                  family = "negative.binomial",
+#                  starting.val="res",
+#                  n.init=runs,#re-run model to get best fit
+#                  trace=TRUE,
+#                  seed = pi,
+#                  num.lv = 2
+#                  )
+# saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_negbin.Rdat") #3.265326 mins
+# toc(log=TRUE)
 m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_negbin.Rdat")
 par(mfrow=c(2,2));plot(m_lvm_0, which=1:4);par(mfrow=c(1,1))
 ordiplot(m_lvm_0,biplot = TRUE,symbols=TRUE)
@@ -438,22 +438,22 @@ ordiplot(m_lvm_0,biplot = TRUE,symbols=TRUE)
 # Constrained w/ Random ####
 #### Nested by Region ####
 ##### Negbin ####
-tic("Fit Constrained Negative binomial model")
-sDsn <- data.frame(region = X$region)
-m_lvm_4 <- gllvm(y=Y, # model with environmental parameters
-                 X=X_scaled, #scaled
-                 offset = log(X$net_vol_m3),#set model offset
-                 formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
-                 studyDesign = sDsn, row.eff = ~(1|region),
-                 family="negative.binomial",
-                 starting.val="zero",
-                 n.init=runs,#re-run model to get best fit
-                 trace=TRUE,
-                 num.lv = 2
-                 )
-
-saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_negbin_scaled.Rdat") #scaled #6.862054 mins
-toc(log=TRUE)
+# tic("Fit Constrained Negative binomial model")
+# sDsn <- data.frame(region = X$region)
+# m_lvm_4 <- gllvm(y=Y, # model with environmental parameters
+#                  X=X_scaled, #scaled
+#                  offset = log(X$net_vol_m3),#set model offset
+#                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
+#                  studyDesign = sDsn, row.eff = ~(1|region),
+#                  family="negative.binomial",
+#                  starting.val="res",
+#                  n.init=runs,#re-run model to get best fit
+#                  trace=TRUE,
+#                  num.lv = 2
+#                  )
+# 
+# saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_negbin_scaled.Rdat") #scaled #6.862054 mins
+# toc(log=TRUE)
 
 tic("Model summaries & comparisons")
 m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_negbin_scaled.Rdat")#scaled
@@ -508,6 +508,9 @@ coefplot(m_lvm_4,mfrow = c(1,1),which.Xcoef = 7, cex.ylab = 0.6,
          order=TRUE, main="Temperature")
 dev.off()
 
+# source("R/function_scores.gllvm.R")
+# scrs <- scores.gllvm(m_lvm_4)
+
 #### GLLVM model explore ####
 # ordiplot.gllvm(m_lvm_0)
 # # ordiplot.gllvm(m_lvm_3)
@@ -521,12 +524,14 @@ ci_mod_all <- as.data.frame(confint(m_lvm_4))
 ci_mod_var <- ci_mod_all[grep("^X", rownames(ci_mod_all)), ]
 rownames(ci_mod_var) <- substring(rownames(ci_mod_var), 7)
 ci_mod_var$varTrt <- rownames(ci_mod_var)
+ci_mod_var$varTrt <- gsub("\\.","_",ci_mod_var$varTrt)
 
 sigterms_all <- summary(m_lvm_4)
 sigterms_all <- as.data.frame(sigterms_all$Coef.tableX)
 sigterms_all$variable <- sub(":.*","",row.names(sigterms_all))
 sigterms_all$trt <- sub(".*:","",row.names(sigterms_all))
 sigterms_all$varTrt <- rownames(sigterms_all)
+sigterms_all$varTrt <- gsub(":","_",sigterms_all$varTrt)
 sigterms_all <- left_join(sigterms_all, ci_mod_var, by = "varTrt")
 sigterms_all$sig <- sigterms_all$`2.5 %`*sigterms_all$`97.5 %`>0
 
@@ -764,3 +769,8 @@ rm(datfol,nit,perms, ppi,replace_values,pl_ts_N,sDsn,subset_data,i,level,
 rm(list = ls(pattern = "^X"))
 rm(Y,runs,mean_estimate,line_color,btwn)
 rm(LVs, newLV,preds,tol,YQuad,gradLength,turn)
+
+########## TO DO ##############
+# * fix caterpillar plot: currently giving off-centre point estimates
+# * check data: unconstrained ordination only showing variation on one axis
+# * 
