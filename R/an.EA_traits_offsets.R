@@ -523,7 +523,7 @@ dev.off()
 mod_coefs <- as.data.frame(m_lvm_4$params$Xcoef)
 mod_coefs$LF <- row.names(mod_coefs)
 mod_coefs <- mod_coefs %>% 
-  pivot_longer(.,cols=!LF,names_to = "coefficient", values_to = "estimate")
+  pivot_longer(.,cols=!LF,names_to = "coefficient", values_to = "Estimate")
 sdXcoef <- as.data.frame(m_lvm_4$sd$Xcoef[,  drop = FALSE])
 sdXcoef$LF <- row.names(sdXcoef)
 sdXcoef <- sdXcoef %>% 
@@ -531,8 +531,8 @@ sdXcoef <- sdXcoef %>%
 
 mod_coefs <- dplyr::left_join(mod_coefs,sdXcoef, by=c("LF","coefficient"))
 mod_coefs <- mod_coefs %>% 
-  mutate(.,lower = estimate-1.96*sd,
-         upper = estimate+1.96*sd) %>% 
+  mutate(.,lower = Estimate-1.96*sd,
+         upper = Estimate+1.96*sd) %>% 
   mutate(.,varTrt=paste0(coefficient,"_",LF))
 
 ## extract P values
@@ -576,20 +576,23 @@ mod_coefs$sig <- mod_coefs$lower*mod_coefs$upper>0
 #   guides(colour="none")
 
 #############
+### updated plot ####
 plot_list <- list()
-sigterms_all$variable <- as.factor(sigterms_all$variable)
-ntrt <- length(unique(sigterms_all$trt))-.5
-sigterms_all %>% 
+mod_coefs$coefficient <- as.factor(mod_coefs$coefficient)
+# sigterms_all$variable <- as.factor(sigterms_all$variable)
+ntrt <- length(unique(mod_coefs$LF))-.5
+mod_coefs %>% 
   mutate(flag = case_when(
     !sig ~ "NONE",
     sig & Estimate >0 ~ "pos",
     sig & Estimate <0 ~ "neg"
-  )) -> sigterms_all
+  )) -> mod_coefs
 
-# Iterate over each level of the factor 'trt'
-for (level in levels(sigterms_all$variable)) {
+# Iterate over each level of the factor 'LF'
+for (level in levels(mod_coefs$coefficient)) {
   # Subset the data for the current level
-  subset_data <- sigterms_all[sigterms_all$variable == level, ]
+  subset_data <- mod_coefs[mod_coefs$coefficient == level, ]
+  #subset_data <- mod_coefs[mod_coefs$coefficient == "nh4", ]
   
   # Calculate the mean value of 'Estimate' for the current level
   mean_estimate <- mean(subset_data$Estimate)
@@ -599,9 +602,9 @@ for (level in levels(sigterms_all$variable)) {
   
   # Create a plot for the current level
   current_plot <- ggplot(subset_data,
-                         aes(x=Estimate, y=trt,
-                             xmin=`2.5 %`,
-                             xmax=`97.5 %`,
+                         aes(x=Estimate, y=LF,
+                             xmin=lower,
+                             xmax=upper,
                              colour=flag,
                              fill=flag)) +
     geom_hline(yintercept = seq(1.5,ntrt,by=1),col="lightgrey",lty=3)+
@@ -611,15 +614,15 @@ for (level in levels(sigterms_all$variable)) {
     geom_linerange()+
     labs(title = paste0(level))+
     geom_point(shape=21) +
-    scale_y_discrete(limits = rev(levels(as.factor(sigterms_all$trt))))+
+    scale_y_discrete(limits = rev(levels(as.factor(mod_coefs$LF))))+
     scale_colour_manual(values = c("red",#negative
-                                         "grey",#null
-                                         "blue"#positive
-                                         ))+
-    scale_fill_manual(values = c("red",#negative
-                                        "white",#null
+                                        "grey",#null
                                         "blue"#positive
-                                        ))+
+    ))+
+    scale_fill_manual(values = c("red",#negative
+                                      "white",#null
+                                      "blue"#positive
+    ))+
     guides(colour="none",
            fill="none")+
     theme(axis.title = element_blank(),
@@ -656,10 +659,8 @@ AIC(m_lvm_0,m_lvm_4)
 
 # Combine all the individual plots into a single plot
 (final_plot <- wrap_plots(plotlist = plot_list,
-                          ncol = nlevels(sigterms_all$variable))+  # Adjust the number of columns as needed
+                          ncol = nlevels(mod_coefs$coefficient))+  # Adjust the number of columns as needed
     plot_annotation(title="Caterpillar plot of generalised linear latent variable model outputs",
-                    # subtitle = "Based on zooplankton taxon lifeforms and water quality parameters",#unscaled
-                    #subtitle = bquote("Model including environmental variables explains "~round(btwn,2)~"% of the (co)variation in lifeform abundances compared to the null (lifeforms-only) model"),#Point estimates & 95% confidence intervals of lifeform-specific model coefficients "~italic(hat(beta)[j])~". Based on zooplankton taxon lifeform densities and scaled water quality parameters"), #scaled
                     subtitle = paste0("Model including environmental variables explains ",round(btwn,2),"% of the (co)variation in lifeform abundances compared to the null (lifeforms-only) model"),
                     caption = paste0("Colours indicate lifeform 95% confidence intervals which do (grey) or do not (red/blue) include zero","\n",
                                      "Dashed vertical lines indicate mean point estimate values\n","Lifeforms recorded in fewer than ",n+1," samples removed from data prior to model estimations","\n",
