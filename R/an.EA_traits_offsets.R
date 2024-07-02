@@ -463,7 +463,7 @@ dev.off();rm(cr)
 
 tic("Model summaries & comparisons")
 m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_negbin_scaled.Rdat")#scaled
-
+ordiplot(m_lvm_4,biplot = TRUE,symbols=TRUE)
 cr <- getResidualCor(m_lvm_4)
 pdf(file = "figs/m_lvm_4_trt_corrplot.pdf",width=14,height=14)
 corrplot::corrplot(cr, diag = FALSE, type = "lower", method = "square",
@@ -661,7 +661,7 @@ AIC(m_lvm_0,m_lvm_4)
 (final_plot <- wrap_plots(plotlist = plot_list,
                           ncol = nlevels(mod_coefs$coefficient))+  # Adjust the number of columns as needed
     plot_annotation(title="Caterpillar plot of generalised linear latent variable model outputs",
-                    subtitle = paste0("Model including environmental variables explains ",round(btwn,2),"% of the (co)variation in lifeform abundances compared to the null (lifeforms-only) model"),
+                    subtitle = paste0("Including environmental variables explains ",round(btwn,2),"% of the (co)variation in lifeform abundances compared to the null (lifeforms-only) model"),
                     caption = paste0("Colours indicate lifeform 95% confidence intervals which do (grey) or do not (red/blue) include zero","\n",
                                      "Dashed vertical lines indicate mean point estimate values\n","Lifeforms recorded in fewer than ",n+1," samples removed from data prior to model estimations","\n",
                                      "Model call: ~",as.character(m_lvm_4$formula)[2],
