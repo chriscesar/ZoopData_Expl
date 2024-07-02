@@ -433,6 +433,12 @@ toc(log=TRUE)
 m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_negbin.Rdat")
 par(mfrow=c(2,2));plot(m_lvm_0, which=1:4);par(mfrow=c(1,1))
 ordiplot(m_lvm_0,biplot = TRUE,symbols=TRUE)
+cr <- getResidualCor(m_lvm_0)
+
+pdf(file = "figs/m_lvm_0_trt_corrplot.pdf",width=14,height=14)
+corrplot::corrplot(cr, diag = FALSE, type = "lower", method = "square",
+                   tl.srt = 25)
+dev.off();rm(cr)
 
 ##########################
 # Constrained w/ Random ####
@@ -512,19 +518,30 @@ dev.off()
 # scrs <- scores.gllvm(m_lvm_4)
 
 #### GLLVM model explore ####
-# ordiplot.gllvm(m_lvm_0)
-# # ordiplot.gllvm(m_lvm_3)
-# ordiplot.gllvm(m_lvm_4, biplot = TRUE)
 
-# tail(confint.gllvm(m_lvm_3))
-# tail(confint.gllvm(m_lvm_4))
+#### extract model terms for plotting ####
+mod_coefs <- as.data.frame(m_lvm_4$params$Xcoef)
+mod_coefs$LF <- row.names(mod_coefs)
+mod_coefs <- mod_coefs %>% 
+  pivot_longer(.,cols=!LF,names_to = "coefficient", values_to = "estimate")
+sdXcoef <- as.data.frame(m_lvm_4$sd$Xcoef[,  drop = FALSE])
+sdXcoef$LF <- row.names(sdXcoef)
+sdXcoef <- sdXcoef %>% 
+  pivot_longer(.,cols=!LF,names_to = "coefficient", values_to = "sd")
 
+mod_coefs <- dplyr::left_join(mod_coefs,sdXcoef, by=c("LF","coefficient"))
+mod_coefs <- mod_coefs %>% 
+  mutate(.,lower = estimate-1.96*sd,
+         upper = estimate+1.96*sd) %>% 
+  mutate(.,varTrt=paste0(coefficient,"_",LF))
+
+## extract P values
 ## extract 'significant' model/species terms from model
-ci_mod_all <- as.data.frame(confint(m_lvm_4))
-ci_mod_var <- ci_mod_all[grep("^X", rownames(ci_mod_all)), ]
-rownames(ci_mod_var) <- substring(rownames(ci_mod_var), 7)
-ci_mod_var$varTrt <- rownames(ci_mod_var)
-ci_mod_var$varTrt <- gsub("\\.","_",ci_mod_var$varTrt)
+# ci_mod_all <- as.data.frame(confint(m_lvm_4))
+# ci_mod_var <- ci_mod_all[grep("^X", rownames(ci_mod_all)), ]
+# rownames(ci_mod_var) <- substring(rownames(ci_mod_var), 7)
+# ci_mod_var$varTrt <- rownames(ci_mod_var)
+# ci_mod_var$varTrt <- gsub("\\.","_",ci_mod_var$varTrt)
 
 sigterms_all <- summary(m_lvm_4)
 sigterms_all <- as.data.frame(sigterms_all$Coef.tableX)
@@ -532,13 +549,17 @@ sigterms_all$variable <- sub(":.*","",row.names(sigterms_all))
 sigterms_all$trt <- sub(".*:","",row.names(sigterms_all))
 sigterms_all$varTrt <- rownames(sigterms_all)
 sigterms_all$varTrt <- gsub(":","_",sigterms_all$varTrt)
-sigterms_all <- left_join(sigterms_all, ci_mod_var, by = "varTrt")
-sigterms_all$sig <- sigterms_all$`2.5 %`*sigterms_all$`97.5 %`>0
+# sigterms_all <- left_join(sigterms_all, ci_mod_var, by = "varTrt")
+# sigterms_all$sig <- sigterms_all$`2.5 %`*sigterms_all$`97.5 %`>0
 
-sigterms_sig <- sigterms_all[sigterms_all$`Pr(>|z|)`>0.05,]
+# sigterms_sig <- sigterms_all[sigterms_all$`Pr(>|z|)`>0.05,]
 
-# View(sigterms_sig)
-# View(sigterms_all)
+mod_coefs <- dplyr::left_join(mod_coefs,
+                              sigterms_all[,c("varTrt","Std. Error","z value","Pr(>|z|)")],
+                              by="varTrt")
+rm(sigterms_all,sdXcoef)
+## create flag if CI doesn't cross 0
+mod_coefs$sig <- mod_coefs$lower*mod_coefs$upper>0
 
 ### plot! ####
 ## recreate coefplot
