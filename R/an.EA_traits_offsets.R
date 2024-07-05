@@ -293,7 +293,7 @@ tic("gllvm model setup")
 #dfw %>% filter(.,!is.na(`Net.volume.sampled.(m3)`)) -> dfw
 
 ### set number of iterations
-runs <- 5
+runs <- 50
 
 Y <- dfw %>% dplyr::select(.,-c(Pot.Number:WB,WIMS.Code.y:"Zinc, Dissolved_ug/l"))
 X <- dfw %>% dplyr::select(.,c(Pot.Number:WB,WIMS.Code.y:"Zinc, Dissolved_ug/l"))
@@ -415,21 +415,21 @@ toc(log=TRUE)
 ### Fit models ####
 # Unconstrained w/ Random ####
 #### Negbin ####
-# tic("Fit Unconstrained Negative binomial model")
-# sDsn <- data.frame(Region = X$region)
-# m_lvm_0 <- gllvm(Y, # unconstrained model
-#                  offset = log(X$net_vol_m3),#set model offset
-#                  studyDesign = sDsn,
-#                  row.eff = ~(1|Region),
-#                  family = "negative.binomial",
-#                  starting.val="res",
-#                  n.init=runs,#re-run model to get best fit
-#                  trace=TRUE,
-#                  seed = pi,
-#                  num.lv = 2
-#                  )
-# saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_negbin.Rdat") #3.265326 mins
-# toc(log=TRUE)
+tic("Fit Unconstrained Negative binomial model")
+sDsn <- data.frame(Region = X$region)
+m_lvm_0 <- gllvm(Y, # unconstrained model
+                 offset = log(X$net_vol_m3),#set model offset
+                 studyDesign = sDsn,
+                 row.eff = ~(1|Region),
+                 family = "negative.binomial",
+                 starting.val="res",
+                 n.init=runs,#re-run model to get best fit
+                 trace=TRUE,
+                 seed = pi,
+                 num.lv = 2
+                 )
+saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_negbin.Rdat") #3.265326 mins
+toc(log=TRUE)
 m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_negbin.Rdat")
 par(mfrow=c(2,2));plot(m_lvm_0, which=1:4);par(mfrow=c(1,1))
 ordiplot(m_lvm_0,biplot = TRUE,symbols=TRUE)
@@ -444,22 +444,22 @@ dev.off();rm(cr)
 # Constrained w/ Random ####
 #### Nested by Region ####
 ##### Negbin ####
-# tic("Fit Constrained Negative binomial model")
-# sDsn <- data.frame(region = X$region)
-# m_lvm_4 <- gllvm(y=Y, # model with environmental parameters
-#                  X=X_scaled, #scaled
-#                  offset = log(X$net_vol_m3),#set model offset
-#                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
-#                  studyDesign = sDsn, row.eff = ~(1|region),
-#                  family="negative.binomial",
-#                  starting.val="res",
-#                  n.init=runs,#re-run model to get best fit
-#                  trace=TRUE,
-#                  num.lv = 2
-#                  )
-# 
-# saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_negbin_scaled.Rdat") #scaled #6.862054 mins
-# toc(log=TRUE)
+tic("Fit Constrained Negative binomial model")
+sDsn <- data.frame(region = X$region)
+m_lvm_4 <- gllvm(y=Y, # model with environmental parameters
+                 X=X_scaled, #scaled
+                 offset = log(X$net_vol_m3),#set model offset
+                 formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
+                 studyDesign = sDsn, row.eff = ~(1|region),
+                 family="negative.binomial",
+                 starting.val="res",
+                 n.init=runs,#re-run model to get best fit
+                 trace=TRUE,
+                 num.lv = 2
+                 )
+
+saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_negbin_scaled.Rdat") #scaled #6.862054 mins
+toc(log=TRUE)
 
 tic("Model summaries & comparisons")
 m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_negbin_scaled.Rdat")#scaled
@@ -666,7 +666,7 @@ AIC(m_lvm_0,m_lvm_4)
                                      "Dashed vertical lines indicate mean point estimate values\n","Lifeforms recorded in fewer than ",n+1," samples removed from data prior to model estimations","\n",
                                      "Model call: ~",as.character(m_lvm_4$formula)[2],
                                      "\nDistribution family: ",as.character(m_lvm_4$family),". ",
-                                     "Random row effects: ",as.character(m_lvm_4$call)[8]),
+                                     "Random row effects: ",as.character(m_lvm_4$call)[8],"; number of model iterations = ",m_lvm_4$n.init,"."),
                     theme = theme(plot.title = element_text(size = 16, face="bold"))))
 
 pdf(file = "figs/coef_trt_all_unordered_v2_scaled.pdf",width=16,height=8) #scaled
@@ -679,7 +679,7 @@ toc(log=TRUE)
 # model is processor-hungry and needs lots of data.  Trim Y
 YQuad <- Y[,colSums(ifelse(Y==0,0,1))>100]
 
-#### Nested by Region ####
+#### QUADRATIC Nested by Region ####
 ##### Negbin ####
 tic("Fit QUADRATIC unconstrained Negative binomial model")
 sDsn <- data.frame(region = X$region)
@@ -701,6 +701,7 @@ saveRDS(m_lvm_quad_0, file="figs/gllvm_traits_unconstrainedQuadraticNegBin.Rdat"
 m_lvm_quad_0 <- readRDS("figs/gllvm_traits_unconstrainedQuadraticNegBin.Rdat")
 toc(log=TRUE)
 
+tic("QUADRATIC unconstrained Negative binomial model checking")
 ordiplot(m_lvm_quad_0,biplot=TRUE,symbols = TRUE)#species optima are far away from the gradient (hence arrows)
 optima(m_lvm_quad_0,sd.errors = FALSE)## inspect optima
 tolerances(m_lvm_quad_0,sd.errors = FALSE)## inspect tolerances
@@ -756,6 +757,35 @@ cat("Turnover rate:", turn)
 
 paste0("LV1 tunrover rate = ",round(2*qnorm(.999,sd=1/sqrt(-2*m_lvm_quad_0$params$theta[1,3]*m_lvm_quad_0$params$sigma.lv[1]^2)),2))
 paste0("LV2 tunrover rate = ",round(2*qnorm(.999,sd=1/sqrt(-2*m_lvm_quad_0$params$theta[1,4]*m_lvm_quad_0$params$sigma.lv[2]^2)),2))
+toc(log=TRUE)
+
+#### QUADRATIC Conditional Nested by Region ####
+##### Negbin ####
+YQuad <- Y[,colSums(ifelse(Y==0,0,1))>100]
+tic("Fit QUADRATIC constrained Negative binomial model")
+sDsn <- data.frame(region = X$region)
+m_lvm_quad_4 <- gllvm(y = YQuad, 
+                      X = X_scaled, #scaled
+                      offset = log(X$net_vol_m3),#set model offset
+                      formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
+                      studyDesign = sDsn, row.eff = ~(1 | region), 
+                      family = "negative.binomial", 
+                      starting.val = "res", 
+                      start.struct="all",
+                      n.init = 100, n.init.max = 10,
+                      trace = TRUE, 
+                      num.lv = 2,
+                      quadratic = TRUE,
+                      seed = pi,
+                      sd.errors = FALSE#quicker fitting for model testing only
+                      )
+
+saveRDS(m_lvm_quad_4, file="figs/gllvm_traits_constrainedQuadraticNegBin.Rdat")
+toc(log=TRUE)
+m_lvm_quad_4 <- readRDS("figs/gllvm_traits_constrainedQuadraticNegBin.Rdat")
+par(mfrow=c(2,2));plot(m_lvm_quad_4, which = 1:4);par(mfrow=c(1,1))
+ordiplot(m_lvm_quad_4, symbols = TRUE)
+
 
 # TIDY UP ####
 # unload packages
