@@ -293,14 +293,14 @@ tic("gllvm model setup")
 #dfw %>% filter(.,!is.na(`Net.volume.sampled.(m3)`)) -> dfw
 
 ### set number of iterations
-runs <- 50
+runs <- 5
 
 Y <- dfw %>% dplyr::select(.,-c(Pot.Number:WB,WIMS.Code.y:"Zinc, Dissolved_ug/l"))
 X <- dfw %>% dplyr::select(.,c(Pot.Number:WB,WIMS.Code.y:"Zinc, Dissolved_ug/l"))
 
 # choose interesting environmental variables
 keep <- c(
-          "Net.volume.sampled.(m3)",
+          # "Net.volume.sampled.(m3)",
           "Ammoniacal Nitrogen, Filtered as N_mg/l",
           "Chlorophyll : Acetone Extract_ug/l",
           "NGR : Easting_NGR",
@@ -358,7 +358,7 @@ X <- X %>%
   rename(
     wb="WB",
     region="Region",
-    net_vol_m3 = "Net.volume.sampled.(m3)",
+    # net_vol_m3 = "Net.volume.sampled.(m3)",
     nh4 = "Ammoniacal Nitrogen, Filtered as N_mg/l",
     chla = "Chlorophyll : Acetone Extract_ug/l",
     ngr_e = "NGR : Easting_NGR",
@@ -388,7 +388,8 @@ X$gn <- ifelse(X$region == "Southern", "Sth",
 ### create scaled version for comparison of effects on model
 X %>% 
   mutate_if(is.numeric,scale) -> X_scaled
-X_scaled$net_vol_m3 <- X$net_vol_m3
+offset_m3 <- dfw$NetUse
+# X_scaled$net_vol_m3 <- X$net_vol_m3
 toc(log=TRUE)
 
 ### fit models ####
@@ -418,7 +419,8 @@ toc(log=TRUE)
 tic("Fit Unconstrained Negative binomial model")
 sDsn <- data.frame(Region = X$region)
 m_lvm_0 <- gllvm(Y, # unconstrained model
-                 offset = log(X$net_vol_m3),#set model offset
+                 # offset = log(X$net_vol_m3),#set model offset
+                 offset = log(offset_m3),#set model offset
                  studyDesign = sDsn,
                  row.eff = ~(1|Region),
                  family = "negative.binomial",
@@ -448,7 +450,8 @@ tic("Fit Constrained Negative binomial model")
 sDsn <- data.frame(region = X$region)
 m_lvm_4 <- gllvm(y=Y, # model with environmental parameters
                  X=X_scaled, #scaled
-                 offset = log(X$net_vol_m3),#set model offset
+                 # offset = log(X$net_vol_m3),#set model offset
+                 offset = log(offset_m3),#set model offset
                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
                  studyDesign = sDsn, row.eff = ~(1|region),
                  family="negative.binomial",
@@ -685,7 +688,8 @@ tic("Fit QUADRATIC unconstrained Negative binomial model")
 sDsn <- data.frame(region = X$region)
 m_lvm_quad_0 <- gllvm(y = YQuad, 
                       # X = X_scaled, #scaled
-                      offset = log(X$net_vol_m3),#set model offset
+                      # offset = log(X$net_vol_m3),#set model offset
+                      offset = log(offset_m3),#set model offset
                       # formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
                       studyDesign = sDsn, row.eff = ~(1 | region), 
                       family = "negative.binomial", 
@@ -714,7 +718,7 @@ newLV <- cbind(LV1=seq(min(LVs[,1]), max(LVs[,1]),length.out=1000),LV2=0)
 ### causes error:
 preds <- gllvm::predict.gllvm(m_lvm_quad_0,
     type = "response", newLV = newLV,
-    newX = cbind(Region = rep(0, nrow(newLV))))
+    newX = cbind(Region = rep(0, nrow(newLV))),offset=TRUE)
 plot(NA,
   ylim = range(preds), xlim = c(range(getLV(m_lvm_quad_0))),
   ylab  = "Predicted response", xlab = "LV1")
@@ -733,7 +737,7 @@ newLV = cbind(LV1 = 0, LV2 =  seq(min(LVs[, 2]), max(LVs[, 2]),
                                   length.out = 1000))
 preds <- gllvm::predict.gllvm(m_lvm_quad_0,
     type = "response", newLV = newLV,
-    newX = cbind(Region = rep(0, nrow(newLV))))
+    newX = cbind(Region = rep(0, nrow(newLV))),offset=TRUE)
 plot( NA,
   ylim = range(preds), xlim = c(range(getLV(m_lvm_quad_0))),
   ylab  = "Predicted response", xlab = "LV2")
@@ -766,7 +770,7 @@ tic("Fit QUADRATIC constrained Negative binomial model")
 sDsn <- data.frame(region = X$region)
 m_lvm_quad_4 <- gllvm(y = YQuad, 
                       X = X_scaled, #scaled
-                      offset = log(X$net_vol_m3),#set model offset
+                      offset = log(offset_m3),#set model offset
                       formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
                       studyDesign = sDsn, row.eff = ~(1 | region), 
                       family = "negative.binomial", 
@@ -784,8 +788,72 @@ saveRDS(m_lvm_quad_4, file="figs/gllvm_traits_constrainedQuadraticNegBin.Rdat")
 toc(log=TRUE)
 m_lvm_quad_4 <- readRDS("figs/gllvm_traits_constrainedQuadraticNegBin.Rdat")
 par(mfrow=c(2,2));plot(m_lvm_quad_4, which = 1:4);par(mfrow=c(1,1))
-ordiplot(m_lvm_quad_4, symbols = TRUE)
+ordiplot(m_lvm_quad_4, symbols = TRUE,biplot = TRUE)
 
+optima(m_lvm_quad_4,sd.errors = FALSE)## inspect optima
+tolerances(m_lvm_quad_4,sd.errors = FALSE)## inspect tolerances
+
+# some very large values in the optima and tolerances, indicating linear responses
+## Use model to predict some values for visualisation
+source("R/function_count_formula_vars.R")
+# calculate number of variables in the model formula
+vars <- extract_formula_vars(m_lvm_quad_4$formula)
+
+#LV1
+LVs = getLV(m_lvm_quad_4)
+newLV <- cbind(LV1=seq(min(LVs[,1]), max(LVs[,1]),length.out=1000),LV2=0)
+newx <- create_random_df(n_rows = 1000,n_cols = vars$number_of_variables)
+names(newx) <- vars$variable_names
+
+### causes error:
+preds <- gllvm::predict.gllvm(m_lvm_quad_4,
+                              type = "response", newLV = newLV,
+                              newX = newx,#cbind(Region = rep(0, nrow(newLV))),
+                              offset=TRUE)
+plot(NA,
+     ylim = range(preds), xlim = c(range(getLV(m_lvm_quad_0))),
+     ylab  = "Predicted response", xlab = "LV1")
+segments(
+  x0 = optima(m_lvm_quad_4, sd.errors = FALSE)[, 1],
+  x1 = optima(m_lvm_quad_4, sd.errors = FALSE)[, 1],
+  y0 = rep(0, ncol(m_lvm_quad_0$y)),
+  y1 = apply(preds, 2, max),
+  col = "red", lty = "dashed", lwd = 2)
+rug(getLV(m_lvm_quad_4))[,1]
+sapply(1:ncol(m_lvm_quad_4$y), function(j)
+  lines(sort(newLV[, 1]), preds[order(newLV[, 1]), j], lwd = 2))
+
+## LV2
+newLV = cbind(LV1 = 0, LV2 =  seq(min(LVs[, 2]), max(LVs[, 2]),
+                                  length.out = 1000))
+preds <- gllvm::predict.gllvm(m_lvm_quad_4,
+                              type = "response", newLV = newLV,
+                              newX = newx,#cbind(Region = rep(0, nrow(newLV))),
+                              offset=TRUE)
+plot( NA,
+      ylim = range(preds), xlim = c(range(getLV(m_lvm_quad_0))),
+      ylab  = "Predicted response", xlab = "LV2")
+segments(
+  x0 = optima(m_lvm_quad_4, sd.errors = FALSE)[, 2],
+  x1 = optima(m_lvm_quad_4, sd.errors = FALSE)[, 2],
+  y0 = rep(0, ncol(m_lvm_quad_4$y)),
+  y1 = apply(preds, 2, max),
+  col = "red", lty = "dashed", lwd = 2)
+rug(getLV(m_lvm_quad_4)[, 2])
+sapply(1:ncol(m_lvm_quad_4$y), function(j)
+  lines(sort(newLV[, 2]), preds[order(newLV[, 2]), j], lwd = 2))
+
+# calculate turnover for these two estimated gradients
+# Extract tolerances
+tol <- tolerances(m_lvm_quad_4, sd.errors = FALSE)
+gradLength <- 4/apply(tol, 2, median)
+cat("Gradient length:", gradLength)
+turn <- 2*qnorm(.999, sd = apply(tol, 2, median))
+cat("Turnover rate:", turn)
+
+paste0("LV1 tunrover rate = ",round(2*qnorm(.999,sd=1/sqrt(-2*m_lvm_quad_4$params$theta[1,3]*m_lvm_quad_4$params$sigma.lv[1]^2)),2))
+paste0("LV2 tunrover rate = ",round(2*qnorm(.999,sd=1/sqrt(-2*m_lvm_quad_4$params$theta[1,4]*m_lvm_quad_4$params$sigma.lv[2]^2)),2))
+toc(log=TRUE)
 
 # TIDY UP ####
 # unload packages
