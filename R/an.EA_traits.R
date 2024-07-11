@@ -4,10 +4,12 @@
 ## set up ####
 #### load packages ####
 ld_pkgs <- c("tidyverse","MASS","lubridate","vegan","mvabund","seas","patchwork",
-             "ecoCopula","performance","gclus","corrplot","gllvm")
+             "ecoCopula","performance","gclus","corrplot","gllvm","tictoc", "GGally")
 vapply(ld_pkgs, library, logical(1L),
        character.only = TRUE, logical.return = TRUE);rm(ld_pkgs)
 
+tictoc::tic.clearlog()
+tic("set universals");print("set universals")
 #### set universals ####
 ### set up folders & import functions ###
 source("R/folder.links.R")
@@ -46,7 +48,9 @@ cbPalette2 <- c("#646464", #100/100/100
                          "#A32C00",#163/044/000
                          "#9A4775"#154/071/117
 )
+toc(log = TRUE)
 
+tic("Load & format data")
 #### load data ####
 dfw <- readRDS(paste0(datfol,"processedData/","zoopWideTraitAbund_m3_taxOnly_USE.RDat"))
 
@@ -100,6 +104,9 @@ xx$WB_lb2 <- ifelse(xx$WB == "Solent","Solent",
 xx$WB_lb <- paste0(xx$WB_lb1,"_",xx$WB_lb2)
 xx$WB_lb1 <- NULL; xx$WB_lb2 <- NULL
 
+toc(log = TRUE)
+
+tic("Initial plots")
 ### plot by WB####
 xx %>% 
   dplyr::select(-c(WB,Region)) %>% ## plot by WB
@@ -353,11 +360,12 @@ ggsave(filename = "figs/nmds_by_Region&season_Traits.pdf",width = 12,height = 12
        plot=final_plot);rm(final_plot, plot_list)
 
 rm(ord, scores_site, scores_species, subset_data,current_plot)
+toc(log=TRUE)
 
 #############
 # GLLVMs ####
 #############
-
+tic("Set up gllvm model")
 # choose interesting environmental variables
 keep <- c("Ammoniacal Nitrogen, Filtered as N_mg/l",
           "Chlorophyll : Acetone Extract_ug/l",
@@ -450,6 +458,7 @@ df_wims_w_trim0$Region <- ifelse(df_wims_w_trim0$Region == "Southern", "Sth",
 ### create scaled version for comparison of effects on model
 df_wims_w_trim0 %>% 
   mutate_if(is.numeric,scale) -> df_wims_w_trim0_scale
+toc(log=TRUE)
 
 ### fit models ####
 
@@ -475,14 +484,14 @@ df_wims_w_trim0 %>%
 ### Fit models ####
 # Unconstrained w/ Random ####
 #### Tweedie ####
-# ptm <- Sys.time()
+# tic("Unconstrained Tweedie model, nested by Region"")
 # sDsn <- data.frame(Region = df_wims_w_trim0$Region)
 # m_lvm_0 <- gllvm(df_tx_w_trm, # unconstrained model
 #                  studyDesign = sDsn, row.eff = ~(1|Region),
 #                  family = "tweedie"
 #                  )
 # saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_tweed.Rdat") #3.265326 mins
-# Sys.time() - ptm;rm(ptm)
+# toc(log=TRUE)
 m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_tweed.Rdat")
 
 ###################
@@ -497,26 +506,11 @@ m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_tweed.Rdat")
 # Sys.time() - ptm;rm(ptm)
 # m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_gauss.Rdat")
 
-#######################
-#### Gamma TO FIX! ####
-## LOOK AT https://github.com/JenniNiku/gllvm/discussions/130
-## FOR CODE
-# ptm <- Sys.time()
-# sDsn <- data.frame(Region = df_wims_w_trim0$Region)
-# m_lvm_0 <- gllvm(y=df_tx_w_trm[,c(1)], # unconstrained model
-#                  # studyDesign = sDsn, row.eff = ~(1|Region),
-#                  family = "gamma"
-#                  )
-# saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_gamma.Rdat")
-# Sys.time() - ptm;rm(ptm)
-# m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_gamma.Rdat")
-######################
-
 ##########################
 # Constrained w/ Random ####
 #### Nested by Region ####
 ##### Tweedie ####
-# ptm <- Sys.time()
+# tic("Constrained Tweedie, nested by Region")
 # sDsn <- data.frame(Region = df_wims_w_trim0$Region)
 # m_lvm_4 <- gllvm(y=df_tx_w_trm, # model with environmental parameters
 #                  # X=df_wims_w_trim0, #unscaled
@@ -545,6 +539,7 @@ m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_tweed_scaled.Rdat")
 # Sys.time() - ptm;rm(ptm)
 # m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_gauss.Rdat")
 
+tic("Model plots")
 cr <- getResidualCor(m_lvm_4)
 pdf(file = "figs/m_lvm_4_trt_corrplot.pdf",width=14,height=14)
 corrplot::corrplot(cr, diag = FALSE, type = "lower", method = "square",
@@ -773,25 +768,60 @@ rcov0$trace; rcov1$trace
 100 - (rcov1$trace / rcov0$trace*100)
 AIC(m_lvm_0,m_lvm_4)
 
+toc(log=TRUE)
+
+#######
+tic("generate Pairs plot")
+### generate Pairs plot
+n <- 200 #number of non zero values
+
+# Function to return points and geom_smooth
+# allow for the method to be changed
+# my_fn <- function(data, mapping, method="loess", ...){
+#   p <- ggplot(data = data, mapping = mapping) + 
+#     geom_point() + 
+#     geom_smooth(method=method, ...)
+#   p
+# }
+mth <- "gam"
+# Custom function to modify the lower panels
+my_fn <- function(data, mapping, ...){
+  ggplot(data = data, mapping = mapping) + 
+    geom_point(color = "black", alpha = 0.3, size = 1) +
+    geom_smooth(method = mth, color = "blue")
+}
+
+dfw %>% 
+  # remove non-zoop columns
+  dplyr::select(.,-c(Pot.Number:WB,
+                     WIMS.Code.y:"Zinc, Dissolved_ug/l")) %>% 
+  #remove taxa with <n occurences
+  dplyr::select(where(~ sum(. != 0) >= n)) %>% 
+  # GGally::ggpairs(.,lower = list(continuous = wrap(my_fn, method="gam"))) +
+  # GGally::ggpairs(.,lower = list(continuous = wrap("smooth",
+  #                                                  method="gam",
+  #                                                  colour="blue",
+  #                                                  alpha=0.3))) +
+  GGally::ggpairs(.,lower = list(continuous = wrap(my_fn))) +
+  labs(title = "Pairwise plot of zooplankton lifeform abundances",
+       subtitle = paste0("Only lifeforms recorded in ",n,
+                         " or more samples included (representing ",
+                         round(n/nrow(dfw)*100,1),"% of samples). Blue line represents ",mth," smoother.")) -> pl
+  
+pdf(file = "figs/pairs_plot_LF.pdf",width=24,height=15) #scaled
+print(pl)
+dev.off()
+rm(mth, my_fn,pl)
+toc(log=TRUE)
+
+log_out <- unlist(tictoc::tic.log())
+
 # PRIORITY : REPRODUCE CODE ####
 ## Currently untidy and seems to produce 'issues'
 ## Errors alluding to "non-numeric argument to binary operator"
 
 # TIDY UP ####
-# unload packages
-detach("package:seas", unload=TRUE)
-detach("package:patchwork", unload=TRUE)
-detach("package:performance", unload=TRUE)
-detach("package:corrplot", unload=TRUE)
-detach("package:gllvm", unload=TRUE)
-detach("package:ecoCopula", unload=TRUE)
-detach("package:gclus", unload=TRUE)
-detach("package:vegan", unload=TRUE)
-detach("package:mvabund", unload=TRUE)
-detach("package:lubridate", unload=TRUE)
-detach("package:tidyverse", unload=TRUE)
-detach("package:MASS", unload=TRUE)
-
+tic("TIDY UP")
 # remove data
 rm(list = ls(pattern = "^df"))
 rm(list = ls(pattern = "^m_"))
@@ -807,4 +837,22 @@ rm(list = ls(pattern = "^min_"))
 rm(list = ls(pattern = "*plot"))
 rm(list = ls(pattern = "*consiste"))
 rm(datfol,nit,perms, ppi,replace_values,pl_ts_N,sDsn,subset_data,i,level,
-   ntrt,sbtt,srt,ttl,cr,n, rcov0,rcov1)
+   ntrt,sbtt,srt,ttl,cr,n, rcov0,rcov1,mean_estimate,line_color)
+
+# unload packages
+detach("package:seas", unload=TRUE)
+detach("package:patchwork", unload=TRUE)
+detach("package:performance", unload=TRUE)
+detach("package:corrplot", unload=TRUE)
+detach("package:gllvm", unload=TRUE)
+detach("package:ecoCopula", unload=TRUE)
+detach("package:gclus", unload=TRUE)
+detach("package:vegan", unload=TRUE)
+detach("package:mvabund", unload=TRUE)
+detach("package:lubridate", unload=TRUE)
+detach("package:tidyverse", unload=TRUE)
+detach("package:MASS", unload=TRUE)
+toc(log=TRUE)
+detach("package:tictoc", unload=TRUE)
+log_out
+rm(log_out)
