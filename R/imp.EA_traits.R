@@ -35,12 +35,14 @@
 # Sys.time() - ptm;rm(ptm,req_packages,new_packages)
 
 #### load packages ####
-ld_pkgs <- c("tidyverse","MASS","lubridate","vegan","mvabund","seas",
+ld_pkgs <- c("tidyverse","MASS","lubridate","vegan","mvabund","seas","tictoc",
              "ecoCopula","performance","gclus","corrplot", "patchwork","gllvm")
 vapply(ld_pkgs, library, logical(1L),
        character.only = TRUE, logical.return = TRUE);rm(ld_pkgs)
 
 #### set universals ####
+tictoc::tic.clearlog()
+tic("set universals");print("set universals")
 source("R/folder.links.R") ## data folders
 perms <- 999 ### number of permutations to run for multivariate analyses
 theme_set(ggthemes::theme_few())###set theme for all ggplot objects
@@ -76,7 +78,8 @@ cbPalette2 <- c("#646464", #100/100/100
                 "#A32C00",#163/044/000
                 "#9A4775"#154/071/117
 )
-
+toc(log=TRUE)
+tic("Load data");print("Load data")
 #### load LIFEFORMS data ####
 ### taxon data
 df_tx0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
@@ -94,7 +97,9 @@ df_tx0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
 df_wims0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
                                                  "/WIMS_Extract_WaterQuality_Zoop_Samples_240618.xlsx"),
                                           sheet="allDat"))
+toc(log = TRUE)
 
+tic("Tidy data")
 ### prep WIMS data ####
 ### format & widen WIMS data ###
 df_wims <- df_wims0
@@ -136,15 +141,20 @@ df_tx %>%
 
 ### join & save data ####  
 dfw <- left_join(df_tx_w,df_wims_w,by="PRN")
+toc(log=TRUE)
 
+tic("Export data")
 write.csv(dfw,file=paste0(datfol,"processedData/","zoopWideTraitAbund_m3_WIMS_USE.csv"),row.names = FALSE)
 write.csv(df_tx_w,file=paste0(datfol,"processedData/","zoopWideTraitAbund_m3_taxOnly_USE.csv"),row.names = FALSE)
 saveRDS(dfw,file=paste0(datfol,"processedData/","zoopWideTraitAbund_m3_taxOnly_USE.RDat"))
+toc(log=TRUE)
 
+unlist(tictoc::tic.log())
 ### tidy up ###
 # unload packages
 detach("package:lubridate", unload=TRUE)
 detach("package:tidyverse", unload=TRUE)
+detach("package:tictoc", unload=TRUE)
 
 # remove data
 rm(list = ls(pattern = "^df"))
