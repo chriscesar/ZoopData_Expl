@@ -685,8 +685,15 @@ YQuad <- Y[,colSums(ifelse(Y==0,0,1))>100]
 #### QUADRATIC Nested by Region ####
 ##### Negbin ####
 tic("Fit QUADRATIC unconstrained Negative binomial model")
+#remove the 4 'problematic' taxa
+painTaxa <- c("Fish_Mero","Poly_Mero","Foram_Sm","Cop_Lg","Crus_NYA")
+YQuadTrim <- YQuad %>% 
+  dplyr::select(.,-c(painTaxa))
+
 sDsn <- data.frame(region = X$region)
-m_lvm_quad_0 <- gllvm(y = YQuad, 
+m_lvm_quad_0 <- gllvm(
+  y = YQuad,
+  # y = YQuadTrim, 
                       # X = X_scaled, #scaled
                       # offset = log(X$net_vol_m3),#set model offset
                       offset = log(offset_m3),#set model offset
@@ -722,6 +729,8 @@ preds <- gllvm::predict.gllvm(m_lvm_quad_0,
 plot(NA,
   ylim = range(preds), xlim = c(range(getLV(m_lvm_quad_0))),
   ylab  = "Predicted response", xlab = "LV1")
+sapply(1:ncol(m_lvm_quad_0$y), function(j)
+  lines(sort(newLV[, 1]), preds[order(newLV[, 1]), j], lwd = 2))
 segments(
   x0 = optima(m_lvm_quad_0, sd.errors = FALSE)[, 1],
   x1 = optima(m_lvm_quad_0, sd.errors = FALSE)[, 1],
@@ -729,8 +738,7 @@ segments(
   y1 = apply(preds, 2, max),
   col = "red", lty = "dashed", lwd = 2)
 rug(getLV(m_lvm_quad_0))[,1]
-sapply(1:ncol(m_lvm_quad_0$y), function(j)
-  lines(sort(newLV[, 1]), preds[order(newLV[, 1]), j], lwd = 2))
+
 
 ## LV2
 newLV = cbind(LV1 = 0, LV2 =  seq(min(LVs[, 2]), max(LVs[, 2]),
@@ -741,6 +749,8 @@ preds <- gllvm::predict.gllvm(m_lvm_quad_0,
 plot( NA,
   ylim = range(preds), xlim = c(range(getLV(m_lvm_quad_0))),
   ylab  = "Predicted response", xlab = "LV2")
+sapply(1:ncol(m_lvm_quad_0$y), function(j)
+  lines(sort(newLV[, 2]), preds[order(newLV[, 2]), j], lwd = 2))
 segments(
   x0 = optima(m_lvm_quad_0, sd.errors = FALSE)[, 2],
   x1 = optima(m_lvm_quad_0, sd.errors = FALSE)[, 2],
@@ -748,8 +758,7 @@ segments(
   y1 = apply(preds, 2, max),
   col = "red", lty = "dashed", lwd = 2)
 rug(getLV(m_lvm_quad_0)[, 2])
-sapply(1:ncol(m_lvm_quad_0$y), function(j)
-  lines(sort(newLV[, 2]), preds[order(newLV[, 2]), j], lwd = 2))
+
 
 # calculate turnover for these two estimated gradients
 # Extract tolerances
@@ -796,6 +805,7 @@ tolerances(m_lvm_quad_4,sd.errors = FALSE)## inspect tolerances
 # some very large values in the optima and tolerances, indicating linear responses
 ## Use model to predict some values for visualisation
 source("R/function_count_formula_vars.R")
+source("R/function_create_random_df.R")
 # calculate number of variables in the model formula
 vars <- extract_formula_vars(m_lvm_quad_4$formula)
 
