@@ -3,7 +3,8 @@
 # lifeforms data
 
 # load packages ####
-ld_pkgs <- c("tidyverse", "tictoc","gllvm","patchwork", "lubridate", "Hmsc")
+ld_pkgs <- c("tidyverse", "tictoc","gllvm","patchwork", "lubridate", "Hmsc",
+             "ggpubr")
 vapply(ld_pkgs, library, logical(1L),
        character.only = TRUE, logical.return = TRUE);rm(ld_pkgs)
 
@@ -141,16 +142,85 @@ gllvm::ordiplot(m_lvm_0nb,predict.region=TRUE, symbols=TRUE)
 ################################
 # Unconstrained HMSC model #####
 ################################
+## Hmsc is primarily geared to modelling abundances against
+## predictor variables.
+## However, if we can model abundances against a constant.  This model essentially
+## becomes a latent variable model for the community data.
+## Note: HMSC does not allow negative binomial, instead uses
+## lognormal poisson
+
+## WARNING: Hmsc does not currently (Jul-24) and hasn't since it's release in ~2019
+## incorporate an offset term for (e.g.) incorporating sampling effort as an error term
+
+## In this case therefore, zooplankton count data are not controlled by Net Volume.
+## One solution would be to recalc zoop counts to convert to standardised
+## abundances per m3 and model as a Tweedie or similar.
+
 tic("hmsc_uncon_offset_nb: Unconstrained NB with offset")
 # create model
 Yuse <- as.matrix(Y)
+XData <- data.frame(intercept = rep(1, nrow(Yuse)))
 
-#simul <- Hmsc(Y=Yuse, distr = "lognormal poisson")
-Yuse_subset <- Yuse[1:10, 1:5]  # Use a small subset for testing
-simul <- Hmsc(Y = Yuse_subset, distr = "poisson")
+### create Hmsc object
+studyDesign <- mt %>%
+  dplyr::select(Region,Pot.Number) %>%
+  mutate(Region = as.factor(Region)) %>%
+  mutate(Pot.Number = as.factor(Pot.Number)) %>%
+  data.frame()
+ranlevels <- HmscRandomLevel(units = studyDesign$Region)
+
+simul <- Hmsc(Y = Yuse, XData=XData,distr = "lognormal poisson",
+              studyDesign=studyDesign,
+              ranLevels = list("Region" = ranlevels))
 
 # Run model
 thin <- 10
-samples <- 1000
+samples <- 10000
 nChains <- 3
 transient <- ceiling(thin*samples*.5)
+
+tic("hmsc_uncon_offset_nb: Unconstrained NB with offset")
+# mod_HMSC <- sampleMcmc(simul,
+#                        samples = samples,
+#                        thin = thin,
+#                        transient = transient,
+#                        nChains = nChains#,
+#                        # nParallel = nChains
+#                        )
+# saveRDS(mod_HMSC, file = paste0("outputs/modUnconHMSC","_smp",samples,
+#                                 "_thn",thin,"_trns",transient,"_chn",nChains,
+#                                 ".Rdata"))
+toc(log = TRUE)
+mod_HMSC <- readRDS( paste0("outputs/modUnconHMSC","_smp",samples,
+                                "_thn",thin,"_trns",transient,"_chn",nChains,
+                                ".Rdata"))
+
+## investigate model outputs ####
+mpost <- convertToCodaObject(mod_HMSC) # model diagnostics/convergence
+preds <- computePredictedValues(mod_HMSC) # model performance
+MF <- evaluateModelFit(hM=mod_HMSC, predY = preds) # r2, etc
+VP <- computeVariancePartitioning(mod_HMSC) # variance partitioning
+
+ess.beta <- effectiveSize(mpost$Beta) %>% 
+  as_tibble() %>% dplyr::rename(ess_beta=value)
+psrf.beta <- gelman.diag(mpost$Beta, multivariate = FALSE)$psrf %>% 
+  as_tibble() %>% dplyr::rename(psrf_beta = "Point est.")
+
+
+(diag_all <- ggarrange(ggplot(ess.beta,aes(x=ess_beta))+
+                        geom_histogram()+
+                        xlab("Effective sample size"),
+                      ggplot(psrf.beta,aes(x=psrf_beta))+
+                        geom_histogram()+
+                        geom_vline(xintercept = 1.001, col=2)+
+                        xlab("Gelman diagnostic"), align = "v")+
+  ggtitle("All plots"))
+
+# species niches
+postBeta <- getPostEstimate(mod_HMSC, parName = "Beta")
+
+plotVariancePartitioning(mod_HMSC, VP=VP, las=2, horiz=TRUE)
+plotBeta(mod_HMSC,post=postBeta, param = "Support", #supportLevel=0.95,
+         split = .4, spNamesNumbers = c(T,F))
+biPlot(mod_HMSC,etaPost = getPostEstimate(mod_HMSC,"Eta"),
+       lambdaPost = getPostEstimate(mod_HMSC, "Lambda"))
