@@ -113,13 +113,53 @@ dfw_tx %>% relocate(WB_lb,.after = WB) -> dfw_tx
 
 # PLOTS! ####
 ## Lifeforms ####
-# dfw_lf %>% 
-#   dplyr::select(., c(Region,WB,sample.date,`Net.volume.sampled.(m3)`,Cop_Sm, Cop_Ambi, Cop_Lg,Cop_NYA)) %>% 
-#   pivot_longer(.,cols = Cop_Sm:Cop_NYA,names_to = "lf",values_to = "abund") %>% 
-#   mutate(abund_m3 = `Net.volume.sampled.(m3)`*abund) %>% 
-#   ggplot(.,aes(x=sample.date, y=lf, fill=abund_m3)) +
-#   geom_tile()+
-#   facet_wrap(.~WB)
+
+## Copepod size classes ###
+# by wb
+dfw_lf %>%
+  dplyr::select(., c(Region,WB,WB_lb,sample.date,`Net.volume.sampled.(m3)`,Cop_Sm, Cop_Ambi, Cop_Lg,Cop_NYA)) %>%
+  mutate(Cop_Sm=(`Net.volume.sampled.(m3)`*Cop_Sm)/max(`Net.volume.sampled.(m3)`*Cop_Sm),
+         Cop_Ambi=(`Net.volume.sampled.(m3)`*Cop_Ambi)/max(`Net.volume.sampled.(m3)`*Cop_Ambi),
+         Cop_Lg=(`Net.volume.sampled.(m3)`*Cop_Lg)/max(`Net.volume.sampled.(m3)`*Cop_Lg),
+         Cop_NYA=(`Net.volume.sampled.(m3)`*Cop_NYA)/max(`Net.volume.sampled.(m3)`*Cop_NYA)) %>% 
+  pivot_longer(.,cols = Cop_Sm:Cop_NYA,names_to = "lf",values_to = "abund") %>%
+  ggplot(.,aes(x=sample.date, y=abund, colour=lf)) +
+  geom_line()+
+  facet_wrap(.~WB_lb)+
+  labs(x=NULL,
+       y="Relative abundance",
+       title="Relative abundance of copepod size classes recorded in EA water bodies",
+       caption="Relative abundance of a given size class is the value recorded in a sample
+       divided by the maximum recorded value for that size class across all samples")+
+  theme(legend.title = element_blank()) -> pl
+
+ggsave(plot = pl, filename = "figs/2407dd_timeseries/copSizesTSByWB.pdf",
+       width = 12,height = 8,units = "in")
+rm(pl)
+
+# by Region
+dfw_lf %>%
+  dplyr::select(., c(Region,WB,WB_lb,sample.date,`Net.volume.sampled.(m3)`,Cop_Sm, Cop_Ambi, Cop_Lg,Cop_NYA)) %>%
+  mutate(Cop_Sm=(`Net.volume.sampled.(m3)`*Cop_Sm)/max(`Net.volume.sampled.(m3)`*Cop_Sm),
+         Cop_Ambi=(`Net.volume.sampled.(m3)`*Cop_Ambi)/max(`Net.volume.sampled.(m3)`*Cop_Ambi),
+         Cop_Lg=(`Net.volume.sampled.(m3)`*Cop_Lg)/max(`Net.volume.sampled.(m3)`*Cop_Lg),
+         Cop_NYA=(`Net.volume.sampled.(m3)`*Cop_NYA)/max(`Net.volume.sampled.(m3)`*Cop_NYA)) %>% 
+  pivot_longer(.,cols = Cop_Sm:Cop_NYA,names_to = "lf",values_to = "abund") %>%
+  ggplot(.,aes(x=sample.date, y=abund, colour=lf)) +
+  # geom_line()+
+  geom_smooth(se=FALSE)+
+  # geom_point()+
+  facet_wrap(.~Region)+
+  labs(x=NULL,
+       y="Relative abundance",
+       title="Relative abundance of copepod size classes recorded in EA water bodies",
+       caption="Relative abundance of a given size class is the value recorded in a sample
+       divided by the maximum recorded value for that size class across all samples")+
+  theme(legend.title = element_blank()) -> pl
+
+ggsave(plot = pl, filename = "figs/2407dd_timeseries/copSizeSmoothTSByRgn.pdf",
+       width = 12,height = 8,units = "in")
+rm(pl)
 
 ## small copepods
 # by WB
