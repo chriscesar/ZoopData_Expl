@@ -122,6 +122,7 @@ dfw_tx %>% relocate(WB_lb,.after = WB) -> dfw_tx
 #   facet_wrap(.~WB)
 
 ## small copepods
+# by WB
 dfw_lf %>% 
   ggplot(.,aes(
     x=sample.date,
@@ -133,7 +134,7 @@ dfw_lf %>%
   geom_point(aes(shape=DJF, fill=DJF), size=2)+
   facet_wrap(.~WB_lb)+
   labs(title = "Temporal trends in small copepod abundances in EA water bodies",
-       y = "Abudance (m^3)",
+       y = bquote("Abudance (m"^3~")"),
        x=NULL,
        caption = "Colour and shape of points indicates sampling season:
        Winter (grey circle), Spring (green square), Summer (Orange diamond), Autumn (brown triangle)") +
@@ -142,7 +143,30 @@ ggsave(plot = pl, filename = "figs/2407dd_timeseries/smCopTSByWB.pdf",
        width = 12,height = 8,units = "in")
 rm(pl)
 
+# by Region
+dfw_lf %>% 
+  ggplot(.,aes(
+    x=sample.date,
+    y= Cop_Sm*`Net.volume.sampled.(m3)`
+  ))+
+  # geom_line(colour=1)+
+  scale_fill_manual(values=c("slategray1","green","sienna2","brown"))+
+  scale_shape_manual(values=c(21:24))+
+  geom_smooth(se=FALSE)+
+  geom_point(aes(shape=DJF, fill=DJF), size=2)+
+  facet_wrap(.~Region)+
+  labs(title = "Temporal trends in small copepod abundances in EA Regions",
+       y = bquote("Abudance (m"^3~")"),
+       x=NULL,
+       caption = "Colour and shape of points indicates sampling season:
+       Winter (grey circle), Spring (green square), Summer (Orange diamond), Autumn (brown triangle)") +
+  theme(legend.position = "none")-> pl
+ggsave(plot = pl, filename = "figs/2407dd_timeseries/smCopTSByRgn.pdf",
+       width = 12,height = 8,units = "in")
+rm(pl)
+
 ## Fish
+# by WB
 dfw_lf %>% 
   ggplot(.,aes(
     x=sample.date,
@@ -154,11 +178,33 @@ dfw_lf %>%
   geom_point(aes(shape=DJF, fill=DJF), size=2)+
   facet_wrap(.~WB_lb)+
   labs(title = "Temporal trends in fish abundances in EA water bodies",
-       y = "Abudance (m^3)",
+       y = bquote("Abudance (m"^3~")"),
        x=NULL,
        caption = "Colour and shape of points indicates sampling season:
        Winter (grey circle), Spring (green square), Summer (Orange diamond), Autumn (brown triangle)") +
   theme(legend.position = "none")-> pl
 ggsave(plot = pl, filename = "figs/2407dd_timeseries/fishTSByWB.pdf",
+       width = 12,height = 8,units = "in")
+rm(pl)
+
+# by Region
+dfw_lf %>% 
+  ggplot(.,aes(
+    x=sample.date,
+    y= Fish_Mero*`Net.volume.sampled.(m3)`
+  ))+
+  # geom_line(colour=1)+
+  scale_fill_manual(values=c("slategray1","green","sienna2","brown"))+
+  scale_shape_manual(values=c(21:24))+
+  geom_smooth(se=FALSE)+
+  geom_point(aes(shape=DJF, fill=DJF), size=2)+
+  facet_wrap(.~Region)+
+  labs(title = "Temporal trends in fish abundances in EA Regions",
+       y = bquote("Abudance (m"^3~")"),
+       x=NULL,
+       caption = "Colour and shape of points indicates sampling season:
+       Winter (grey circle), Spring (green square), Summer (Orange diamond), Autumn (brown triangle)") +
+  theme(legend.position = "none")-> pl
+ggsave(plot = pl, filename = "figs/2407dd_timeseries/fishTSByRgn.pdf",
        width = 12,height = 8,units = "in")
 rm(pl)
