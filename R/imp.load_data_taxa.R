@@ -39,6 +39,9 @@ tic("Prep for export & export data");print("Prep for export & export data")
 ### convert dates
 df_tx$sample.date <- as.Date(df_tx$sample.date, origin = "1899-12-30")
 
+### add day of year
+df_tx$yday <- lubridate::yday(df_tx$sample.date)
+df_tx %>% relocate(.,yday, .after = sample.date) -> df_tx
 ### add month
 df_tx$month <- lubridate::month(df_tx$sample.date)
 df_tx %>% relocate(.,month, .after = sample.date) -> df_tx
