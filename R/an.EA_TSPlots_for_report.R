@@ -105,8 +105,45 @@ rm(WB_lb1,WB_lb2)
 
 dfw_lf$WB_lb <- WB_lb
 dfw_lf %>% relocate(WB_lb,.after = WB) -> dfw_lf
+dfw_lf$WB_lb <- factor(dfw_lf$WB_lb, levels = c(
+  "NE_Nrthmb Nth",
+  "NE_Farne Is",
+  "NE_Tees",
+  "Ang_Yorks Sth",
+  "Ang_Lincs",
+  "Ang_Wash Out",
+  "Ang_Blckw Out",
+  "Thm_Thm Low",
+  "Sth_Kent Sth",
+  "Sth_Solent",
+  "Sth_Soton Wtr",  
+  "SW_Cornw Nth",
+  "SW_Brnstp B",
+  "SW_Brist Ch In Sth",
+  "NW_Mersey Mth", 
+  "NW_Solway O"
+  ))
+
 dfw_tx$WB_lb <- WB_lb
 dfw_tx %>% relocate(WB_lb,.after = WB) -> dfw_tx
+dfw_tx$WB_lb <- factor(dfw_tx$WB_lb, levels = c(
+  "NE_Nrthmb Nth",
+  "NE_Farne Is",
+  "NE_Tees",
+  "Ang_Yorks Sth",
+  "Ang_Lincs",
+  "Ang_Wash Out",
+  "Ang_Blckw Out",
+  "Thm_Thm Low",
+  "Sth_Kent Sth",
+  "Sth_Solent",
+  "Sth_Soton Wtr",  
+  "SW_Cornw Nth",
+  "SW_Brnstp B",
+  "SW_Brist Ch In Sth",
+  "NW_Mersey Mth", 
+  "NW_Solway O"
+))
 ########
 
 #####
@@ -258,7 +295,7 @@ dfw_lf %>%
   mutate(Cop_all=Cop_all*`Net.volume.sampled.(m3)`,
          Fish_Mero=Fish_Mero*`Net.volume.sampled.(m3)`) %>% 
   filter(.,WB != "Solway Outer South") %>% 
-  ggplot(.,aes(x=Cop_all, y= Fish_Mero))+
+  ggplot(.,aes(x=log(Cop_all+1), y= log(Fish_Mero+1)))+
   # geom_smooth(method="loess", colour=2,fill="pink",span = 0.9)+
   geom_smooth(method="lm", fill="lightblue")+
   geom_point(alpha=0.3)+
@@ -273,5 +310,30 @@ dfw_lf %>%
   theme(legend.position = "none") -> pl
 
 ggsave(plot = pl, filename = "figs/2407dd_timeseries/copepodsFishByWB_allSmooths.pdf",
+       width = 12,height = 8,units = "in")
+rm(pl)
+
+### all copepods vs temperature
+dfw_lf %>% 
+  mutate(Cop_all = Cop_NYA+Cop_Sm+Cop_Ambi+Cop_Lg) %>% 
+  mutate(Cop_all=Cop_all*`Net.volume.sampled.(m3)`) %>% 
+  filter(.,WB != "Solway Outer South") %>%
+  ggplot(.,
+         aes(x=log(as.numeric(`Chlorophyll : Acetone Extract_ug/l`)+1),
+             y= log(Cop_all+1)))+
+  geom_point()+
+  facet_wrap(.~WB_lb, scales = "free")+
+  geom_smooth(method="lm", fill="lightblue")+
+  ggpubr::stat_cor(method="pearson",
+                   label.y.npc="top", label.x.npc = "left")+
+  labs(title = "Relationship between total copepod abundance and chlorophyll concentrations in EA water bodies",
+       y = bquote("log Copepod abundance (m"^-3~")"),
+       x = bquote("log Chlorophyll concentration (ug/l)"),
+       caption=paste0("Samples gathered between ",format(min(dfw_lf$sample.date), "%d/%m/%Y")," & ",format(max(dfw_lf$sample.date), "%d/%m/%Y"),
+                      "\nBlue lines inidate linear model.")) +
+  theme(legend.position = "none",
+        strip.text = element_text(face=2)) -> pl
+
+ggsave(plot = pl, filename = "figs/2407dd_timeseries/copepodsChlByWB_lm.pdf",
        width = 12,height = 8,units = "in")
 rm(pl)
