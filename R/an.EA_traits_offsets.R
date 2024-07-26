@@ -425,7 +425,7 @@ m_lvm_0 <- gllvm(Y, # unconstrained model
                  row.eff = ~(1|Region),
                  family = "negative.binomial",
                  starting.val="res",
-                 n.init=runs,#re-run model to get best fit
+                 n.init = runs, #re-run model to get best fit
                  trace=TRUE,
                  seed = pi,
                  num.lv = 2
@@ -434,7 +434,7 @@ saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_negbin.Rdat") #3.265326 mins
 toc(log=TRUE)
 m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_negbin.Rdat")
 par(mfrow=c(2,2));plot(m_lvm_0, which=1:4);par(mfrow=c(1,1))
-ordiplot(m_lvm_0,biplot = TRUE,symbols=TRUE)
+gllvm::ordiplot.gllvm(m_lvm_0,biplot = TRUE,symbols=TRUE)
 cr <- getResidualCor(m_lvm_0)
 
 pdf(file = "figs/m_lvm_0_trt_corrplot.pdf",width=14,height=14)
@@ -466,7 +466,7 @@ toc(log=TRUE)
 
 tic("Model summaries & comparisons")
 m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_negbin_scaled.Rdat")#scaled
-ordiplot(m_lvm_4,biplot = TRUE,symbols=TRUE)
+gllvm::ordiplot.gllvm(m_lvm_4,biplot = TRUE,symbols=TRUE)
 cr <- getResidualCor(m_lvm_4)
 pdf(file = "figs/m_lvm_4_trt_corrplot.pdf",width=14,height=14)
 corrplot::corrplot(cr, diag = FALSE, type = "lower", method = "square",
@@ -482,40 +482,12 @@ coefplot(m_lvm_4,cex.ylab = 0.7,
          order=FALSE)
 dev.off()
 
-pdf(file = "figs/coef_trt_1.pdf",width=7,height=14)
-coefplot(m_lvm_4,mfrow = c(1,1),which.Xcoef = 1, cex.ylab = 0.6,
-         main="NH4")
-dev.off()
-
-pdf(file = "figs/coef_trt_2.pdf",width=7,height=14)
-coefplot(m_lvm_4,mfrow = c(1,1),which.Xcoef = 2, cex.ylab = 0.6,
-         main="Salinity")
-dev.off()
-
-pdf(file = "figs/coef_trt_3.pdf",width=7,height=14)
-coefplot(m_lvm_4,mfrow = c(1,1),which.Xcoef = 3, cex.ylab = 0.6,
-         main="Chlorophyll")
-dev.off()
-
-pdf(file = "figs/coef_trt_4.pdf",width=7,height=14)
-coefplot(m_lvm_4,mfrow = c(1,1),which.Xcoef = 4, cex.ylab = 0.6,
-         main="DIN")
-dev.off()
-
-pdf(file = "figs/coef_trt_5.pdf",width=7,height=14)
-coefplot(m_lvm_4,mfrow = c(1,1),which.Xcoef = 5, cex.ylab = 0.6,
-         main="Depth")
-dev.off()
-
-pdf(file = "figs/coef_trt_6.pdf",width=7,height=14)
-coefplot(m_lvm_4,mfrow = c(1,1),which.Xcoef = 6, cex.ylab = 0.6,
-         order=TRUE, main="PO4")
-dev.off()
-
-pdf(file = "figs/coef_trt_7.pdf",width=7,height=14)
-coefplot(m_lvm_4,mfrow = c(1,1),which.Xcoef = 7, cex.ylab = 0.6,
-         order=TRUE, main="Temperature")
-dev.off()
+for(i in 1:ncol(m_lvm_4$X.design)){
+  pdf(file = paste0("figs/coef_nb_trt_",i,".pdf"),width = 7, height = 14)
+  coefplot(m_lvm_4,mfrow = c(1,1),which.Xcoef = i, cex.ylab = 0.6,
+           main=colnames(m_lvm_4$X.design)[i])
+  dev.off()
+}
 
 # source("R/function_scores.gllvm.R")
 # scrs <- scores.gllvm(m_lvm_4)
@@ -589,13 +561,18 @@ mod_coefs %>%
     !sig ~ "NONE",
     sig & Estimate >0 ~ "pos",
     sig & Estimate <0 ~ "neg"
-  )) -> mod_coefs
+  )) %>% 
+  mutate(clr = case_when(
+    !sig ~ "grey",
+    sig & Estimate >0 ~ "blue",
+    sig & Estimate <0 ~ "red"
+    )) -> mod_coefs
 
 # Iterate over each level of the factor 'LF'
 for (level in levels(mod_coefs$coefficient)) {
   # Subset the data for the current level
   subset_data <- mod_coefs[mod_coefs$coefficient == level, ]
-  #subset_data <- mod_coefs[mod_coefs$coefficient == "nh4", ]
+  #subset_data <- mod_coefs[mod_coefs$coefficient == "sal_ppt", ]
   
   # Calculate the mean value of 'Estimate' for the current level
   mean_estimate <- mean(subset_data$Estimate)
@@ -608,24 +585,26 @@ for (level in levels(mod_coefs$coefficient)) {
                          aes(x=Estimate, y=LF,
                              xmin=lower,
                              xmax=upper,
-                             colour=flag,
-                             fill=flag)) +
+                             colour=clr,
+                             fill=clr)) +
     geom_hline(yintercept = seq(1.5,ntrt,by=1),col="lightgrey",lty=3)+
     geom_vline(xintercept = 0)+
     # Add vertical line for mean estimate
     geom_vline(xintercept = mean_estimate, color = line_color,linetype="dashed") +
     geom_linerange()+
     labs(title = paste0(level))+
-    geom_point(shape=21) +
+    # geom_point(shape=21) +
+    geom_point() +
     scale_y_discrete(limits = rev(levels(as.factor(mod_coefs$LF))))+
-    scale_colour_manual(values = c("red",#negative
-                                        "grey",#null
-                                        "blue"#positive
-    ))+
-    scale_fill_manual(values = c("red",#negative
-                                      "white",#null
-                                      "blue"#positive
-    ))+
+    # scale_colour_manual(values = c("red",#negative
+    #                                     "grey",#null
+    #                                     "blue"#positive
+    # ))+
+    scale_colour_identity()+
+    # scale_fill_manual(values = c("red",#negative
+    #                                   "white",#null
+    #                                   "blue"#positive
+    # ))+
     guides(colour="none",
            fill="none")+
     theme(axis.title = element_blank(),
@@ -713,7 +692,7 @@ m_lvm_quad_0 <- readRDS("figs/gllvm_traits_unconstrainedQuadraticNegBin.Rdat")
 toc(log=TRUE)
 
 tic("QUADRATIC unconstrained Negative binomial model checking")
-ordiplot(m_lvm_quad_0,biplot=TRUE,symbols = TRUE)#species optima are far away from the gradient (hence arrows)
+gllvm::ordiplot.gllvm(m_lvm_quad_0,biplot=TRUE,symbols = TRUE)#species optima are far away from the gradient (hence arrows)
 optima(m_lvm_quad_0,sd.errors = FALSE)## inspect optima
 tolerances(m_lvm_quad_0,sd.errors = FALSE)## inspect tolerances
 
