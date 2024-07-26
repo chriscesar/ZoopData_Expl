@@ -4,7 +4,7 @@
 
 # 00 set up ####
 ## load packages ####
-ld_pkgs <- c("tidyverse", "tictoc","gllvm","patchwork", "lubridate")
+ld_pkgs <- c("tidyverse", "tictoc","gllvm","patchwork", "lubridate","ggpubr")
 vapply(ld_pkgs, library, logical(1L),
        character.only = TRUE, logical.return = TRUE);rm(ld_pkgs)
 
@@ -125,7 +125,7 @@ dfw_lf %>%
   pivot_longer(.,cols = Cop_Sm:Cop_NYA,names_to = "lf",values_to = "abund") %>%
   ggplot(.,aes(x=sample.date, y=abund, colour=lf)) +
   geom_line()+
-  facet_wrap(.~WB_lb)+
+  facet_wrap(.~WB_lb, scales = "free_y")+
   labs(x=NULL,
        y="Relative abundance",
        title="Relative abundance of copepod size classes recorded in EA water bodies",
@@ -147,12 +147,13 @@ dfw_lf %>%
   pivot_longer(.,cols = Cop_Sm:Cop_NYA,names_to = "lf",values_to = "abund") %>%
   ggplot(.,aes(x=sample.date, y=abund, colour=lf)) +
   # geom_line()+
-  geom_smooth(se=FALSE)+
+  geom_smooth(se=FALSE,method="loess",span=0.9)+
   # geom_point()+
-  facet_wrap(.~Region)+
+  facet_wrap(.~Region, scales = "free_y")+
   labs(x=NULL,
        y="Relative abundance",
-       title="Relative abundance of copepod size classes recorded in EA water bodies",
+       title="Modelled relative abundances of copepod size classes recorded in EA water bodies",
+       subtitle="Curves represent loess smooths with span = 0.9",
        caption="Relative abundance of a given size class is the value recorded in a sample
        divided by the maximum recorded value for that size class across all samples")+
   theme(legend.title = element_blank()) -> pl
@@ -166,20 +167,20 @@ rm(pl)
 dfw_lf %>% 
   ggplot(.,aes(
     x=sample.date,
-    y= Cop_Sm*`Net.volume.sampled.(m3)`
+    y= log(Cop_Sm*`Net.volume.sampled.(m3)`+1)
     ))+
   geom_line(colour=1)+
   scale_fill_manual(values=c("slategray1","green","sienna2","brown"))+
   scale_shape_manual(values=c(21:24))+
   geom_point(aes(shape=DJF, fill=DJF), size=2)+
-  facet_wrap(.~WB_lb)+
+  facet_wrap(.~WB_lb, scales = "free_y")+
   labs(title = "Temporal trends in small copepod abundances in EA water bodies",
-       y = bquote("Abudance (m"^3~")"),
+       y = "log(Abundance, n+1)",#bquote("Abudance (m"^3~")"),
        x=NULL,
        caption = "Colour and shape of points indicates sampling season:
        Winter (grey circle), Spring (green square), Summer (Orange diamond), Autumn (brown triangle)") +
   theme(legend.position = "none")-> pl
-ggsave(plot = pl, filename = "figs/2407dd_timeseries/smCopTSByWB.pdf",
+ggsave(plot = pl, filename = "figs/2407dd_timeseries/smCopTSByWBLogN.pdf",
        width = 12,height = 8,units = "in")
 rm(pl)
 
@@ -192,14 +193,15 @@ dfw_lf %>%
   # geom_line(colour=1)+
   scale_fill_manual(values=c("slategray1","green","sienna2","brown"))+
   scale_shape_manual(values=c(21:24))+
-  geom_smooth(se=FALSE)+
+  geom_smooth(se=FALSE, span=0.9)+
   geom_point(aes(shape=DJF, fill=DJF), size=2)+
-  facet_wrap(.~Region)+
+  facet_wrap(.~Region, scales = "free_y")+
   labs(title = "Temporal trends in small copepod abundances in EA Regions",
        y = bquote("Abudance (m"^3~")"),
        x=NULL,
        caption = "Colour and shape of points indicates sampling season:
-       Winter (grey circle), Spring (green square), Summer (Orange diamond), Autumn (brown triangle)") +
+       Winter (grey circle), Spring (green square), Summer (Orange diamond), Autumn (brown triangle).
+       Line represents loess smoother (span = 0.9)") +
   theme(legend.position = "none")-> pl
 ggsave(plot = pl, filename = "figs/2407dd_timeseries/smCopTSByRgn.pdf",
        width = 12,height = 8,units = "in")
@@ -216,7 +218,8 @@ dfw_lf %>%
   scale_fill_manual(values=c("slategray1","green","sienna2","brown"))+
   scale_shape_manual(values=c(21:24))+
   geom_point(aes(shape=DJF, fill=DJF), size=2)+
-  facet_wrap(.~WB_lb)+
+  ylim(0,NA)+
+  facet_wrap(.~WB_lb, scales = "free_y")+
   labs(title = "Temporal trends in fish abundances in EA water bodies",
        y = bquote("Abudance (m"^3~")"),
        x=NULL,
@@ -238,7 +241,7 @@ dfw_lf %>%
   scale_shape_manual(values=c(21:24))+
   geom_smooth(se=FALSE)+
   geom_point(aes(shape=DJF, fill=DJF), size=2)+
-  facet_wrap(.~Region)+
+  facet_wrap(.~Region,scales = "free_y")+
   labs(title = "Temporal trends in fish abundances in EA Regions",
        y = bquote("Abudance (m"^3~")"),
        x=NULL,
@@ -246,5 +249,29 @@ dfw_lf %>%
        Winter (grey circle), Spring (green square), Summer (Orange diamond), Autumn (brown triangle)") +
   theme(legend.position = "none")-> pl
 ggsave(plot = pl, filename = "figs/2407dd_timeseries/fishTSByRgn.pdf",
+       width = 12,height = 8,units = "in")
+rm(pl)
+
+### all fish vs all copepods
+dfw_lf %>% 
+  mutate(Cop_all = Cop_NYA+Cop_Sm+Cop_Ambi+Cop_Lg) %>% 
+  mutate(Cop_all=Cop_all*`Net.volume.sampled.(m3)`,
+         Fish_Mero=Fish_Mero*`Net.volume.sampled.(m3)`) %>% 
+  filter(.,WB != "Solway Outer South") %>% 
+  ggplot(.,aes(x=Cop_all, y= Fish_Mero))+
+  # geom_smooth(method="loess", colour=2,fill="pink",span = 0.9)+
+  geom_smooth(method="lm", fill="lightblue")+
+  geom_point(alpha=0.3)+
+  coord_cartesian(ylim=c(0, NA))+
+  facet_wrap(.~WB_lb, scales = "free")+
+  ggpubr::stat_cor(method="pearson")+
+  labs(title = "Relationship between total copepod and total fish abundances in zooplankton assemblages in EA water bodies",
+       y = bquote("Fish abudance (m"^-3~")"),
+       x = bquote("Total copepod abudance (m"^-3~")"),
+       caption=paste0("Samples gathered between ",format(min(dfw_lf$sample.date), "%d/%m/%Y")," & ",format(max(dfw_lf$sample.date), "%d/%m/%Y"),
+                      "\nBlue lines inidate linear model; red lines indicate loess smoother (span = 0.9)")) +
+  theme(legend.position = "none") -> pl
+
+ggsave(plot = pl, filename = "figs/2407dd_timeseries/copepodsFishByWB_allSmooths.pdf",
        width = 12,height = 8,units = "in")
 rm(pl)
