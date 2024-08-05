@@ -48,7 +48,7 @@ toc(log = TRUE)
 
 ## taxon data
 tic("load data sets: taxon data")
-source("R/imp.load_data_lifeforms.R")
+source("R/imp.load_data_taxa.R")
 df_tx_l <- df_tx0
 rm(df_tx,df_tx_100um,df_tx0)
 toc(log=TRUE)
@@ -69,6 +69,19 @@ tic("Join lifeforms & WIMS data")
 dfw_lf <- left_join(df_lf_w,df_wims_w,by="PRN")
 toc(log=TRUE)
 rm(df_wims_w,df_lf_w,df_tx_w)
+
+## Carbon content data
+tic("Carbon content data")
+df_carb <- readxl::read_xlsx(paste0(datfol,"Lifeforms/ZOOPLANKTON carbon mass data_v5Aug 2024.xlsx"),
+                  sheet = "FINAL SHEET TO USE") %>% 
+  dplyr::select(.,c(2:6)) %>% 
+  janitor::clean_names(.) %>% 
+  rename(copNonCop = copepod_or_non_copepod,
+         CPerIndiv_ug = body_mass_as_ug_c_per_individ,
+         longMaxAxis_mm = starts_with("longest_max"),
+         Aphia.ID = aphia_id) %>% 
+  mutate(Aphia.ID=as.numeric(Aphia.ID))
+toc(log=TRUE)
 
 ### create Region_WB variable
 LFRegion <- dfw_lf$Region
@@ -154,21 +167,26 @@ dfw_tx$WB_lb <- factor(dfw_tx$WB_lb, levels = c(
 ## Copepod size classes ###
 # by wb
 dfw_lf %>%
-  dplyr::select(., c(Region,WB,WB_lb,sample.date,`Net.volume.sampled.(m3)`,Cop_Sm, Cop_Ambi, Cop_Lg,Cop_NYA)) %>%
+  dplyr::select(., c(Region,WB,WB_lb,sample.date,yday,month,`Net.volume.sampled.(m3)`,Cop_Sm, Cop_Ambi, Cop_Lg,Cop_NYA)) %>%
   mutate(Cop_Sm=(`Net.volume.sampled.(m3)`*Cop_Sm)/max(`Net.volume.sampled.(m3)`*Cop_Sm),
          Cop_Ambi=(`Net.volume.sampled.(m3)`*Cop_Ambi)/max(`Net.volume.sampled.(m3)`*Cop_Ambi),
          Cop_Lg=(`Net.volume.sampled.(m3)`*Cop_Lg)/max(`Net.volume.sampled.(m3)`*Cop_Lg),
          Cop_NYA=(`Net.volume.sampled.(m3)`*Cop_NYA)/max(`Net.volume.sampled.(m3)`*Cop_NYA)) %>% 
   pivot_longer(.,cols = Cop_Sm:Cop_NYA,names_to = "lf",values_to = "abund") %>%
-  ggplot(.,aes(x=sample.date, y=abund, colour=lf)) +
+  ggplot(.,aes(
+    # x=sample.date,
+    x=yday,
+    y=log(abund+1),
+    colour=lf)) +
   geom_line()+
   facet_wrap(.~WB_lb, scales = "free_y")+
   labs(x=NULL,
        y="Relative abundance",
        title="Relative abundance of copepod size classes recorded in EA water bodies",
-       caption="Relative abundance of a given size class is the value recorded in a sample
-       divided by the maximum recorded value for that size class across all samples")+
-  theme(legend.title = element_blank()) -> pl
+       caption="Relative abundance of a given size class is the value recorded in a sample divided by the maximum recorded value for that size class across all samples")+
+  theme(legend.title = element_blank(),
+        strip.text = element_text(face=2),
+        axis.title = element_text(face=2)) -> pl
 
 ggsave(plot = pl, filename = "figs/2407dd_timeseries/copSizesTSByWB.pdf",
        width = 12,height = 8,units = "in")
@@ -176,13 +194,18 @@ rm(pl)
 
 # by Region
 dfw_lf %>%
-  dplyr::select(., c(Region,WB,WB_lb,sample.date,`Net.volume.sampled.(m3)`,Cop_Sm, Cop_Ambi, Cop_Lg,Cop_NYA)) %>%
+  dplyr::select(., c(Region,WB,WB_lb,sample.date,month,DJF,yday,`Net.volume.sampled.(m3)`,Cop_Sm, Cop_Ambi, Cop_Lg,Cop_NYA)) %>%
   mutate(Cop_Sm=(`Net.volume.sampled.(m3)`*Cop_Sm)/max(`Net.volume.sampled.(m3)`*Cop_Sm),
          Cop_Ambi=(`Net.volume.sampled.(m3)`*Cop_Ambi)/max(`Net.volume.sampled.(m3)`*Cop_Ambi),
          Cop_Lg=(`Net.volume.sampled.(m3)`*Cop_Lg)/max(`Net.volume.sampled.(m3)`*Cop_Lg),
          Cop_NYA=(`Net.volume.sampled.(m3)`*Cop_NYA)/max(`Net.volume.sampled.(m3)`*Cop_NYA)) %>% 
   pivot_longer(.,cols = Cop_Sm:Cop_NYA,names_to = "lf",values_to = "abund") %>%
-  ggplot(.,aes(x=sample.date, y=abund, colour=lf)) +
+  ggplot(.,aes(
+    x=sample.date,
+    # x=yday,
+    y=abund,
+    colour=lf
+    )) +
   # geom_line()+
   geom_smooth(se=FALSE,method="loess",span=0.9)+
   # geom_point()+
@@ -193,7 +216,9 @@ dfw_lf %>%
        subtitle="Curves represent loess smooths with span = 0.9",
        caption="Relative abundance of a given size class is the value recorded in a sample
        divided by the maximum recorded value for that size class across all samples")+
-  theme(legend.title = element_blank()) -> pl
+  theme(legend.title = element_blank(),
+        axis.title.y= element_text(face=2),
+        strip.text = element_text(face=2)) -> pl
 
 ggsave(plot = pl, filename = "figs/2407dd_timeseries/copSizeSmoothTSByRgn.pdf",
        width = 12,height = 8,units = "in")
@@ -204,6 +229,7 @@ rm(pl)
 dfw_lf %>% 
   ggplot(.,aes(
     x=sample.date,
+    # x=yday,
     y= log(Cop_Sm*`Net.volume.sampled.(m3)`+1)
     ))+
   geom_line(colour=1)+
@@ -216,7 +242,10 @@ dfw_lf %>%
        x=NULL,
        caption = "Colour and shape of points indicates sampling season:
        Winter (grey circle), Spring (green square), Summer (Orange diamond), Autumn (brown triangle)") +
-  theme(legend.position = "none")-> pl
+  theme(legend.position = "none",
+        axis.title.y = element_text(face=2),
+        strip.text = element_text(face=2)) -> pl
+
 ggsave(plot = pl, filename = "figs/2407dd_timeseries/smCopTSByWBLogN.pdf",
        width = 12,height = 8,units = "in")
 rm(pl)
@@ -225,6 +254,7 @@ rm(pl)
 dfw_lf %>% 
   ggplot(.,aes(
     x=sample.date,
+    #x=yday,
     y= Cop_Sm*`Net.volume.sampled.(m3)`
   ))+
   # geom_line(colour=1)+
@@ -234,12 +264,15 @@ dfw_lf %>%
   geom_point(aes(shape=DJF, fill=DJF), size=2)+
   facet_wrap(.~Region, scales = "free_y")+
   labs(title = "Temporal trends in small copepod abundances in EA Regions",
-       y = bquote("Abudance (m"^3~")"),
+       y = expression(bold("Abudance (m"^-3~")")),
        x=NULL,
        caption = "Colour and shape of points indicates sampling season:
        Winter (grey circle), Spring (green square), Summer (Orange diamond), Autumn (brown triangle).
        Line represents loess smoother (span = 0.9)") +
-  theme(legend.position = "none")-> pl
+  theme(legend.position = "none",
+        axis.title.y = element_text(face=2),
+        strip.text = element_text(face=2)) -> pl
+
 ggsave(plot = pl, filename = "figs/2407dd_timeseries/smCopTSByRgn.pdf",
        width = 12,height = 8,units = "in")
 rm(pl)
@@ -258,11 +291,14 @@ dfw_lf %>%
   ylim(0,NA)+
   facet_wrap(.~WB_lb, scales = "free_y")+
   labs(title = "Temporal trends in fish abundances in EA water bodies",
-       y = bquote("Abudance (m"^3~")"),
+       y = expression(bold("Abudance (m"^3~")")),
        x=NULL,
        caption = "Colour and shape of points indicates sampling season:
        Winter (grey circle), Spring (green square), Summer (Orange diamond), Autumn (brown triangle)") +
-  theme(legend.position = "none")-> pl
+  theme(legend.position = "none",
+        axis.title.y = element_text(face=2),
+        strip.text = element_text(face=2)) -> pl
+
 ggsave(plot = pl, filename = "figs/2407dd_timeseries/fishTSByWB.pdf",
        width = 12,height = 8,units = "in")
 rm(pl)
@@ -284,7 +320,10 @@ dfw_lf %>%
        x=NULL,
        caption = "Colour and shape of points indicates sampling season:
        Winter (grey circle), Spring (green square), Summer (Orange diamond), Autumn (brown triangle)") +
-  theme(legend.position = "none")-> pl
+  theme(legend.position = "none",
+        axis.title.y = element_text(face=2),
+        strip.text = element_text(face=2)) -> pl
+
 ggsave(plot = pl, filename = "figs/2407dd_timeseries/fishTSByRgn.pdf",
        width = 12,height = 8,units = "in")
 rm(pl)
@@ -303,11 +342,15 @@ dfw_lf %>%
   facet_wrap(.~WB_lb, scales = "free")+
   ggpubr::stat_cor(method="pearson")+
   labs(title = "Relationship between total copepod and total fish abundances in zooplankton assemblages in EA water bodies",
-       y = bquote("Fish abudance (m"^-3~")"),
-       x = bquote("Total copepod abudance (m"^-3~")"),
+       y = expression(bold("Fish abudance (m"^-3~")")),
+       #y = bquote("Fish abudance (m"^-3~")"),
+       #x = bquote("Total copepod abudance (m"^-3~")"),
+       x = expression(bold("Total copepod abudance (m"^-3~")")),
        caption=paste0("Samples gathered between ",format(min(dfw_lf$sample.date), "%d/%m/%Y")," & ",format(max(dfw_lf$sample.date), "%d/%m/%Y"),
                       "\nBlue lines inidate linear model; red lines indicate loess smoother (span = 0.9)")) +
-  theme(legend.position = "none") -> pl
+  theme(legend.position = "none",
+        axis.title = element_text(face=2),
+        strip.text = element_text(face=2)) -> pl
 
 ggsave(plot = pl, filename = "figs/2407dd_timeseries/copepodsFishByWB_allSmooths.pdf",
        width = 12,height = 8,units = "in")
@@ -327,8 +370,10 @@ dfw_lf %>%
   ggpubr::stat_cor(method="pearson",
                    label.y.npc="top", label.x.npc = "left")+
   labs(title = "Relationship between total copepod abundance and chlorophyll concentrations in EA water bodies",
-       y = bquote("log Copepod abundance (m"^-3~")"),
-       x = bquote("log Chlorophyll concentration (ug/l)"),
+       #y = bquote("log Copepod abundance (m"^-3~")"),
+       y = expression(bold("log Copepod abundance (m"^-3~")")),
+       #x = bquote("log Chlorophyll concentration (ug/l)"),
+       x = expression(bold("log Chlorophyll concentration (ug/l)")),
        caption=paste0("Samples gathered between ",format(min(dfw_lf$sample.date), "%d/%m/%Y")," & ",format(max(dfw_lf$sample.date), "%d/%m/%Y"),
                       "\nBlue lines inidate linear model.")) +
   theme(legend.position = "none",
