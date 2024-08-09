@@ -16,7 +16,6 @@ df_tx0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
                                                "processedData/MBA_Returns_Amalgamated_USE.xlsx"),
                                         sheet="outR04_LF"))
 ### prep taxon data ####
-### remove odd data
 df_tx <- as_tibble(df_tx0) ### create new data (keep df0 as 'raw')
 
 ### convert dates
