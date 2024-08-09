@@ -80,7 +80,19 @@ df_carb <- readxl::read_xlsx(paste0(datfol,"Lifeforms/ZOOPLANKTON carbon mass da
          CPerIndiv_ug = body_mass_as_ug_c_per_individ,
          longMaxAxis_mm = starts_with("longest_max"),
          Aphia.ID = aphia_id) %>% 
-  mutate(Aphia.ID=as.numeric(Aphia.ID))
+  mutate(Aphia.ID=as.numeric(Aphia.ID)) %>% 
+  group_by(Aphia.ID) %>% 
+  mutate(mnlongMaxAxis_mm = mean(longMaxAxis_mm, na.rm = TRUE),
+         mdlongMaxAxis_mm = median(longMaxAxis_mm, na.rm = TRUE),
+         mnCPerIndiv_ug = mean(CPerIndiv_ug, na.rm = TRUE),
+         mdCPerIndiv_ug = median(CPerIndiv_ug, na.rm = TRUE)) %>% 
+  ungroup(.) %>% 
+  mutate_all(~ifelse(is.nan(.), NA, .)) %>% 
+  as_tibble(.)
+
+df_carb %>% 
+  dplyr::select(.,-c(taxon, longMaxAxis_mm,CPerIndiv_ug)) %>%
+  distinct(.) -> df_carb_summary
 toc(log=TRUE)
 
 ### create Region_WB variable
@@ -114,7 +126,7 @@ WB_lb2 <- ifelse(LFWB == "Solent","Solent",
                                                                                                                              NA)))))))))))
                                          )))))
 WB_lb <- paste0(WB_lb1,"_",WB_lb2)
-rm(WB_lb1,WB_lb2)
+#rm(WB_lb1,WB_lb2)
 
 dfw_lf$WB_lb <- WB_lb
 dfw_lf %>% relocate(WB_lb,.after = WB) -> dfw_lf
@@ -382,3 +394,118 @@ dfw_lf %>%
 ggsave(plot = pl, filename = "figs/2407dd_timeseries/copepodsChlByWB_lm.pdf",
        width = 12,height = 8,units = "in")
 rm(pl)
+#####
+
+# Carbon explorations ####
+
+## flag which taxa we don't have carbon data for
+left_join(df_lf_l, df_carb_summary, by="Aphia.ID") %>%
+  filter(.,is.na(mdCPerIndiv_ug)) %>% 
+  dplyr::select(.,c("Aphia.ID","Taxa")) %>% 
+  distinct(.) %>% write.csv(.,
+                            file="outputs/ZoopsWithoutCEstimate.csv",
+                            row.names = FALSE)
+
+# Append carbon content to taxon data & multiply abundance by Carbon
+df_lf_l <- left_join(df_lf_l, df_carb_summary, by="Aphia.ID")
+
+df_lf_l %>% 
+  mutate(mn_carbTot_raw = AbundanceRaw*mnCPerIndiv_ug,
+         md_carbTot_raw = AbundanceRaw*mdCPerIndiv_ug,
+         mn_carbTot_m3 = Abund_m3*mnCPerIndiv_ug,
+         md_carbTot_m3 = Abund_m3*mdCPerIndiv_ug
+  ) -> df_lf_l
+
+df_lf_l$sample.date <- as.Date(df_lf_l$sample.date, origin = "1899-12-30")
+df_lf_l$yday <- lubridate::yday(df_lf_l$sample.date)
+df_lf_l %>% relocate(.,yday, .after = sample.date) -> df_lf_l
+
+### widen lifeforms data: remove counts, replace with Carbon
+df_lf_w_C <- df_lf_l %>% 
+  dplyr::select(.,c(date_site, sample.date, yday, BIOSYS.Code, WIMS.Code,
+                    "Net.volume.sampled.(m3)", PRN, LF02, md_carbTot_m3,
+                    WB,Region)) %>%
+  mutate(md_carbTot_m3 = replace_na(md_carbTot_m3, 0)) %>% 
+  group_by(across(c(!md_carbTot_m3))) %>% 
+  summarise(md_carbTot_m3 = sum(md_carbTot_m3),.groups = "drop") %>%
+  ungroup(.) %>% 
+  pivot_wider(.,names_from = LF02, values_from = md_carbTot_m3,
+              values_fill = 0) %>%
+  rowwise() %>% 
+  mutate(SUM = sum(c_across(-(1:9)))) %>% 
+  ungroup()
+
+### order labels
+### create Region_WB variable
+LFRegion <- df_lf_w_C$Region
+LFWB <- df_lf_w_C$WB
+
+WB_lb1 <- ifelse(LFRegion == "Southern","Sth",
+                 ifelse(LFRegion == "Thames","Thm",
+                        ifelse(LFRegion == "Anglian","Ang",
+                               ifelse(LFRegion == "NWest","NW",
+                                      ifelse(LFRegion == "NEast","NE",
+                                             ifelse(LFRegion == "SWest","SW",NA)
+                                      )))))
+
+WB_lb2 <- ifelse(LFWB == "Solent","Solent",
+                 ifelse(LFWB == "SOUTHAMPTON WATER","Soton Wtr",
+                        ifelse(LFWB == "Solway Outer South","Solway O",
+                               ifelse(LFWB == "THAMES LOWER","Thm Low",
+                                      ifelse(LFWB == "Blackwater Outer","Blckw Out",
+                                             ifelse(LFWB == "Cornwall North","Cornw Nth",
+                                                    ifelse(LFWB == "Barnstaple Bay","Brnstp B",
+                                                           ifelse(LFWB == "Kent South","Kent Sth",
+                                                                  ifelse(LFWB == "Mersey Mouth","Mersey Mth",
+                                                                         ifelse(LFWB == "Wash Outer","Wash Out",
+                                                                                ifelse(LFWB == "Lincolnshire","Lincs",
+                                                                                       ifelse(LFWB == "Yorkshire South","Yorks Sth",
+                                                                                              ifelse(LFWB == "TEES","Tees",
+                                                                                                     ifelse(LFWB == "Northumberland North","Nrthmb Nth",
+                                                                                                            ifelse(LFWB == "Farne Islands to Newton Haven","Farne Is",
+                                                                                                                   ifelse(LFWB == "Bristol Channel Inner South","Brist Ch In Sth",
+                                                                                                                          NA)))))))))))
+                                      )))))
+WB_lb <- paste0(WB_lb1,"_",WB_lb2)
+#rm(WB_lb1,WB_lb2)
+
+df_lf_w_C$WB_lb <- WB_lb
+df_lf_w_C %>% relocate(WB_lb,.after = WB) -> df_lf_w_C
+df_lf_w_C$WB_lb <- factor(df_lf_w_C$WB_lb, levels = c(
+  "NE_Nrthmb Nth",
+  "NE_Farne Is",
+  "NE_Tees",
+  "Ang_Yorks Sth",
+  "Ang_Lincs",
+  "Ang_Wash Out",
+  "Ang_Blckw Out",
+  "Thm_Thm Low",
+  "Sth_Kent Sth",
+  "Sth_Solent",
+  "Sth_Soton Wtr",  
+  "SW_Cornw Nth",
+  "SW_Brnstp B",
+  "SW_Brist Ch In Sth",
+  "NW_Mersey Mth", 
+  "NW_Solway O"
+))
+
+df_lf_w_C %>% 
+  ggplot(., aes(x=sample.date, y = log(SUM)))+ 
+  geom_point()+
+  geom_smooth(se=FALSE)+
+  facet_wrap(.~WB_lb, scale="free_y")+
+  ylim(0,NA)+
+  labs(title = "Trend in total carbon content within zooplankton assemblages by date in EA water bodies",
+       y = expression(bold("Log total carbon content (ug m"^-3~")")),
+       # y = expression(bold("Square root of total carbon content (ug m"^-3~")")),
+       # y = expression(bold("Total carbon content (ug m"^-3~")")),
+       x = "Date",
+       caption=paste0("Samples gathered between ",format(min(dfw_lf$sample.date), "%d/%m/%Y")," & ",format(max(dfw_lf$sample.date), "%d/%m/%Y"),
+                      "\nBlue lines inidate loess smooths.")) +
+  theme(legend.position = "none",
+        axis.title = element_text(face=2),
+        strip.text = element_text(face=2)) -> pl
+
+ggsave(plot = pl, filename = "figs/2407dd_timeseries/logtotCByDateByWB.pdf",
+       width = 12,height = 8,units = "in")
