@@ -530,3 +530,167 @@ df_lf_w_C %>%
         axis.text.x = element_text(face=2)) -> pl
 ggsave(plot = pl, filename = "figs/2407dd_timeseries/carbonByWB.pdf",
        width = 20,height = 12,units = "in")
+
+#####
+df_lf_l %>% 
+  dplyr::select(.,c(Pot.Number,date_site, sample.date, yday, BIOSYS.Code, WIMS.Code,
+                    ZooType, "Net.volume.sampled.(m3)", PRN, 
+                    md_carbTot_m3, WB,Region)) %>%
+  mutate(md_carbTot_m3 = replace_na(md_carbTot_m3, 0)) %>% 
+  group_by(across(c(!md_carbTot_m3))) %>% 
+  summarise(md_carbTot_m3 = sum(md_carbTot_m3),.groups = "drop") %>%
+  ungroup(.) %>% 
+  pivot_wider(.,names_from = ZooType, values_from = md_carbTot_m3,
+              values_fill = 0) %>%
+  rowwise() %>% #names(.)
+  mutate(SUM = sum(c_across(-(1:10)))) %>% 
+  ungroup() -> df_lf_w_C_zooType
+
+#### append labels
+LFRegion <- df_lf_w_C_zooType$Region
+LFWB <- df_lf_w_C_zooType$WB
+
+WB_lb1 <- ifelse(LFRegion == "Southern","Sth", ifelse(LFRegion == "Thames","Thm",
+                        ifelse(LFRegion == "Anglian","Ang", ifelse(LFRegion == "NWest","NW",
+                                      ifelse(LFRegion == "NEast","NE", ifelse(LFRegion == "SWest","SW",NA)
+                                      )))))
+
+WB_lb2 <- ifelse(LFWB == "Solent","Solent", ifelse(LFWB == "SOUTHAMPTON WATER","Soton Wtr",
+                        ifelse(LFWB == "Solway Outer South","Solway O",
+                               ifelse(LFWB == "THAMES LOWER","Thm Low",
+                                      ifelse(LFWB == "Blackwater Outer","Blckw Out",
+                                             ifelse(LFWB == "Cornwall North","Cornw Nth",
+                                                    ifelse(LFWB == "Barnstaple Bay","Brnstp B",
+                                                           ifelse(LFWB == "Kent South","Kent Sth",
+                                                                  ifelse(LFWB == "Mersey Mouth","Mersey Mth",
+                                                                         ifelse(LFWB == "Wash Outer","Wash Out",
+                                                                                ifelse(LFWB == "Lincolnshire","Lincs",
+                                                                                       ifelse(LFWB == "Yorkshire South","Yorks Sth",
+                                                                                              ifelse(LFWB == "TEES","Tees",
+                                                                                                     ifelse(LFWB == "Northumberland North","Nrthmb Nth",
+                                                                                                            ifelse(LFWB == "Farne Islands to Newton Haven","Farne Is",
+                                                                                                                   ifelse(LFWB == "Bristol Channel Inner South","Brist Ch In Sth",
+                                                                                                                          NA)))))))))))
+                                      )))))
+WB_lb <- paste0(WB_lb1,"_",WB_lb2)
+#rm(WB_lb1,WB_lb2)
+
+df_lf_w_C_zooType$WB_lb <- WB_lb
+df_lf_w_C_zooType %>% relocate(WB_lb,.after = WB) -> df_lf_w_C_zooType
+df_lf_w_C_zooType$WB_lb <- factor(df_lf_w_C_zooType$WB_lb, levels = c(
+  "NE_Nrthmb Nth",  "NE_Farne Is", "NE_Tees", "Ang_Yorks Sth", "Ang_Lincs",
+  "Ang_Wash Out", "Ang_Blckw Out", "Thm_Thm Low", "Sth_Kent Sth", "Sth_Solent",
+  "Sth_Soton Wtr", "SW_Cornw Nth", "SW_Brnstp B", "SW_Brist Ch In Sth",
+  "NW_Mersey Mth", "NW_Solway O"
+))
+
+df_lf_w_C_zooType$Region <- factor(df_lf_w_C_zooType$Region,
+                                   levels = c(
+                                     "NEast","Anglian","Thames",
+                                     "Southern","SWest","NWest"
+                                   ))
+
+df_lf_w_C_zooType %>% 
+  dplyr::select(.,-SUM) %>%
+  pivot_longer(.,cols=12:31,names_to = "ZooType",values_to = "TotCarb") %>%
+  filter(.,TotCarb != 0) %>% 
+  ggplot(., aes(x=ZooType, y=log(TotCarb)))+
+  geom_boxplot(varwidth = FALSE,outlier.shape = NA)+
+  coord_flip()+
+  facet_wrap(.~Region)+
+  # facet_wrap(.~WB_lb)+
+  geom_point(aes(group=ZooType), position=position_jitter(width = 0.2),alpha=0.2)+
+  scale_colour_manual(values = cbPalette2)+
+  scale_x_discrete(limits=rev)+
+  labs(
+    title = "Total carbon content by zooplankton type by EA region",
+    y="log(Total carbon)"
+       )+
+  theme(legend.position = "none",
+        axis.title.y = element_blank(),
+        strip.text = element_text(face=2),
+        axis.title.x = element_text(face=2),
+        axis.text.x = element_text(face=2),
+        axis.text.y = element_text(face=2)) -> pl
+
+ggsave(plot = pl, filename = "figs/2407dd_timeseries/carbonByZooTypeRegion.pdf",
+       width = 20,height = 12,units = "in")
+rm(pl)
+
+############
+#### append labels
+LFRegion <- df_lf_l$Region
+LFWB <- df_lf_l$WB
+
+WB_lb1 <- ifelse(LFRegion == "Southern","Sth", ifelse(LFRegion == "Thames","Thm",
+                                                      ifelse(LFRegion == "Anglian","Ang", ifelse(LFRegion == "NWest","NW",
+                                                                                                 ifelse(LFRegion == "NEast","NE", ifelse(LFRegion == "SWest","SW",NA)
+                                                                                               )))))
+
+WB_lb2 <- ifelse(LFWB == "Solent","Solent", ifelse(LFWB == "SOUTHAMPTON WATER","Soton Wtr",
+                                                   ifelse(LFWB == "Solway Outer South","Solway O",
+                                                          ifelse(LFWB == "THAMES LOWER","Thm Low",
+                                                                 ifelse(LFWB == "Blackwater Outer","Blckw Out",
+                                                                        ifelse(LFWB == "Cornwall North","Cornw Nth",
+                                                                               ifelse(LFWB == "Barnstaple Bay","Brnstp B",
+                                                                                      ifelse(LFWB == "Kent South","Kent Sth",
+                                                                                             ifelse(LFWB == "Mersey Mouth","Mersey Mth",
+                                                                                                    ifelse(LFWB == "Wash Outer","Wash Out",
+                                                                                                           ifelse(LFWB == "Lincolnshire","Lincs",
+                                                                                                                  ifelse(LFWB == "Yorkshire South","Yorks Sth",
+                                                                                                                         ifelse(LFWB == "TEES","Tees",
+                                                                                                                                ifelse(LFWB == "Northumberland North","Nrthmb Nth",
+                                                                                                                                       ifelse(LFWB == "Farne Islands to Newton Haven","Farne Is",
+                                                                                                                                              ifelse(LFWB == "Bristol Channel Inner South","Brist Ch In Sth",
+                                                                                                                                                     NA)))))))))))
+                                                                 )))))
+WB_lb <- paste0(WB_lb1,"_",WB_lb2)
+#rm(WB_lb1,WB_lb2)
+
+df_lf_l$WB_lb <- WB_lb
+df_lf_l %>% relocate(WB_lb,.after = WB) -> df_lf_l
+df_lf_l$WB_lb <- factor(df_lf_l$WB_lb, levels = c(
+  "NE_Nrthmb Nth",  "NE_Farne Is", "NE_Tees", "Ang_Yorks Sth", "Ang_Lincs",
+  "Ang_Wash Out", "Ang_Blckw Out", "Thm_Thm Low", "Sth_Kent Sth", "Sth_Solent",
+  "Sth_Soton Wtr", "SW_Cornw Nth", "SW_Brnstp B", "SW_Brist Ch In Sth",
+  "NW_Mersey Mth", "NW_Solway O"
+))
+
+df_lf_l$Region <- factor(df_lf_l$Region,
+                                   levels = c(
+                                     "NEast","Anglian","Thames",
+                                     "Southern","SWest","NWest"
+                                   ))
+###
+df_lf_l %>% #names(.)
+  mutate(.,LF03 = if_else(Copepod == "Y", paste0("Cop_",CopSize),ZooType)) %>%
+  dplyr::select(.,c(Pot.Number, sample.date, yday, BIOSYS.Code, WIMS.Code,
+                    LF03, "Net.volume.sampled.(m3)", PRN, 
+                    md_carbTot_m3, WB,Region,WB_lb)) %>% 
+  mutate(md_carbTot_m3 = replace_na(md_carbTot_m3, 0)) %>% 
+  filter(.,md_carbTot_m3 != 0) %>% 
+  group_by(across(c(!md_carbTot_m3))) %>% 
+  summarise(md_carbTot_m3 = sum(md_carbTot_m3),.groups = "drop") %>%
+  ungroup(.) %>% View()
+  ggplot(., aes(x=LF03, y=log(md_carbTot_m3)))+
+  geom_boxplot(varwidth = FALSE,outlier.shape = NA)+
+  coord_flip()+
+  facet_wrap(.~WB_lb)+
+  # facet_wrap(.~WB_lb)+
+  geom_point(aes(group=LF03), position=position_jitter(width = 0.2),alpha=0.2)+
+  scale_colour_manual(values = cbPalette2)+
+  scale_x_discrete(limits=rev)+
+  labs(
+    title = "Total carbon content by zooplankton type by EA water body",
+    y="log(Total carbon)"
+  )+
+  theme(legend.position = "none",
+        axis.title.y = element_blank(),
+        strip.text = element_text(face=2),
+        axis.title.x = element_text(face=2),
+        axis.text.x = element_text(face=2),
+        axis.text.y = element_text(face=2)) -> pl
+
+ggsave(plot = pl, filename = "figs/2407dd_timeseries/carbonByZooTypeWB_v2.pdf",
+       width = 20,height = 12,units = "in")
+rm(pl)
