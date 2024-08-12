@@ -509,3 +509,24 @@ df_lf_w_C %>%
 
 ggsave(plot = pl, filename = "figs/2407dd_timeseries/logtotCByDateByWB.pdf",
        width = 12,height = 8,units = "in")
+rm(pl)
+
+glob.mean <- mean(df_lf_w_C$SUM)
+glob.mean.log <- mean(log(df_lf_w_C$SUM))
+
+df_lf_w_C %>% 
+  ggplot(.,aes(x=WB_lb, y=log(SUM), colour=Region))+
+  geom_hline(yintercept = glob.mean.log,lty=2)+
+  geom_boxplot(varwidth = TRUE,outlier.shape = NA)+
+  geom_point(aes(group=Region), position=position_jitterdodge(),alpha=0.3)+
+  scale_colour_manual(values = cbPalette2)+
+  labs(title = "Total carbon content in zooplankton assemblages by EA water body",
+       y="log(total carbon)",
+       caption = paste0("Dashed line indicates global mean log carbon content across all water bodies",
+                        "\nBox widths are proportional to the number of observations"))+
+  theme(legend.position = "none",
+        axis.title.x = element_blank(),
+        axis.title.y = element_text(face=2),
+        axis.text.x = element_text(face=2)) -> pl
+ggsave(plot = pl, filename = "figs/2407dd_timeseries/carbonByWB.pdf",
+       width = 20,height = 12,units = "in")
