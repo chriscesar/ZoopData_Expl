@@ -513,6 +513,8 @@ rm(pl)
 
 glob.mean <- mean(df_lf_w_C$SUM)
 glob.mean.log <- mean(log(df_lf_w_C$SUM))
+glob.median <- median(df_lf_w_C$SUM)
+glob.median.log <- median(log(df_lf_w_C$SUM))
 
 df_lf_w_C %>% 
   ggplot(.,aes(x=WB_lb, y=log(SUM), colour=Region))+
@@ -530,6 +532,39 @@ df_lf_w_C %>%
         axis.text.x = element_text(face=2)) -> pl
 ggsave(plot = pl, filename = "figs/2407dd_timeseries/carbonByWB.pdf",
        width = 20,height = 12,units = "in")
+
+df_lf_w_C %>%
+  group_by(WB_lb) %>% 
+  summarise(min=min(SUM),
+            q1 = quantile(SUM, 0.25),
+            median=median(SUM),
+            mean = mean(SUM),
+            q3 = quantile(SUM, 0.75),
+            max=max(SUM),
+            globalMean=glob.mean,
+            globalMedian=glob.median,
+            .groups = "drop"
+            ) -> descriptives
+write.csv(descriptives,
+          file="outputs/descriptWB_SUMCarbon.csv",
+          row.names = FALSE)
+
+df_lf_w_C %>%
+  mutate(SUM=log(SUM)) %>% group_by(WB_lb) %>% 
+  summarise(min=min(SUM),
+            q1 = quantile(SUM, 0.25),
+            median=median(SUM),
+            mean = mean(SUM),
+            q3 = quantile(SUM, 0.75),
+            max=max(SUM),
+            globalMean=glob.median.log,
+            globalMedian=glob.median.log,
+            .groups = "drop"
+  ) -> logdescriptives
+write.csv(logdescriptives,
+          file="outputs/descriptWB_logSUMCarbon.csv",
+          row.names = FALSE)
+rm(descriptives,logdescriptives)
 
 #####
 df_lf_l %>% 
