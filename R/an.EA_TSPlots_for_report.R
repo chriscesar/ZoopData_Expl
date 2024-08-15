@@ -557,7 +557,7 @@ df_lf_w_C %>%
             mean = mean(SUM),
             q3 = quantile(SUM, 0.75),
             max=max(SUM),
-            globalMean=glob.median.log,
+            globalMean=glob.mean.log,
             globalMedian=glob.median.log,
             .groups = "drop"
   ) -> logdescriptives
