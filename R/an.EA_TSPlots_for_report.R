@@ -494,7 +494,7 @@ df_lf_w_C %>%
   ggplot(., aes(x=sample.date, y = log(SUM)))+ 
   geom_point()+
   geom_smooth(se=FALSE)+
-  facet_wrap(.~WB_lb, scale="free_y")+
+  facet_wrap(.~WB_lb)+#, scale="free_y")+
   ylim(0,NA)+
   labs(title = "Trend in total carbon content within zooplankton assemblages by date in EA water bodies",
        y = expression(bold("Log total carbon content (ug m"^-3~")")),
@@ -507,7 +507,7 @@ df_lf_w_C %>%
         axis.title = element_text(face=2),
         strip.text = element_text(face=2)) -> pl
 
-ggsave(plot = pl, filename = "figs/2407dd_timeseries/logtotCByDateByWB.pdf",
+ggsave(plot = pl, filename = "figs/2407dd_timeseries/logtotCByDateByWB_Fixed_Y.pdf",
        width = 12,height = 8,units = "in")
 rm(pl)
 
@@ -706,7 +706,7 @@ df_lf_l %>% #names(.)
   filter(.,md_carbTot_m3 != 0) %>% 
   group_by(across(c(!md_carbTot_m3))) %>% 
   summarise(md_carbTot_m3 = sum(md_carbTot_m3),.groups = "drop") %>%
-  ungroup(.) %>% View()
+  ungroup(.) %>%
   ggplot(., aes(x=LF03, y=log(md_carbTot_m3)))+
   geom_boxplot(varwidth = FALSE,outlier.shape = NA)+
   coord_flip()+
@@ -729,3 +729,127 @@ df_lf_l %>% #names(.)
 ggsave(plot = pl, filename = "figs/2407dd_timeseries/carbonByZooTypeWB_v2.pdf",
        width = 20,height = 12,units = "in")
 rm(pl)
+
+# SEAHORSE FOOD ####
+## total carbon
+df_lf_w_C %>% 
+  filter(.,WB_lb %in% c("Sth_Solent","Sth_Soton Wtr")) %>% 
+  filter(.,WIMS.Code != "Y00017477") %>% 
+  mutate(.,WIMS.Code = factor(WIMS.Code, levels = c("G0003572",
+                                                    "Y0017477",
+                                                    "Y0004367",
+                                                    "G0003532"))) %>% 
+  ggplot(.,aes(x=BIOSYS.Code,y=SUM, colour=WB_lb))+
+  geom_hline(yintercept = seq(from=0, to=100000, by=10000), colour = "grey",
+             linetype=2)+
+  geom_boxplot(outliers = FALSE)+
+  geom_jitter(width = 0.25)+
+  labs(title = "Total carbon content of zooplankters recorded in the Solent and Southampton Water",
+       x="BIOSYS site code",
+       y= "Total carbon (ug C/m3)")+
+  scale_y_continuous(breaks = c(0,50000,100000),labels = scales::comma_format())+
+  coord_flip()+
+  theme(legend.title = element_blank(),
+        axis.title = element_text(face=2)) -> pl
+
+ggsave(plot = pl, filename = "figs/2407dd_timeseries/carbonTot_Soton.pdf",
+       width = 20,height = 12,units = "in");rm(pl)
+
+## by taxon
+dfw_lf %>% 
+  filter(.,WB_lb %in% c("Sth_Solent","Sth_Soton Wtr")) %>% names(.)
+
+df_lf_l %>% 
+  filter(.,WB_lb %in% c("Sth_Solent","Sth_Soton Wtr")) %>%
+  mutate(.,label = ifelse(LF02 == "Cop_Sm","Cop_Sm",
+                          ifelse(LF02 == "Cop_Lg","Cop_Lg",
+                                 ifelse(LF02 == "Cop_Ambi","Cop_Ambi",
+                                        ifelse(LF02 == "Cop_NYA","Cop_NYA",
+                                               ifelse(Order == "Mysida","Mysida","X")))))) %>% 
+  filter(.,label != "X") %>% 
+  dplyr::select(.,c("BIOSYS.Code","WIMS.Code","sample.date","PRN",
+                    "WB_lb","label","Abund_m3","md_carbTot_m3")) %>% 
+  group_by(BIOSYS.Code, WIMS.Code, sample.date, PRN, WB_lb, label) %>%
+  summarise(
+    Abund_m3 = sum(Abund_m3, na.rm = TRUE),
+    md_carbTot_m3 = sum(md_carbTot_m3, na.rm = TRUE)
+  ) %>%
+  ungroup() %>% 
+  ggplot(.,aes(x= BIOSYS.Code,y=log(md_carbTot_m3+1), colour=WB_lb))+
+  geom_boxplot(outliers = FALSE)+
+  facet_wrap(.~label, scales = "free_y")+
+  geom_jitter(width = 0.25)+
+  labs(title = "Total carbon content of selected zooplankters recorded in the Solent and Southampton Water",
+       x="BIOSYS site code",
+       y= "Log (n+1) carbon content (ug C/m3)")+
+  theme(legend.title = element_blank(),
+        axis.title = element_text(face=2))+
+  coord_flip() -> pl
+
+ggsave(plot = pl, filename = "figs/2407dd_timeseries/log_CarbonTot_Soton.pdf",
+       width = 20,height = 12,units = "in");rm(pl)
+
+# how many taxa do we not have C data for? ####
+left_join(df_tx_l, df_carb_summary, by="Aphia.ID") %>% 
+  mutate(.,WB_lb = WB_lb) %>% 
+  mutate(.,cdat=ifelse(is.na(.$mdCPerIndiv_ug),"N","Y")) %>%
+  dplyr::select(.,c(sample.date,BIOSYS.Code,WIMS.Code,PRN,
+                    Abund_m3,Region,WB_lb,cdat)) %>% 
+  group_by(sample.date,BIOSYS.Code,WIMS.Code,PRN,
+           Region,WB_lb,cdat) %>% 
+  summarise(totAbnd=sum(Abund_m3),.groups = "drop") %>% 
+  ggplot(.,aes(cdat,
+               y=log(totAbnd+1),
+               # y=totAbnd,
+               colour=cdat))+
+  # geom_bar(stat = "identity")+
+  geom_boxplot(outliers = FALSE)+
+  geom_jitter(width=.2)+
+  labs(
+    title="Total zooplankton abundances in samples gathered in EA water bodies",
+    subtitle = "Abundances split between taxa for which we do (Y) and do not (N) have carbon content estimates",
+    # y="Total zooplankton abundance (individuals/m3)",
+    y="Log (n+1) zooplankton abundance",
+    x=NULL
+    )+
+  facet_wrap(.~WB_lb, scales = "free_y")+
+  theme(
+    axis.title.y = element_text(face=2),
+    axis.text.x = element_text(face=2),
+    strip.text = element_text(face=2),
+    legend.position = "none"
+  ) #-> pl
+  
+ggsave(plot = pl, filename = "figs/2407dd_timeseries/LogAbundTot_Missing_C.pdf",
+       width = 20,height = 12,units = "in");rm(pl)
+
+# Prevalence of missing Carbon taxa ####
+left_join(df_tx_l, df_carb_summary, by="Aphia.ID") %>% 
+  mutate(.,WB_lb = WB_lb) %>% 
+  mutate(.,cdat=ifelse(is.na(.$mdCPerIndiv_ug),"N","Y")) %>%
+  dplyr::select(.,c(sample.date,BIOSYS.Code,WIMS.Code,PRN,
+                    Abund_m3,Region,WB_lb,cdat)) %>% 
+  mutate(preval=1) %>% dplyr::select(.,-Abund_m3) %>% 
+  group_by(sample.date,BIOSYS.Code,WIMS.Code,PRN,
+           Region,WB_lb,cdat) %>% 
+  summarise(preval=sum(preval),.groups = "drop") %>% 
+  mutate(.,WB_lb = factor(WB_lb, levels = c("NE_Nrthmb Nth",
+    "NE_Farne Is","NE_Tees", "Ang_Yorks Sth", "Ang_Lincs", "Ang_Wash Out",
+    "Ang_Blckw Out", "Thm_Thm Low", "Sth_Kent Sth", "Sth_Solent", "Sth_Soton Wtr",
+    "SW_Cornw Nth", "SW_Brnstp B","SW_Brist Ch In Sth","NW_Mersey Mth", "NW_Solway O"))) %>% 
+  filter(.,cdat=="N") %>% 
+  ggplot(., aes(x=preval))+
+  geom_histogram(fill="grey",colour=1)+
+  facet_wrap(.~WB_lb)+
+  labs(title = "Prevalence of zooplankton taxa which do not have an estimate of carbon content",
+       subtitle="Histograms show the number of taxa without estimate of carbon content within each sample across EA water bodies",
+       x="Number of taxa within sample with missing carbon estimates",
+       y="Frequency")+
+  theme(
+    axis.title.y = element_text(face=2),
+    axis.title.x = element_text(face=2),
+    axis.text.x = element_text(face=2),
+    strip.text = element_text(face=2)
+  ) -> pl
+ggsave(plot = pl, filename = "figs/2407dd_timeseries/OccurencesMissing_C.pdf",
+       width = 20,height = 12,units = "in");rm(pl)
