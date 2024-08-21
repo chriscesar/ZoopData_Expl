@@ -874,3 +874,20 @@ left_join(df_tx_l,df_carb_summary, by="Aphia.ID") %>% #names()
             file="outputs/PrevalenceOfMissingCarbonTax0.csv",
             row.names = FALSE)
 rm(samples)
+
+left_join(df_tx_l,df_carb_summary, by="Aphia.ID") %>% #names() 
+  dplyr::select(Pot.Number, PRN, sample.date, Region, Aphia.ID,
+                Taxa.x,Abund_m3,mdCPerIndiv_ug) %>% 
+  # mutate(present = 1) %>% 
+  mutate(carbon = ifelse(is.na(mdCPerIndiv_ug), "N", "Y")) %>% 
+  dplyr::select(-mdCPerIndiv_ug, -Pot.Number, -PRN, -sample.date, -Region) %>%
+  group_by(across(-Abund_m3)) %>%  # Group by all columns except 'present'
+  summarise(totalAbund = sum(Abund_m3), 
+            .groups = "drop") %>% 
+  ungroup() %>% 
+  arrange(-totalAbund) %>% 
+  rename(.,carbonEstimateAvailable = carbon) %>% 
+  mutate(.,proportionOfIndividuals = totalAbund/sum(totalAbund)*100) %>% 
+  write.csv(.,
+            file="outputs/ProportionOfCounts_MissingCarbonTax0.csv",
+            row.names = FALSE)
