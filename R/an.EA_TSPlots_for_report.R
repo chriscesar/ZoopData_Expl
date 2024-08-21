@@ -818,7 +818,7 @@ left_join(df_tx_l, df_carb_summary, by="Aphia.ID") %>%
     axis.text.x = element_text(face=2),
     strip.text = element_text(face=2),
     legend.position = "none"
-  ) #-> pl
+  ) -> pl
   
 ggsave(plot = pl, filename = "figs/2407dd_timeseries/LogAbundTot_Missing_C.pdf",
        width = 20,height = 12,units = "in");rm(pl)
@@ -853,3 +853,24 @@ left_join(df_tx_l, df_carb_summary, by="Aphia.ID") %>%
   ) -> pl
 ggsave(plot = pl, filename = "figs/2407dd_timeseries/OccurencesMissing_C.pdf",
        width = 20,height = 12,units = "in");rm(pl)
+
+df_tx_l %>% 
+  dplyr::select(.,c(Pot.Number,PRN)) %>% distinct() %>% count() -> samples
+
+left_join(df_tx_l,df_carb_summary, by="Aphia.ID") %>% #names() 
+  dplyr::select(Pot.Number, PRN, sample.date, Region, Aphia.ID,
+                Taxa.x,Abund_m3,mdCPerIndiv_ug) %>% 
+  mutate(present = 1) %>% 
+  mutate(carbon = ifelse(is.na(mdCPerIndiv_ug), "N", "Y")) %>% 
+  dplyr::select(-mdCPerIndiv_ug, -Pot.Number, -PRN, -sample.date, -Region,-Abund_m3) %>%
+  group_by(across(-present)) %>%  # Group by all columns except 'present'
+  summarise(occurences = sum(present), 
+            proportionOfSamples = as.numeric(occurences/samples), 
+            .groups = "drop") %>% 
+  ungroup() %>% 
+  arrange(-proportionOfSamples) %>% 
+  rename(.,carbonEstimateAvailable = carbon) %>% 
+  write.csv(.,
+            file="outputs/PrevalenceOfMissingCarbonTax0.csv",
+            row.names = FALSE)
+rm(samples)
