@@ -77,6 +77,7 @@ df_tx_w %>%
   dplyr::select_if(~ !is.numeric(.) || sum(.) !=0) %>% ### drop cols summing to 0
   filter(rowSums(across(where(is.numeric)))!=0) -> dftmp ###remove 'empty' rows
 toc(log=TRUE)
+
 ### NMDS ####
 # tic("Run NMDS")
 # set.seed(pi);ord <-   vegan::metaMDS(dftmp,trymax = 500)
@@ -417,12 +418,15 @@ toc(log=TRUE)
 # Unconstrained w/ Random ####
 #### Negbin ####
 tic("Fit Unconstrained Negative binomial model")
-sDsn <- data.frame(Region = X$region)
+# sDsn <- data.frame(Region = X$region)
+sDsn <- data.frame(WB = X$wb)
 m_lvm_0 <- gllvm(Y, # unconstrained model
                  # offset = log(X$net_vol_m3),#set model offset
-                 offset = log(offset_m3),#set model offset
+                 #model offset is logged to accommodate the neg.bin log-link function
+                 offset = log(offset_m3),
                  studyDesign = sDsn,
-                 row.eff = ~(1|Region),
+                 # row.eff = ~(1|Region),
+                 row.eff = ~(1|WB),
                  family = "negative.binomial",
                  starting.val="res",
                  n.init = runs, #re-run model to get best fit
@@ -430,9 +434,11 @@ m_lvm_0 <- gllvm(Y, # unconstrained model
                  seed = pi,
                  num.lv = 2
                  )
-saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_negbin.Rdat") #3.265326 mins
+# saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_Rgn_negbin.Rdat") #3.265326 mins
+saveRDS(m_lvm_0, file="figs/gllvm_traits_uncon_WB_negbin.Rdat") #3.265326 mins
 toc(log=TRUE)
-m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_negbin.Rdat")
+# m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_Rgn_negbin.Rdat")
+m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_WB_negbin.Rdat")
 par(mfrow=c(2,2));plot(m_lvm_0, which=1:4);par(mfrow=c(1,1))
 gllvm::ordiplot.gllvm(m_lvm_0,biplot = TRUE,symbols=TRUE)
 cr <- getResidualCor(m_lvm_0)
@@ -447,13 +453,16 @@ dev.off();rm(cr)
 #### Nested by Region ####
 ##### Negbin ####
 tic("Fit Constrained Negative binomial model")
-sDsn <- data.frame(region = X$region)
+# sDsn <- data.frame(region = X$region)
+sDsn <- data.frame(WB = X$wb)
 m_lvm_4 <- gllvm(y=Y, # model with environmental parameters
                  X=X_scaled, #scaled
                  # offset = log(X$net_vol_m3),#set model offset
                  offset = log(offset_m3),#set model offset
                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
-                 studyDesign = sDsn, row.eff = ~(1|region),
+                 studyDesign = sDsn,
+                 # row.eff = ~(1|region),
+                 row.eff = ~(1|WB),
                  family="negative.binomial",
                  starting.val="res",
                  n.init=runs,#re-run model to get best fit
@@ -461,11 +470,13 @@ m_lvm_4 <- gllvm(y=Y, # model with environmental parameters
                  num.lv = 2
                  )
 
-saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_negbin_scaled.Rdat") #scaled #6.862054 mins
+# saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_negbin_scaled.Rdat") #scaled #6.862054 mins
+saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4WB_negbin_scaled.Rdat") #scaled #6.862054 mins
 toc(log=TRUE)
 
 tic("Model summaries & comparisons")
-m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_negbin_scaled.Rdat")#scaled
+# m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_negbin_scaled.Rdat")#scaled
+m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4WB_negbin_scaled.Rdat")#scaled
 gllvm::ordiplot.gllvm(m_lvm_4,biplot = TRUE,symbols=TRUE)
 cr <- getResidualCor(m_lvm_4)
 pdf(file = "figs/m_lvm_4_trt_corrplot.pdf",width=14,height=14)
