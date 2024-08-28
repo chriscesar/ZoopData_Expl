@@ -6,7 +6,6 @@ ld_pkgs <- c("tidyverse","seas","tictoc")
 vapply(ld_pkgs, library, logical(1L),
        character.only = TRUE, logical.return = TRUE);rm(ld_pkgs)
 
-
 tic("Load lifeforms data, format data and correct names")
 print("Load lifeforms data and correct taxon names")
 
@@ -50,10 +49,63 @@ df_tx %>% relocate(.,DJF, .after = sample.date) -> df_tx
 df_tx %>% 
   filter(!str_starts(Sample.comments,"100um")) -> df_tx
 
-### set Region as a factor
+# ### set Region as a factor
 df_tx$Region <- factor(df_tx$Region, levels = c("NEast","Anglian","Thames",
                                                 "Southern","SWest","NWest"))
 
+### check ####
+### create label
+LFRegion <- df_tx$Region
+LFWB <- df_tx$WB
+
+WB_lb1 <- ifelse(LFRegion == "Southern","Sth",
+                 ifelse(LFRegion == "Thames","Thm",
+                        ifelse(LFRegion == "Anglian","Ang",
+                               ifelse(LFRegion == "NWest","NW",
+                                      ifelse(LFRegion == "NEast","NE",
+                                             ifelse(LFRegion == "SWest","SW",NA)
+                                      )))))
+
+WB_lb2 <- ifelse(LFWB == "Solent","Solent",
+                 ifelse(LFWB == "SOUTHAMPTON WATER","Soton Wtr",
+                        ifelse(LFWB == "Solway Outer South","Solway O",
+                               ifelse(LFWB == "THAMES LOWER","Thm Low",
+                                      ifelse(LFWB == "Blackwater Outer","Blckw Out",
+                                             ifelse(LFWB == "Cornwall North","Cornw Nth",
+                                                    ifelse(LFWB == "Barnstaple Bay","Brnstp B",
+                                                           ifelse(LFWB == "Kent South","Kent Sth",
+                                                                  ifelse(LFWB == "Mersey Mouth","Mersey Mth",
+                                                                         ifelse(LFWB == "Wash Outer","Wash Out",
+                                                                                ifelse(LFWB == "Lincolnshire","Lincs",
+                                                                                       ifelse(LFWB == "Yorkshire South","Yorks Sth",
+                                                                                              ifelse(LFWB == "TEES","Tees",
+                                                                                                     ifelse(LFWB == "Northumberland North","Nrthmb Nth",
+                                                                                                            ifelse(LFWB == "Farne Islands to Newton Haven","Farne Is",
+                                                                                                                   ifelse(LFWB == "Bristol Channel Inner South","Brist Ch In Sth",
+                                                                                                                          NA)))))))))))
+                                      )))))
+WB_lb <- paste0(WB_lb1,"_",WB_lb2)
+df_tx$WB_lb <- WB_lb
+df_tx %>% relocate(WB_lb,.after = WB) -> df_tx
+df_tx$WB_lb <- factor(df_tx$WB_lb, levels = c(
+  "NE_Nrthmb Nth",
+  "NE_Farne Is",
+  "NE_Tees",
+  "Ang_Yorks Sth",
+  "Ang_Lincs",
+  "Ang_Wash Out",
+  "Ang_Blckw Out",
+  "Thm_Thm Low",
+  "Sth_Kent Sth",
+  "Sth_Solent",
+  "Sth_Soton Wtr",
+  "SW_Cornw Nth",
+  "SW_Brnstp B",
+  "SW_Brist Ch In Sth",
+  "NW_Mersey Mth",
+  "NW_Solway O"
+))
+### check over ####
 toc(log=TRUE)
 
 ###widen data & fill NAs with 0s ####
