@@ -41,7 +41,7 @@ toc(log=TRUE)
 ## lifeforms data
 tic("load data sets: lifeforms data")
 source("R/imp.load_data_lifeforms.R")
-df_lf_l <- df_tx0
+df_lf_l <- df_tx
 df_lf_w <- df_tx_w
 rm(df_tx_w,df_tx,df_tx_100um,df_tx0)
 toc(log = TRUE)
@@ -49,7 +49,7 @@ toc(log = TRUE)
 ## taxon data
 tic("load data sets: taxon data")
 source("R/imp.load_data_taxa.R")
-df_tx_l <- df_tx0
+df_tx_l <- df_tx
 rm(df_tx,df_tx_100um,df_tx0)
 toc(log=TRUE)
 
@@ -96,79 +96,79 @@ df_carb %>%
 toc(log=TRUE)
 
 ### create Region_WB variable
-LFRegion <- dfw_lf$Region
-LFWB <- dfw_lf$WB
-
-WB_lb1 <- ifelse(LFRegion == "Southern","Sth",
-                    ifelse(LFRegion == "Thames","Thm",
-                           ifelse(LFRegion == "Anglian","Ang",
-                                  ifelse(LFRegion == "NWest","NW",
-                                         ifelse(LFRegion == "NEast","NE",
-                                                ifelse(LFRegion == "SWest","SW",NA)
-                                         )))))
-
-WB_lb2 <- ifelse(LFWB == "Solent","Solent",
-                    ifelse(LFWB == "SOUTHAMPTON WATER","Soton Wtr",
-                           ifelse(LFWB == "Solway Outer South","Solway O",
-                                  ifelse(LFWB == "THAMES LOWER","Thm Low",
-                                         ifelse(LFWB == "Blackwater Outer","Blckw Out",
-                                                ifelse(LFWB == "Cornwall North","Cornw Nth",
-                                                       ifelse(LFWB == "Barnstaple Bay","Brnstp B",
-                                                              ifelse(LFWB == "Kent South","Kent Sth",
-                                                                     ifelse(LFWB == "Mersey Mouth","Mersey Mth",
-                                                                            ifelse(LFWB == "Wash Outer","Wash Out",
-                                                                                   ifelse(LFWB == "Lincolnshire","Lincs",
-                                                                                          ifelse(LFWB == "Yorkshire South","Yorks Sth",
-                                                                                                 ifelse(LFWB == "TEES","Tees",
-                                                                                                        ifelse(LFWB == "Northumberland North","Nrthmb Nth",
-                                                                                                               ifelse(LFWB == "Farne Islands to Newton Haven","Farne Is",
-                                                                                                                      ifelse(LFWB == "Bristol Channel Inner South","Brist Ch In Sth",
-                                                                                                                             NA)))))))))))
-                                         )))))
-WB_lb <- paste0(WB_lb1,"_",WB_lb2)
-#rm(WB_lb1,WB_lb2)
-
-dfw_lf$WB_lb <- WB_lb
-dfw_lf %>% relocate(WB_lb,.after = WB) -> dfw_lf
-dfw_lf$WB_lb <- factor(dfw_lf$WB_lb, levels = c(
-  "NE_Nrthmb Nth",
-  "NE_Farne Is",
-  "NE_Tees",
-  "Ang_Yorks Sth",
-  "Ang_Lincs",
-  "Ang_Wash Out",
-  "Ang_Blckw Out",
-  "Thm_Thm Low",
-  "Sth_Kent Sth",
-  "Sth_Solent",
-  "Sth_Soton Wtr",  
-  "SW_Cornw Nth",
-  "SW_Brnstp B",
-  "SW_Brist Ch In Sth",
-  "NW_Mersey Mth", 
-  "NW_Solway O"
-  ))
-
-dfw_tx$WB_lb <- WB_lb
-dfw_tx %>% relocate(WB_lb,.after = WB) -> dfw_tx
-dfw_tx$WB_lb <- factor(dfw_tx$WB_lb, levels = c(
-  "NE_Nrthmb Nth",
-  "NE_Farne Is",
-  "NE_Tees",
-  "Ang_Yorks Sth",
-  "Ang_Lincs",
-  "Ang_Wash Out",
-  "Ang_Blckw Out",
-  "Thm_Thm Low",
-  "Sth_Kent Sth",
-  "Sth_Solent",
-  "Sth_Soton Wtr",  
-  "SW_Cornw Nth",
-  "SW_Brnstp B",
-  "SW_Brist Ch In Sth",
-  "NW_Mersey Mth", 
-  "NW_Solway O"
-))
+# LFRegion <- dfw_lf$Region
+# LFWB <- dfw_lf$WB
+# 
+# WB_lb1 <- ifelse(LFRegion == "Southern","Sth",
+#                     ifelse(LFRegion == "Thames","Thm",
+#                            ifelse(LFRegion == "Anglian","Ang",
+#                                   ifelse(LFRegion == "NWest","NW",
+#                                          ifelse(LFRegion == "NEast","NE",
+#                                                 ifelse(LFRegion == "SWest","SW",NA)
+#                                          )))))
+# 
+# WB_lb2 <- ifelse(LFWB == "Solent","Solent",
+#                     ifelse(LFWB == "SOUTHAMPTON WATER","Soton Wtr",
+#                            ifelse(LFWB == "Solway Outer South","Solway O",
+#                                   ifelse(LFWB == "THAMES LOWER","Thm Low",
+#                                          ifelse(LFWB == "Blackwater Outer","Blckw Out",
+#                                                 ifelse(LFWB == "Cornwall North","Cornw Nth",
+#                                                        ifelse(LFWB == "Barnstaple Bay","Brnstp B",
+#                                                               ifelse(LFWB == "Kent South","Kent Sth",
+#                                                                      ifelse(LFWB == "Mersey Mouth","Mersey Mth",
+#                                                                             ifelse(LFWB == "Wash Outer","Wash Out",
+#                                                                                    ifelse(LFWB == "Lincolnshire","Lincs",
+#                                                                                           ifelse(LFWB == "Yorkshire South","Yorks Sth",
+#                                                                                                  ifelse(LFWB == "TEES","Tees",
+#                                                                                                         ifelse(LFWB == "Northumberland North","Nrthmb Nth",
+#                                                                                                                ifelse(LFWB == "Farne Islands to Newton Haven","Farne Is",
+#                                                                                                                       ifelse(LFWB == "Bristol Channel Inner South","Brist Ch In Sth",
+#                                                                                                                              NA)))))))))))
+#                                          )))))
+# WB_lb <- paste0(WB_lb1,"_",WB_lb2)
+# #rm(WB_lb1,WB_lb2)
+# 
+# dfw_lf$WB_lb <- WB_lb
+# dfw_lf %>% relocate(WB_lb,.after = WB) -> dfw_lf
+# dfw_lf$WB_lb <- factor(dfw_lf$WB_lb, levels = c(
+#   "NE_Nrthmb Nth",
+#   "NE_Farne Is",
+#   "NE_Tees",
+#   "Ang_Yorks Sth",
+#   "Ang_Lincs",
+#   "Ang_Wash Out",
+#   "Ang_Blckw Out",
+#   "Thm_Thm Low",
+#   "Sth_Kent Sth",
+#   "Sth_Solent",
+#   "Sth_Soton Wtr",  
+#   "SW_Cornw Nth",
+#   "SW_Brnstp B",
+#   "SW_Brist Ch In Sth",
+#   "NW_Mersey Mth", 
+#   "NW_Solway O"
+#   ))
+# 
+# dfw_tx$WB_lb <- WB_lb
+# dfw_tx %>% relocate(WB_lb,.after = WB) -> dfw_tx
+# dfw_tx$WB_lb <- factor(dfw_tx$WB_lb, levels = c(
+#   "NE_Nrthmb Nth",
+#   "NE_Farne Is",
+#   "NE_Tees",
+#   "Ang_Yorks Sth",
+#   "Ang_Lincs",
+#   "Ang_Wash Out",
+#   "Ang_Blckw Out",
+#   "Thm_Thm Low",
+#   "Sth_Kent Sth",
+#   "Sth_Solent",
+#   "Sth_Soton Wtr",  
+#   "SW_Cornw Nth",
+#   "SW_Brnstp B",
+#   "SW_Brist Ch In Sth",
+#   "NW_Mersey Mth", 
+#   "NW_Solway O"
+# ))
 ########
 
 #####
@@ -192,7 +192,7 @@ dfw_lf %>%
     colour=lf)) +
   geom_line()+
   facet_wrap(.~WB_lb, scales = "free_y")+
-  labs(x=NULL,
+  labs(x="Day of year",
        y="Relative abundance",
        title="Relative abundance of copepod size classes recorded in EA water bodies",
        caption="Relative abundance of a given size class is the value recorded in a sample divided by the maximum recorded value for that size class across all samples")+
@@ -359,7 +359,7 @@ dfw_lf %>%
        #x = bquote("Total copepod abudance (m"^-3~")"),
        x = expression(bold("Total copepod abudance (m"^-3~")")),
        caption=paste0("Samples gathered between ",format(min(dfw_lf$sample.date), "%d/%m/%Y")," & ",format(max(dfw_lf$sample.date), "%d/%m/%Y"),
-                      "\nBlue lines inidate linear model; red lines indicate loess smoother (span = 0.9)")) +
+                      "\nBlue lines inidate linear model")) +
   theme(legend.position = "none",
         axis.title = element_text(face=2),
         strip.text = element_text(face=2)) -> pl
@@ -424,71 +424,71 @@ df_lf_l %>% relocate(.,yday, .after = sample.date) -> df_lf_l
 df_lf_w_C <- df_lf_l %>% 
   dplyr::select(.,c(date_site, sample.date, yday, BIOSYS.Code, WIMS.Code,
                     "Net.volume.sampled.(m3)", PRN, LF02, md_carbTot_m3,
-                    WB,Region)) %>%
+                    WB,Region,WB_lb)) %>%
   mutate(md_carbTot_m3 = replace_na(md_carbTot_m3, 0)) %>% 
   group_by(across(c(!md_carbTot_m3))) %>% 
   summarise(md_carbTot_m3 = sum(md_carbTot_m3),.groups = "drop") %>%
   ungroup(.) %>% 
   pivot_wider(.,names_from = LF02, values_from = md_carbTot_m3,
               values_fill = 0) %>%
-  rowwise() %>% 
-  mutate(SUM = sum(c_across(-(1:9)))) %>% 
+  rowwise() %>% #names(.)
+  mutate(SUM = sum(c_across(-(1:10)))) %>% 
   ungroup()
 
 ### order labels
 ### create Region_WB variable
-LFRegion <- df_lf_w_C$Region
-LFWB <- df_lf_w_C$WB
-
-WB_lb1 <- ifelse(LFRegion == "Southern","Sth",
-                 ifelse(LFRegion == "Thames","Thm",
-                        ifelse(LFRegion == "Anglian","Ang",
-                               ifelse(LFRegion == "NWest","NW",
-                                      ifelse(LFRegion == "NEast","NE",
-                                             ifelse(LFRegion == "SWest","SW",NA)
-                                      )))))
-
-WB_lb2 <- ifelse(LFWB == "Solent","Solent",
-                 ifelse(LFWB == "SOUTHAMPTON WATER","Soton Wtr",
-                        ifelse(LFWB == "Solway Outer South","Solway O",
-                               ifelse(LFWB == "THAMES LOWER","Thm Low",
-                                      ifelse(LFWB == "Blackwater Outer","Blckw Out",
-                                             ifelse(LFWB == "Cornwall North","Cornw Nth",
-                                                    ifelse(LFWB == "Barnstaple Bay","Brnstp B",
-                                                           ifelse(LFWB == "Kent South","Kent Sth",
-                                                                  ifelse(LFWB == "Mersey Mouth","Mersey Mth",
-                                                                         ifelse(LFWB == "Wash Outer","Wash Out",
-                                                                                ifelse(LFWB == "Lincolnshire","Lincs",
-                                                                                       ifelse(LFWB == "Yorkshire South","Yorks Sth",
-                                                                                              ifelse(LFWB == "TEES","Tees",
-                                                                                                     ifelse(LFWB == "Northumberland North","Nrthmb Nth",
-                                                                                                            ifelse(LFWB == "Farne Islands to Newton Haven","Farne Is",
-                                                                                                                   ifelse(LFWB == "Bristol Channel Inner South","Brist Ch In Sth",
-                                                                                                                          NA)))))))))))
-                                      )))))
-WB_lb <- paste0(WB_lb1,"_",WB_lb2)
-#rm(WB_lb1,WB_lb2)
-
-df_lf_w_C$WB_lb <- WB_lb
-df_lf_w_C %>% relocate(WB_lb,.after = WB) -> df_lf_w_C
-df_lf_w_C$WB_lb <- factor(df_lf_w_C$WB_lb, levels = c(
-  "NE_Nrthmb Nth",
-  "NE_Farne Is",
-  "NE_Tees",
-  "Ang_Yorks Sth",
-  "Ang_Lincs",
-  "Ang_Wash Out",
-  "Ang_Blckw Out",
-  "Thm_Thm Low",
-  "Sth_Kent Sth",
-  "Sth_Solent",
-  "Sth_Soton Wtr",  
-  "SW_Cornw Nth",
-  "SW_Brnstp B",
-  "SW_Brist Ch In Sth",
-  "NW_Mersey Mth", 
-  "NW_Solway O"
-))
+# LFRegion <- df_lf_w_C$Region
+# LFWB <- df_lf_w_C$WB
+# 
+# WB_lb1 <- ifelse(LFRegion == "Southern","Sth",
+#                  ifelse(LFRegion == "Thames","Thm",
+#                         ifelse(LFRegion == "Anglian","Ang",
+#                                ifelse(LFRegion == "NWest","NW",
+#                                       ifelse(LFRegion == "NEast","NE",
+#                                              ifelse(LFRegion == "SWest","SW",NA)
+#                                       )))))
+# 
+# WB_lb2 <- ifelse(LFWB == "Solent","Solent",
+#                  ifelse(LFWB == "SOUTHAMPTON WATER","Soton Wtr",
+#                         ifelse(LFWB == "Solway Outer South","Solway O",
+#                                ifelse(LFWB == "THAMES LOWER","Thm Low",
+#                                       ifelse(LFWB == "Blackwater Outer","Blckw Out",
+#                                              ifelse(LFWB == "Cornwall North","Cornw Nth",
+#                                                     ifelse(LFWB == "Barnstaple Bay","Brnstp B",
+#                                                            ifelse(LFWB == "Kent South","Kent Sth",
+#                                                                   ifelse(LFWB == "Mersey Mouth","Mersey Mth",
+#                                                                          ifelse(LFWB == "Wash Outer","Wash Out",
+#                                                                                 ifelse(LFWB == "Lincolnshire","Lincs",
+#                                                                                        ifelse(LFWB == "Yorkshire South","Yorks Sth",
+#                                                                                               ifelse(LFWB == "TEES","Tees",
+#                                                                                                      ifelse(LFWB == "Northumberland North","Nrthmb Nth",
+#                                                                                                             ifelse(LFWB == "Farne Islands to Newton Haven","Farne Is",
+#                                                                                                                    ifelse(LFWB == "Bristol Channel Inner South","Brist Ch In Sth",
+#                                                                                                                           NA)))))))))))
+#                                       )))))
+# WB_lb <- paste0(WB_lb1,"_",WB_lb2)
+# #rm(WB_lb1,WB_lb2)
+# 
+# df_lf_w_C$WB_lb <- WB_lb
+# df_lf_w_C %>% relocate(WB_lb,.after = WB) -> df_lf_w_C
+# df_lf_w_C$WB_lb <- factor(df_lf_w_C$WB_lb, levels = c(
+#   "NE_Nrthmb Nth",
+#   "NE_Farne Is",
+#   "NE_Tees",
+#   "Ang_Yorks Sth",
+#   "Ang_Lincs",
+#   "Ang_Wash Out",
+#   "Ang_Blckw Out",
+#   "Thm_Thm Low",
+#   "Sth_Kent Sth",
+#   "Sth_Solent",
+#   "Sth_Soton Wtr",  
+#   "SW_Cornw Nth",
+#   "SW_Brnstp B",
+#   "SW_Brist Ch In Sth",
+#   "NW_Mersey Mth", 
+#   "NW_Solway O"
+# ))
 
 df_lf_w_C %>% 
   ggplot(., aes(x=sample.date, y = log(SUM)))+ 
@@ -570,7 +570,7 @@ rm(descriptives,logdescriptives)
 df_lf_l %>% 
   dplyr::select(.,c(Pot.Number,date_site, sample.date, yday, BIOSYS.Code, WIMS.Code,
                     ZooType, "Net.volume.sampled.(m3)", PRN, 
-                    md_carbTot_m3, WB,Region)) %>%
+                    md_carbTot_m3, WB,Region, WB_lb)) %>%
   mutate(md_carbTot_m3 = replace_na(md_carbTot_m3, 0)) %>% 
   group_by(across(c(!md_carbTot_m3))) %>% 
   summarise(md_carbTot_m3 = sum(md_carbTot_m3),.groups = "drop") %>%
@@ -578,52 +578,52 @@ df_lf_l %>%
   pivot_wider(.,names_from = ZooType, values_from = md_carbTot_m3,
               values_fill = 0) %>%
   rowwise() %>% #names(.)
-  mutate(SUM = sum(c_across(-(1:10)))) %>% 
+  mutate(SUM = sum(c_across(-(1:11)))) %>% 
   ungroup() -> df_lf_w_C_zooType
 
 #### append labels
-LFRegion <- df_lf_w_C_zooType$Region
-LFWB <- df_lf_w_C_zooType$WB
-
-WB_lb1 <- ifelse(LFRegion == "Southern","Sth", ifelse(LFRegion == "Thames","Thm",
-                        ifelse(LFRegion == "Anglian","Ang", ifelse(LFRegion == "NWest","NW",
-                                      ifelse(LFRegion == "NEast","NE", ifelse(LFRegion == "SWest","SW",NA)
-                                      )))))
-
-WB_lb2 <- ifelse(LFWB == "Solent","Solent", ifelse(LFWB == "SOUTHAMPTON WATER","Soton Wtr",
-                        ifelse(LFWB == "Solway Outer South","Solway O",
-                               ifelse(LFWB == "THAMES LOWER","Thm Low",
-                                      ifelse(LFWB == "Blackwater Outer","Blckw Out",
-                                             ifelse(LFWB == "Cornwall North","Cornw Nth",
-                                                    ifelse(LFWB == "Barnstaple Bay","Brnstp B",
-                                                           ifelse(LFWB == "Kent South","Kent Sth",
-                                                                  ifelse(LFWB == "Mersey Mouth","Mersey Mth",
-                                                                         ifelse(LFWB == "Wash Outer","Wash Out",
-                                                                                ifelse(LFWB == "Lincolnshire","Lincs",
-                                                                                       ifelse(LFWB == "Yorkshire South","Yorks Sth",
-                                                                                              ifelse(LFWB == "TEES","Tees",
-                                                                                                     ifelse(LFWB == "Northumberland North","Nrthmb Nth",
-                                                                                                            ifelse(LFWB == "Farne Islands to Newton Haven","Farne Is",
-                                                                                                                   ifelse(LFWB == "Bristol Channel Inner South","Brist Ch In Sth",
-                                                                                                                          NA)))))))))))
-                                      )))))
-WB_lb <- paste0(WB_lb1,"_",WB_lb2)
-#rm(WB_lb1,WB_lb2)
-
-df_lf_w_C_zooType$WB_lb <- WB_lb
-df_lf_w_C_zooType %>% relocate(WB_lb,.after = WB) -> df_lf_w_C_zooType
-df_lf_w_C_zooType$WB_lb <- factor(df_lf_w_C_zooType$WB_lb, levels = c(
-  "NE_Nrthmb Nth",  "NE_Farne Is", "NE_Tees", "Ang_Yorks Sth", "Ang_Lincs",
-  "Ang_Wash Out", "Ang_Blckw Out", "Thm_Thm Low", "Sth_Kent Sth", "Sth_Solent",
-  "Sth_Soton Wtr", "SW_Cornw Nth", "SW_Brnstp B", "SW_Brist Ch In Sth",
-  "NW_Mersey Mth", "NW_Solway O"
-))
-
-df_lf_w_C_zooType$Region <- factor(df_lf_w_C_zooType$Region,
-                                   levels = c(
-                                     "NEast","Anglian","Thames",
-                                     "Southern","SWest","NWest"
-                                   ))
+# LFRegion <- df_lf_w_C_zooType$Region
+# LFWB <- df_lf_w_C_zooType$WB
+# 
+# WB_lb1 <- ifelse(LFRegion == "Southern","Sth", ifelse(LFRegion == "Thames","Thm",
+#                         ifelse(LFRegion == "Anglian","Ang", ifelse(LFRegion == "NWest","NW",
+#                                       ifelse(LFRegion == "NEast","NE", ifelse(LFRegion == "SWest","SW",NA)
+#                                       )))))
+# 
+# WB_lb2 <- ifelse(LFWB == "Solent","Solent", ifelse(LFWB == "SOUTHAMPTON WATER","Soton Wtr",
+#                         ifelse(LFWB == "Solway Outer South","Solway O",
+#                                ifelse(LFWB == "THAMES LOWER","Thm Low",
+#                                       ifelse(LFWB == "Blackwater Outer","Blckw Out",
+#                                              ifelse(LFWB == "Cornwall North","Cornw Nth",
+#                                                     ifelse(LFWB == "Barnstaple Bay","Brnstp B",
+#                                                            ifelse(LFWB == "Kent South","Kent Sth",
+#                                                                   ifelse(LFWB == "Mersey Mouth","Mersey Mth",
+#                                                                          ifelse(LFWB == "Wash Outer","Wash Out",
+#                                                                                 ifelse(LFWB == "Lincolnshire","Lincs",
+#                                                                                        ifelse(LFWB == "Yorkshire South","Yorks Sth",
+#                                                                                               ifelse(LFWB == "TEES","Tees",
+#                                                                                                      ifelse(LFWB == "Northumberland North","Nrthmb Nth",
+#                                                                                                             ifelse(LFWB == "Farne Islands to Newton Haven","Farne Is",
+#                                                                                                                    ifelse(LFWB == "Bristol Channel Inner South","Brist Ch In Sth",
+#                                                                                                                           NA)))))))))))
+#                                       )))))
+# WB_lb <- paste0(WB_lb1,"_",WB_lb2)
+# #rm(WB_lb1,WB_lb2)
+# 
+# df_lf_w_C_zooType$WB_lb <- WB_lb
+# df_lf_w_C_zooType %>% relocate(WB_lb,.after = WB) -> df_lf_w_C_zooType
+# df_lf_w_C_zooType$WB_lb <- factor(df_lf_w_C_zooType$WB_lb, levels = c(
+#   "NE_Nrthmb Nth",  "NE_Farne Is", "NE_Tees", "Ang_Yorks Sth", "Ang_Lincs",
+#   "Ang_Wash Out", "Ang_Blckw Out", "Thm_Thm Low", "Sth_Kent Sth", "Sth_Solent",
+#   "Sth_Soton Wtr", "SW_Cornw Nth", "SW_Brnstp B", "SW_Brist Ch In Sth",
+#   "NW_Mersey Mth", "NW_Solway O"
+# ))
+# 
+# df_lf_w_C_zooType$Region <- factor(df_lf_w_C_zooType$Region,
+#                                    levels = c(
+#                                      "NEast","Anglian","Thames",
+#                                      "Southern","SWest","NWest"
+#                                    ))
 
 df_lf_w_C_zooType %>% 
   dplyr::select(.,-SUM) %>%
@@ -654,48 +654,48 @@ rm(pl)
 
 ############
 #### append labels
-LFRegion <- df_lf_l$Region
-LFWB <- df_lf_l$WB
-
-WB_lb1 <- ifelse(LFRegion == "Southern","Sth", ifelse(LFRegion == "Thames","Thm",
-                                                      ifelse(LFRegion == "Anglian","Ang", ifelse(LFRegion == "NWest","NW",
-                                                                                                 ifelse(LFRegion == "NEast","NE", ifelse(LFRegion == "SWest","SW",NA)
-                                                                                               )))))
-
-WB_lb2 <- ifelse(LFWB == "Solent","Solent", ifelse(LFWB == "SOUTHAMPTON WATER","Soton Wtr",
-                                                   ifelse(LFWB == "Solway Outer South","Solway O",
-                                                          ifelse(LFWB == "THAMES LOWER","Thm Low",
-                                                                 ifelse(LFWB == "Blackwater Outer","Blckw Out",
-                                                                        ifelse(LFWB == "Cornwall North","Cornw Nth",
-                                                                               ifelse(LFWB == "Barnstaple Bay","Brnstp B",
-                                                                                      ifelse(LFWB == "Kent South","Kent Sth",
-                                                                                             ifelse(LFWB == "Mersey Mouth","Mersey Mth",
-                                                                                                    ifelse(LFWB == "Wash Outer","Wash Out",
-                                                                                                           ifelse(LFWB == "Lincolnshire","Lincs",
-                                                                                                                  ifelse(LFWB == "Yorkshire South","Yorks Sth",
-                                                                                                                         ifelse(LFWB == "TEES","Tees",
-                                                                                                                                ifelse(LFWB == "Northumberland North","Nrthmb Nth",
-                                                                                                                                       ifelse(LFWB == "Farne Islands to Newton Haven","Farne Is",
-                                                                                                                                              ifelse(LFWB == "Bristol Channel Inner South","Brist Ch In Sth",
-                                                                                                                                                     NA)))))))))))
-                                                                 )))))
-WB_lb <- paste0(WB_lb1,"_",WB_lb2)
-#rm(WB_lb1,WB_lb2)
-
-df_lf_l$WB_lb <- WB_lb
-df_lf_l %>% relocate(WB_lb,.after = WB) -> df_lf_l
-df_lf_l$WB_lb <- factor(df_lf_l$WB_lb, levels = c(
-  "NE_Nrthmb Nth",  "NE_Farne Is", "NE_Tees", "Ang_Yorks Sth", "Ang_Lincs",
-  "Ang_Wash Out", "Ang_Blckw Out", "Thm_Thm Low", "Sth_Kent Sth", "Sth_Solent",
-  "Sth_Soton Wtr", "SW_Cornw Nth", "SW_Brnstp B", "SW_Brist Ch In Sth",
-  "NW_Mersey Mth", "NW_Solway O"
-))
-
-df_lf_l$Region <- factor(df_lf_l$Region,
-                                   levels = c(
-                                     "NEast","Anglian","Thames",
-                                     "Southern","SWest","NWest"
-                                   ))
+# LFRegion <- df_lf_l$Region
+# LFWB <- df_lf_l$WB
+# 
+# WB_lb1 <- ifelse(LFRegion == "Southern","Sth", ifelse(LFRegion == "Thames","Thm",
+#                                                       ifelse(LFRegion == "Anglian","Ang", ifelse(LFRegion == "NWest","NW",
+#                                                                                                  ifelse(LFRegion == "NEast","NE", ifelse(LFRegion == "SWest","SW",NA)
+#                                                                                                )))))
+# 
+# WB_lb2 <- ifelse(LFWB == "Solent","Solent", ifelse(LFWB == "SOUTHAMPTON WATER","Soton Wtr",
+#                                                    ifelse(LFWB == "Solway Outer South","Solway O",
+#                                                           ifelse(LFWB == "THAMES LOWER","Thm Low",
+#                                                                  ifelse(LFWB == "Blackwater Outer","Blckw Out",
+#                                                                         ifelse(LFWB == "Cornwall North","Cornw Nth",
+#                                                                                ifelse(LFWB == "Barnstaple Bay","Brnstp B",
+#                                                                                       ifelse(LFWB == "Kent South","Kent Sth",
+#                                                                                              ifelse(LFWB == "Mersey Mouth","Mersey Mth",
+#                                                                                                     ifelse(LFWB == "Wash Outer","Wash Out",
+#                                                                                                            ifelse(LFWB == "Lincolnshire","Lincs",
+#                                                                                                                   ifelse(LFWB == "Yorkshire South","Yorks Sth",
+#                                                                                                                          ifelse(LFWB == "TEES","Tees",
+#                                                                                                                                 ifelse(LFWB == "Northumberland North","Nrthmb Nth",
+#                                                                                                                                        ifelse(LFWB == "Farne Islands to Newton Haven","Farne Is",
+#                                                                                                                                               ifelse(LFWB == "Bristol Channel Inner South","Brist Ch In Sth",
+#                                                                                                                                                      NA)))))))))))
+#                                                                  )))))
+# WB_lb <- paste0(WB_lb1,"_",WB_lb2)
+# #rm(WB_lb1,WB_lb2)
+# 
+# df_lf_l$WB_lb <- WB_lb
+# df_lf_l %>% relocate(WB_lb,.after = WB) -> df_lf_l
+# df_lf_l$WB_lb <- factor(df_lf_l$WB_lb, levels = c(
+#   "NE_Nrthmb Nth",  "NE_Farne Is", "NE_Tees", "Ang_Yorks Sth", "Ang_Lincs",
+#   "Ang_Wash Out", "Ang_Blckw Out", "Thm_Thm Low", "Sth_Kent Sth", "Sth_Solent",
+#   "Sth_Soton Wtr", "SW_Cornw Nth", "SW_Brnstp B", "SW_Brist Ch In Sth",
+#   "NW_Mersey Mth", "NW_Solway O"
+# ))
+# 
+# df_lf_l$Region <- factor(df_lf_l$Region,
+#                                    levels = c(
+#                                      "NEast","Anglian","Thames",
+#                                      "Southern","SWest","NWest"
+#                                    ))
 ###
 df_lf_l %>% #names(.)
   mutate(.,LF03 = if_else(Copepod == "Y", paste0("Cop_",CopSize),ZooType)) %>%
@@ -791,8 +791,10 @@ ggsave(plot = pl, filename = "figs/2407dd_timeseries/log_CarbonTot_Soton.pdf",
 
 # how many taxa do we not have C data for? ####
 left_join(df_tx_l, df_carb_summary, by="Aphia.ID") %>% 
-  mutate(.,WB_lb = WB_lb) %>% 
+  mutate(.,WB_lb = WB_lb) %>%
   mutate(.,cdat=ifelse(is.na(.$mdCPerIndiv_ug),"N","Y")) %>%
+  mutate(Abund_m3 = ifelse(is.na(.$"Net.volume.sampled.(m3)"),AbundanceRaw,
+                           .$AbundanceRaw*.$"Net.volume.sampled.(m3)")) %>% 
   dplyr::select(.,c(sample.date,BIOSYS.Code,WIMS.Code,PRN,
                     Abund_m3,Region,WB_lb,cdat)) %>% 
   group_by(sample.date,BIOSYS.Code,WIMS.Code,PRN,
@@ -827,6 +829,8 @@ ggsave(plot = pl, filename = "figs/2407dd_timeseries/LogAbundTot_Missing_C.pdf",
 left_join(df_tx_l, df_carb_summary, by="Aphia.ID") %>% 
   mutate(.,WB_lb = WB_lb) %>% 
   mutate(.,cdat=ifelse(is.na(.$mdCPerIndiv_ug),"N","Y")) %>%
+  mutate(Abund_m3 = ifelse(is.na(.$"Net.volume.sampled.(m3)"),AbundanceRaw,
+                           .$AbundanceRaw*.$"Net.volume.sampled.(m3)")) %>% 
   dplyr::select(.,c(sample.date,BIOSYS.Code,WIMS.Code,PRN,
                     Abund_m3,Region,WB_lb,cdat)) %>% 
   mutate(preval=1) %>% dplyr::select(.,-Abund_m3) %>% 
@@ -858,8 +862,10 @@ df_tx_l %>%
   dplyr::select(.,c(Pot.Number,PRN)) %>% distinct() %>% count() -> samples
 
 left_join(df_tx_l,df_carb_summary, by="Aphia.ID") %>% #names() 
+  mutate(Abund_m3 = ifelse(is.na(.$"Net.volume.sampled.(m3)"),AbundanceRaw,
+                           .$AbundanceRaw*.$"Net.volume.sampled.(m3)")) %>% 
   dplyr::select(Pot.Number, PRN, sample.date, Region, Aphia.ID,
-                Taxa.x,Abund_m3,mdCPerIndiv_ug) %>% 
+                Taxa,Abund_m3,mdCPerIndiv_ug) %>% 
   mutate(present = 1) %>% 
   mutate(carbon = ifelse(is.na(mdCPerIndiv_ug), "N", "Y")) %>% 
   dplyr::select(-mdCPerIndiv_ug, -Pot.Number, -PRN, -sample.date, -Region,-Abund_m3) %>%
@@ -869,15 +875,17 @@ left_join(df_tx_l,df_carb_summary, by="Aphia.ID") %>% #names()
             .groups = "drop") %>% 
   ungroup() %>% 
   arrange(-proportionOfSamples) %>% 
-  rename(.,carbonEstimateAvailable = carbon) %>% 
+  rename(.,carbonEstimateAvailable = carbon) %>% View(.)
   write.csv(.,
             file="outputs/PrevalenceOfMissingCarbonTax0.csv",
             row.names = FALSE)
 rm(samples)
 
 left_join(df_tx_l,df_carb_summary, by="Aphia.ID") %>% #names() 
+  mutate(Abund_m3 = ifelse(is.na(.$"Net.volume.sampled.(m3)"),AbundanceRaw,
+                           .$AbundanceRaw*.$"Net.volume.sampled.(m3)")) %>% 
   dplyr::select(Pot.Number, PRN, sample.date, Region, Aphia.ID,
-                Taxa.x,Abund_m3,mdCPerIndiv_ug) %>% 
+                Taxa,Abund_m3,mdCPerIndiv_ug) %>% 
   # mutate(present = 1) %>% 
   mutate(carbon = ifelse(is.na(mdCPerIndiv_ug), "N", "Y")) %>% 
   dplyr::select(-mdCPerIndiv_ug, -Pot.Number, -PRN, -sample.date, -Region) %>%
