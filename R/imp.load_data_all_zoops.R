@@ -146,12 +146,12 @@ dfl <- left_join(dfl, df_carb_summary, by="Aphia.ID")
 
 
 #########################FROM HERE
-df_lf_l %>% 
-  mutate(mn_carbTot_raw = AbundanceRaw*mnCPerIndiv_ug,
-         md_carbTot_raw = AbundanceRaw*mdCPerIndiv_ug,
-         mn_carbTot_m3 = Abund_m3*mnCPerIndiv_ug,
-         md_carbTot_m3 = Abund_m3*mdCPerIndiv_ug
-  ) -> df_lf_l
-
-
-toc(log=TRUE)
+# df_lf_l %>% 
+#   mutate(mn_carbTot_raw = AbundanceRaw*mnCPerIndiv_ug,
+#          md_carbTot_raw = AbundanceRaw*mdCPerIndiv_ug,
+#          mn_carbTot_m3 = Abund_m3*mnCPerIndiv_ug,
+#          md_carbTot_m3 = Abund_m3*mdCPerIndiv_ug
+#   ) -> df_lf_l
+# 
+# 
+# toc(log=TRUE)
