@@ -25,6 +25,8 @@ df_wims0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
 df_wims <- df_wims0
 
 df_wims$PRN <- df_wims$SAMP_SCHEDULE_SAMPLE_ID
+df_wims$SAMP_SAMPLE_DATE <- as.Date(df_wims$SAMP_SAMPLE_DATE, origin = "1899-12-30")
+
 df_wims %>%
   dplyr::mutate(det=paste0(DETE_DESC,"_",UNIT_SHORT_DESC)) %>% ##create new variable label
   dplyr::mutate(Result=ifelse(is.na(df_wims$MEAS_SIGN == "<"), MEAS_RESULT,
