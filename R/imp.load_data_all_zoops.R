@@ -9,8 +9,7 @@ vapply(ld_pkgs, library, logical(1L),
 tic("Load lifeforms data, format data and correct names")
 print("Load lifeforms data and correct taxon names")
 
-### lifeforms data
-### taxon data
+## load data
 dfl0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
                                             "processedData/MBA_Returns_Amalgamated_USE.xlsx"),
                                      sheet="outR04_LF"))
@@ -29,23 +28,26 @@ tx_chk <- tx_chk0 %>%
 tx_chk %>% dplyr::select(., Taxa, Aphia.ID) %>% 
   distinct() -> tx_chktrm
 
-### append to abundance data
+### append updated taxon names to abundance data
 dfl0 <- left_join(dfl0, tx_chktrm, by="Aphia.ID")
 dfl0$Taxa.x <- dfl0$Taxa.y;dfl0$Taxa.y <- NULL
+
 dfl0 %>%
   rename(Taxa=Taxa.x) %>% 
-  dplyr::select(.,-Abund_m3) %>% 
-  group_by(across(c(!AbundanceRaw))) %>% 
-  summarise(.,AbundanceRaw=sum(AbundanceRaw),.groups = "drop") %>%
+  group_by(across(-c(AbundanceRaw,Abund_m3))) %>% 
+  summarise(.,
+            AbundanceRaw=sum(AbundanceRaw, na.rm = TRUE),
+            Abund_m3 = sum(Abund_m3, na.rm = TRUE),
+            .groups = "drop") %>%
   ungroup() %>% 
-  # Remove 100 µm data [OPTIONAL] ####
-  filter(!str_starts(Sample.comments,"100um")) %>% 
+  filter(!str_starts(Sample.comments,"100um")) %>%   # Remove 100 µm data [OPTIONAL] ###
   as_tibble(.) -> dfl
 rm(tx_chk,tx_chk0,tx_chktrm)
 toc(log=TRUE)
 
-tic("Prep for export & export data");print("Prep for export & export data")
-### convert dates
+# Prep metadata formatting ####
+tic("Prep metadata formatting");print("Prep metadata formatting")
+### convert sample dates
 dfl$sample.date <- as.Date(dfl$sample.date, origin = "1899-12-30")
 ### add day of year
 dfl$yday <- lubridate::yday(dfl$sample.date)
@@ -57,11 +59,11 @@ dfl %>% relocate(.,month, .after = sample.date) -> dfl
 dfl$DJF <- as.factor(seas::mkseas(dfl$sample.date, width="DJF"))#convert dates to 3month seasonal block
 dfl %>% relocate(.,DJF, .after = sample.date) -> dfl
 
-# ### set Region as a factor
+# ### set Region as a factor & order in clockwise from NE to NW
 dfl$Region <- factor(dfl$Region, levels = c("NEast","Anglian","Thames",
                                           "Southern","SWest","NWest"))
 
-### create label
+### generate labels
 LFRegion <- dfl$Region
 LFWB <- dfl$WB
 
@@ -89,11 +91,12 @@ WB_lb2 <- ifelse(LFWB == "Solent","Solent",
                                                                                                      ifelse(LFWB == "Northumberland North","NrthmbNth",
                                                                                                             ifelse(LFWB == "Farne Islands to Newton Haven","FarneIs",
                                                                                                                    ifelse(LFWB == "Bristol Channel Inner South","BristInSth",
-                                                                                                                          NA)))))))))))
-                                      )))))
-WB_lb <- paste0(WB_lb1,"_",WB_lb2)
+                                                                                                                          NA)))))))))))))
+                               )))
+WB_lb <- paste0(WB_lb1,"_",WB_lb2) ###concatenate labels
 dfl$WB_lb <- WB_lb
 dfl %>% relocate(WB_lb,.after = WB) -> dfl
+### Order water body labels clockwise from north east to north west
 dfl$WB_lb <- factor(dfl$WB_lb, levels = c(
   "NE_NrthmbNth",
   "NE_FarneIs",
@@ -134,24 +137,26 @@ df_carb <- readxl::read_xlsx(paste0(datfol,"Lifeforms/ZOOPLANKTON carbon mass da
          mdCPerIndiv_ug = median(CPerIndiv_ug, na.rm = TRUE)) %>% 
   ungroup(.) %>% 
   mutate_all(~ifelse(is.nan(.), NA, .)) %>% 
-  as_tibble(.)
-
-df_carb %>% 
+  as_tibble(.) %>% 
   dplyr::select(.,-c(taxon, longMaxAxis_mm,CPerIndiv_ug)) %>%
-  distinct(.) -> df_carb_summary
-rm(df_carb)
+  distinct(.)
 
 # Append carbon content to taxon data & multiply abundance by Carbon
-dfl <- left_join(dfl, df_carb_summary, by="Aphia.ID")
+dfl <- left_join(dfl, df_carb, by="Aphia.ID")
+rm(df_carb)
 
+dfl %>%
+  mutate(mn_carbTot_raw = AbundanceRaw*mnCPerIndiv_ug,
+         md_carbTot_raw = AbundanceRaw*mdCPerIndiv_ug,
+         mn_carbTot_m3 = Abund_m3*mnCPerIndiv_ug,
+         md_carbTot_m3 = Abund_m3*mdCPerIndiv_ug
+  ) -> dfl
 
-#########################FROM HERE
-# df_lf_l %>% 
-#   mutate(mn_carbTot_raw = AbundanceRaw*mnCPerIndiv_ug,
-#          md_carbTot_raw = AbundanceRaw*mdCPerIndiv_ug,
-#          mn_carbTot_m3 = Abund_m3*mnCPerIndiv_ug,
-#          md_carbTot_m3 = Abund_m3*mdCPerIndiv_ug
-#   ) -> df_lf_l
-# 
-# 
-# toc(log=TRUE)
+toc(log=TRUE)
+
+# Write data ####
+tic("Write data to csv");print("Write data to csv")
+write.csv(dfl, file=paste0(datfol,"processedData/zoopsAll.csv"),
+          row.names = FALSE)
+toc(log = TRUE)
+unlist(tictoc::tic.log())
