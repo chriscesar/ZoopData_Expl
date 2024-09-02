@@ -158,7 +158,7 @@ toc(log=TRUE)
 
 # Write data ####
 tic("Write data to csv");print("Write data to csv")
-write.csv(dfl, file=paste0(datfol,"processedData/zoopsAll.csv"),
-          row.names = FALSE)
+# write.csv(dfl, file=paste0(datfol,"processedData/zoopsAll.csv"),
+#           row.names = FALSE)
 toc(log = TRUE)
 unlist(tictoc::tic.log())
