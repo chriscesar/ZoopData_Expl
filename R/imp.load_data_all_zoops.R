@@ -121,7 +121,9 @@ toc(log=TRUE)
 # load and append carbon content data ####
 ## Carbon content data
 tic("Carbon content data")
-df_carb <- readxl::read_xlsx(paste0(datfol,"Lifeforms/ZOOPLANKTON carbon mass data_v5Aug 2024.xlsx"),
+# df_carb <- readxl::read_xlsx(paste0(datfol,"Lifeforms/ZOOPLANKTON carbon mass data_v5Aug 2024.xlsx"),
+#                              sheet = "FINAL SHEET TO USE") %>%
+df_carb <- readxl::read_xlsx(paste0(datfol,"Lifeforms/ZOOPLANKTON carbon mass data_v5Aug 2024_AMENDED_USE.xlsx"),
                              sheet = "FINAL SHEET TO USE") %>% 
   dplyr::select(.,c(2:6)) %>% 
   janitor::clean_names(.) %>% 
