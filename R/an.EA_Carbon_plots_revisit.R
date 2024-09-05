@@ -287,7 +287,7 @@ dfl %>% #names()
   scale_y_continuous(breaks = seq(from=0,to=330000,by=50000),labels = scales::comma_format())+
   coord_flip()+
   theme(legend.title = element_blank(),
-        axis.title = element_text(face=2)) #-> pl
+        axis.title = element_text(face=2)) -> pl
 
 ggsave(plot = pl, filename = "figs/2409dd/carbonTot_Soton_Mean.pdf",
        width = 20,height = 12,units = "in");rm(pl)
