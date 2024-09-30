@@ -12,9 +12,13 @@ print("Load WIMS data")
 # E0001449, E0001450, E0004730, G0003532, G0003572, LC544405, LC560357,
 # PTTR0026, WA560349, Y0004367, Y0017477, YC536426
 
+# added following WIMS CODEs to list (visited July 2024):
+# Y0003370, Y0004428, G0003451, LC551397
+
 df_wims0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
                                                  #"/WIMS_Extract_WaterQuality_Zoop_Samples_240618.xlsx"),
-                                                 "/WIMS_Extract_240618.xlsx"),
+                                                 #/"/WIMS_Extract_240618.xlsx"),
+                                                 "/WIMS_Extract_WaterQuality_Zoop_Samples_240930.xlsx"),
                                           sheet="allDat"))
 
 ### counts for pots 1&2 have been summed as to have those for pots 3&4
