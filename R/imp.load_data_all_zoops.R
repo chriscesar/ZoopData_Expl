@@ -91,11 +91,17 @@ WB_lb2 <- ifelse(LFWB == "Solent","Solent",
                                                                                                      ifelse(LFWB == "Northumberland North","NrthmbNth",
                                                                                                             ifelse(LFWB == "Farne Islands to Newton Haven","FarneIs",
                                                                                                                    ifelse(LFWB == "Bristol Channel Inner South","BristInSth",
-                                                                                                                          NA)))))))))))))
-                               )))
+                                                                                                                          ifelse(LFWB == "Lincs Offshore","LincOffsh",
+                                                                                                                                 ifelse(LFWB == "Isle of Wight East","IoWE",
+                                                                                                                                
+                                                                                                                          NA))))))))
+                                                                                )))))
+                               )))))
+
 WB_lb <- paste0(WB_lb1,"_",WB_lb2) ###concatenate labels
 dfl$WB_lb <- WB_lb
 dfl %>% relocate(WB_lb,.after = WB) -> dfl
+
 ### Order water body labels clockwise from north east to north west
 dfl$WB_lb <- factor(dfl$WB_lb, levels = c(
   "NE_NrthmbNth",
@@ -103,10 +109,12 @@ dfl$WB_lb <- factor(dfl$WB_lb, levels = c(
   "NE_Tees",
   "Ang_YorksSth",
   "Ang_Lincs",
+  "Ang_LincOffsh",
   "Ang_WashOtr",
   "Ang_BlckwOtr",
   "Thm_ThmLwr",
   "Sth_KentSth",
+  "Sth_IoWE",
   "Sth_Solent",
   "Sth_SotonWtr",
   "SW_CornwNth",
