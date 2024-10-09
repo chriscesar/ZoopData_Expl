@@ -5,6 +5,10 @@
 ## load packages ####
 ld_pkgs <- c("tidyverse", "tictoc","gllvm","patchwork", "lubridate","ggpubr",
              "cowplot","ggridges", "seas")
+## NB: Script requires the github version of ggridges.  This version allows weighting of ridgeplots
+# install with:
+#devtools::install_github("wilkelab/ggridges")
+
 vapply(ld_pkgs, library, logical(1L),
        character.only = TRUE, logical.return = TRUE);rm(ld_pkgs)
 
@@ -42,37 +46,15 @@ rm(fac_tmp,fac_tmp22,fac_tmp23,fac_tmp24)
 ### make a 'complete' version so that 'missing' surveys will be included in the charts
 dfl_complete <- dfl %>%
   group_by(BIOSYS.Code) %>%  # Group by site
-  tidyr::complete(yyyy_mm, fill = list(mn_carbTot_m3 = 0)) %>% # Fill missing months with 0 or NA
-  tidyr::complete(DJF, fill = list(mn_carbTot_m3 = 0)) #Fill missing seasons
-
-# dftmp_complete %>%
-# # dftmp %>% 
-#   ggplot(., aes(
-#     x=mnlongMaxAxis_mm,
-#     y=yyyy_mm,
-#     # y=DJF,
-#     weight = mn_carbTot_m3))+
-#   geom_density_ridges(alpha=0.7, aes(fill=DJF),
-#                       jittered_points=TRUE,
-#                       position = position_points_jitter(width = 0.05, height = 0),
-#                       point_shape= "|",
-#                       point_size = 3,
-#                       point_alpha=1
-#                       )+
-#   ggthemes::theme_few()+
-#   xlim(-10,120)+
-#   labs(x = "Mean taxon length (mm)",
-#        subtitle = paste0(unique(dftmp$Region)[1],": ", unique(dftmp$WB)[1],
-#                          " (",unique(dftmp$BIOSYS.Code)[1],")"))+
-#   scale_fill_manual(values=c("skyblue","lightgreen","orange","sienna"))+
-#   scale_y_discrete(limits=rev)+
-#   theme(axis.title.y = element_blank(),
-#         legend.position = "none")
+  # tidyr::complete(yyyy_mm, fill = list(mn_carbTot_m3 = 0)) %>% # Fill missing months with 0 or NA
+  # tidyr::complete(DJF, fill = list(mn_carbTot_m3 = 0)) #Fill missing seasons
+  tidyr::complete(yyyy_mm, DJF, fill = list(mn_carbTot_m3 = 0))
 
 # generate pdfs for individual BIOSYS sites ####
-## MONTLY ####
+## Carbon-weighted ####
+### MONTLY ####
 # Define the unique levels of BIOSYS.Code (each site)
-tic("Generate & export plots of monthly data by BIOSYS site")
+tic("Carbon-weighted plots of monthly data by BIOSYS site")
 unique_sites <- unique(dfl_complete$BIOSYS.Code)
 # unique_sites <- unique_sites[20:25]
 
@@ -107,12 +89,13 @@ purrr::walk(unique_sites, function(site) {
   
   # Export the plot to a PDF file using ggplot2::ggsave()
   ggplot2::ggsave(filename = paste0("figs/2410_zoopSize/",
-    "zoopSize_monthly_", na.omit(dfl_filtered$WB_lb)[1],"_",site, ".pdf"), plot = p, width = 8, height = 6)
+    "zoopSize_monthly_", na.omit(dfl_filtered$WB_lb)[1],"_",site, "_carbon.pdf"),
+    plot = p, width = 8, height = 6)
 })
 toc(log = TRUE)
 
-## Seasonally ####
-tic("Generate & export plots of seasonal data by BIOSYS site")
+### Seasonally ####
+tic("Carbon-weighted plots of seasonal data by BIOSYS site")
 # Define the unique levels of BIOSYS.Code (each site)
 unique_sites <- unique(dfl_complete$BIOSYS.Code)
 #unique_sites <- unique_sites[20:25]
@@ -149,7 +132,93 @@ purrr::walk(unique_sites, function(site) {
   
   # Export the plot to a PDF file using ggplot2::ggsave()
   ggplot2::ggsave(filename = paste0("figs/2410_zoopSize/",
-                                    "zoopSize_seasoanlly_", na.omit(dfl_filtered$WB_lb)[1],"_",site, ".pdf"), plot = p, width = 8, height = 6)
+                                    "zoopSize_seasoanlly_", na.omit(dfl_filtered$WB_lb)[1],"_",site, "_carbon.pdf"),
+                  plot = p, width = 8, height = 6)
+})
+toc(log = TRUE)
+
+## Abundance-weighted ####
+### MONTLY ####
+# Define the unique levels of BIOSYS.Code (each site)
+tic("Abundance-weighted plots of monthly data by BIOSYS site")
+unique_sites <- unique(dfl_complete$BIOSYS.Code)
+# unique_sites <- unique_sites[20:25]
+
+# Loop through each site and create/export a unique plot
+purrr::walk(unique_sites, function(site) {
+  
+  # Filter data for the current site using dplyr::filter()
+  dfl_filtered <- dplyr::filter(dfl_complete, BIOSYS.Code == site) #%>% 
+  # dplyr::filter(., !is.na(mnlongMaxAxis_mm)) %>% filter(., !is.na(mn_carbTot_m3))
+  
+  # Create the plot with ggplot2
+  p <- dfl_filtered %>%
+    ggplot2::ggplot(aes(x = mnlongMaxAxis_mm, y = yyyy_mm, weight = Abund_m3)) +
+    ggridges::geom_density_ridges(alpha=0.7, aes(fill=DJF),
+                                  jittered_points=TRUE,
+                                  position = position_points_jitter(width = 0.05, height = 0),
+                                  point_shape= "|",
+                                  point_size = 3,
+                                  point_alpha=1
+    )+
+    ggthemes::theme_few() +  # Theme from ggthemes
+    xlim(-10,120)+
+    labs(x = "Mean taxon length (mm)",
+         subtitle = paste0("Contribution of zooplankton size classes to total zooplankton densities\n",na.omit(dfl_filtered$Region)[1],": ", na.omit(dfl_filtered$WB)[1],
+                           " (",site,")"),
+         caption = "Monthly sampling program. Fill colours indicate season.")+
+    scale_fill_manual(values=c("skyblue","lightgreen","orange","sienna"),
+                      limits=c("DJF", "MAM", "JJA", "SON")) +  # Ensure all seasons are present
+    scale_y_discrete(limits=rev)+
+    theme(axis.title.y = element_blank(),
+          legend.position = "none")
+  
+  # Export the plot to a PDF file using ggplot2::ggsave()
+  ggplot2::ggsave(filename = paste0("figs/2410_zoopSize/",
+                                    "zoopSize_monthly_", na.omit(dfl_filtered$WB_lb)[1],"_",site, "_abundance.pdf"), plot = p, width = 8, height = 6)
+})
+toc(log = TRUE)
+
+### Seasonally ####
+tic("Abundance-weighted plots of seasonal data by BIOSYS site")
+# Define the unique levels of BIOSYS.Code (each site)
+unique_sites <- unique(dfl_complete$BIOSYS.Code)
+#unique_sites <- unique_sites[20:25]
+
+# Loop through each site and create/export a unique plot
+purrr::walk(unique_sites, function(site) {
+  
+  # Filter data for the current site using dplyr::filter()
+  dfl_filtered <- dplyr::filter(dfl_complete, BIOSYS.Code == site) %>% 
+    dplyr::filter(.,!is.na(DJF))
+  # dplyr::filter(., !is.na(mnlongMaxAxis_mm)) %>% filter(., !is.na(mn_carbTot_m3))
+  
+  # Create the plot with ggplot2
+  p <- dfl_filtered %>%
+    ggplot2::ggplot(aes(x = mnlongMaxAxis_mm, y = DJF, weight = Abund_m3)) +
+    ggridges::geom_density_ridges(alpha=0.7, aes(fill=DJF),
+                                  jittered_points=TRUE,
+                                  position = position_points_jitter(width = 0.05, height = 0),
+                                  point_shape= "|",
+                                  point_size = 3,
+                                  point_alpha=1
+    )+
+    ggthemes::theme_few() +  # Theme from ggthemes
+    xlim(-10,120)+
+    labs(x = "Mean taxon length (mm)",
+         subtitle = paste0("Contribution of zooplankton size classes to total zooplankton densities\n",na.omit(dfl_filtered$Region)[1],": ", na.omit(dfl_filtered$WB)[1],
+                           " (",site,")"),
+         caption = "Monthly sampling program. Values grouped by season")+
+    scale_fill_manual(values=c("skyblue","lightgreen","orange","sienna"),
+                      limits=c("DJF", "MAM", "JJA", "SON")) +  # Ensure all seasons are present
+    scale_y_discrete(limits=rev)+
+    theme(axis.title.y = element_blank(),
+          legend.position = "none")
+  
+  # Export the plot to a PDF file using ggplot2::ggsave()
+  ggplot2::ggsave(filename = paste0("figs/2410_zoopSize/",
+                                    "zoopSize_seasoanlly_", na.omit(dfl_filtered$WB_lb)[1],"_",site, "_abundance.pdf"),
+                  plot = p, width = 8, height = 6)
 })
 toc(log = TRUE)
 
