@@ -33,29 +33,31 @@ dfl0 <- left_join(dfl0, tx_chktrm, by="Aphia.ID")
 dfl0$Taxa.x <- dfl0$Taxa.y;dfl0$Taxa.y <- NULL
 
 dfl0 %>%
-  rename(Taxa=Taxa.x) %>% 
+  rename(Taxa=Taxa.x) %>% # clear up taxon column name
+  # remove repeated taxon names within samples: sum by updated taxon names
   group_by(across(-c(AbundanceRaw,Abund_m3))) %>% 
   summarise(.,
             AbundanceRaw=sum(AbundanceRaw, na.rm = TRUE),
             Abund_m3 = sum(Abund_m3, na.rm = TRUE),
             .groups = "drop") %>%
   ungroup() %>% 
-  filter(!str_starts(Sample.comments,"100um")) %>%   # Remove 100 µm data [OPTIONAL] ###
+  # remove 100um mesh samples [OPTIONAL]
+  filter(!str_starts(Sample.comments,"100um")) %>%
   as_tibble(.) -> dfl
 rm(tx_chk,tx_chk0,tx_chktrm)
 toc(log=TRUE)
 
 # Prep metadata formatting ####
 tic("Prep metadata formatting");print("Prep metadata formatting")
-### convert sample dates
+### convert sample dates from Excel to Date format
 dfl$sample.date <- as.Date(dfl$sample.date, origin = "1899-12-30")
-### add day of year
+### add day of year variable
 dfl$yday <- lubridate::yday(dfl$sample.date)
 dfl %>% relocate(.,yday, .after = sample.date) -> dfl
-### add month
+### add month variable
 dfl$month <- lubridate::month(dfl$sample.date)
 dfl %>% relocate(.,month, .after = sample.date) -> dfl
-### add season
+### add season variable
 dfl$DJF <- as.factor(seas::mkseas(dfl$sample.date, width="DJF"))#convert dates to 3month seasonal block
 dfl %>% relocate(.,DJF, .after = sample.date) -> dfl
 
@@ -64,6 +66,7 @@ dfl$Region <- factor(dfl$Region, levels = c("NEast","Anglian","Thames",
                                           "Southern","SWest","NWest"))
 
 ### generate labels
+### Likely wil require updating as samples are gathered at new stations/WBs
 LFRegion <- dfl$Region
 LFWB <- dfl$WB
 
@@ -102,7 +105,8 @@ WB_lb <- paste0(WB_lb1,"_",WB_lb2) ###concatenate labels
 dfl$WB_lb <- WB_lb
 dfl %>% relocate(WB_lb,.after = WB) -> dfl
 
-### Order water body labels clockwise from north east to north west
+### Order water body labels clockwise around England from
+# north east to south east to south to south west to north west
 dfl$WB_lb <- factor(dfl$WB_lb, levels = c(
   "NE_NrthmbNth",
   "NE_FarneIs",
@@ -129,18 +133,19 @@ toc(log=TRUE)
 # load and append carbon content data ####
 ## Carbon content data
 tic("Carbon content data")
-# df_carb <- readxl::read_xlsx(paste0(datfol,"Lifeforms/ZOOPLANKTON carbon mass data_v5Aug 2024.xlsx"),
-#                              sheet = "FINAL SHEET TO USE") %>%
-df_carb <- readxl::read_xlsx(paste0(datfol,"Lifeforms/ZOOPLANKTON carbon mass data_v5Aug 2024_AMENDED_USE.xlsx"),
-                             sheet = "FINAL SHEET TO USE") %>% 
-  dplyr::select(.,c(2:6)) %>% 
-  janitor::clean_names(.) %>% 
+## this version has been tweaked.  See 'changeLog' worksheet in .xlsx for info
+df_carb <- readxl::read_xlsx(
+  paste0(datfol,"Lifeforms/ZOOPLANKTON carbon mass data_v5Aug 2024_AMENDED_USE.xlsx"),
+  sheet = "FINAL SHEET TO USE") %>% ## load data
+  dplyr::select(.,c(2:6)) %>% ## keep only taxon info, carbon and length info
+  janitor::clean_names(.) %>% # tidy names
   rename(copNonCop = copepod_or_non_copepod,
          CPerIndiv_ug = body_mass_as_ug_c_per_individ,
          longMaxAxis_mm = starts_with("longest_max"),
          Aphia.ID = aphia_id) %>% 
   mutate(Aphia.ID=as.numeric(Aphia.ID)) %>% 
   group_by(Aphia.ID) %>% 
+  ### calculate mean & median lengths & carbon contents by Aphia IDs
   mutate(mnlongMaxAxis_mm = mean(longMaxAxis_mm, na.rm = TRUE),
          mdlongMaxAxis_mm = median(longMaxAxis_mm, na.rm = TRUE),
          mnCPerIndiv_ug = mean(CPerIndiv_ug, na.rm = TRUE),
@@ -164,7 +169,7 @@ dfl %>%
 
 toc(log=TRUE)
 
-# Write data ####
+# Write data [if needed]####
 tic("Write data to csv");print("Write data to csv")
 # write.csv(dfl, file=paste0(datfol,"processedData/zoopsAll.csv"),
 #           row.names = FALSE)
