@@ -226,39 +226,13 @@ png(file = "figs/wordcloud_TEST.png",
 print(pltest)
 dev.off()
 
+### tidy up
+rm(list = ls(pattern = "^df"))
+rm(list = ls(pattern = "^pl"))
+rm(list = ls(pattern = c("^cb")))
+rm(list = ls(pattern = c("^tmp")))
+rm(tx_chktrm2,xdf,datfol,groups,pal,pl,ppi,words)
 
-
-
-# ### prep taxon data ####
-# ### remove odd data
-# df_tx <- as_tibble(df_tx0) ### create new data (keep df0 as 'raw')
-# 
-# ### convert dates
-# df_tx$sample.date <- as.Date(df_tx$sample.date, origin = "1899-12-30")
-# 
-# # Remove 100 µm data [OPTIONAL] ####
-# df_tx_100um <- df_tx %>% 
-#   filter(str_starts(Sample.comments,"100um"))
-# 
-# df_tx %>% 
-#   filter(!str_starts(Sample.comments,"100um")) -> df_tx
-# 
-# ###widen data & fill NAs with 0s ####
-# df_tx %>% 
-#   dplyr::select(.,-c("Aphia.ID","AbundanceRaw","Taxa","Category":"Unallocated",
-#                      "LF0","Kingdom":"Subspecies")) %>% #drop unneeded cols
-#   group_by(across(c(-Abund_m3))) %>% # group by everything except abundance
-#   summarise(Abund_m3=sum(Abund_m3), #sum abundances
-#             .groups="drop") %>% 
-#   pivot_wider(names_from = "LF02",values_from = "Abund_m3", #widen
-#               values_fill = 0) -> df_tx_w
-# 
-# ### join & save data ####  
-# dfw <- left_join(df_tx_w,df_wims_w,by="PRN")
-# 
-# dftaxa0 <- df_tx %>% 
-#   dplyr::select(.,Kingdom:DisplayName,Taxa) %>% 
-#   distinct() %>% 
-#   mutate_all(as.character) %>%
-#   mutate_all(~ replace_na(., "NA"))
-# toc()
+detach("package:tidyverse", unload=TRUE)
+detach("package:tictoc", unload=TRUE)
+detach("package:ggwordcloud", unload=TRUE)
