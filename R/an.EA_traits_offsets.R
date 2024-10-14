@@ -50,6 +50,7 @@ cbPalette2 <- c("#646464", #100/100/100
 toc(log=TRUE)
 
 #### load data ####
+## as generated in ./R/imp.EA_traits_offsets.R #
 tic("Load and format data")
 dfw0 <- readRDS(paste0(datfol,"processedData/","zoopWideTraitAbund_m3_taxOnly_USE.RDat"))
 
