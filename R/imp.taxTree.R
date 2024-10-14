@@ -59,10 +59,7 @@ df_tx0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
 # PTTR0026, WA560349, Y0004367, Y0017477, YC536426
 
 df_wims0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
-                                                 # "/WIMS_Extract_WaterQuality_Zoop_Samples_230809.xlsx"),
-                                                 # "/WIMS_Extract_WaterQuality_Zoop_Samples_231218.xlsx"),
-                                                 # "/WIMS_Extract_WaterQuality_Zoop_Samples_240108.xlsx"),
-                                                 "/WIMS_Extract_WaterQuality_Zoop_Samples_240405.xlsx"),
+                                                 "/WIMS_Extract_WaterQuality_Zoop_Samples_240930.xlsx"),
                                           sheet="allDat"))
 
 ### prep WIMS data ####
@@ -104,7 +101,8 @@ df_tx %>%
   pivot_wider(names_from = "LF02",values_from = "Abund_m3", #widen
               values_fill = 0) -> df_tx_w
 
-### join & save data ####  
+### join & save data ####
+#df_tx_w$PRN <- as.character
 dfw <- left_join(df_tx_w,df_wims_w,by="PRN")
 
 dftaxa0 <- df_tx %>% 
