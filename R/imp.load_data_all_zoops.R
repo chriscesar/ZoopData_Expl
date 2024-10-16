@@ -135,7 +135,8 @@ toc(log=TRUE)
 tic("Carbon content data")
 ## this version has been tweaked.  See 'changeLog' worksheet in .xlsx for info
 df_carb <- readxl::read_xlsx(
-  paste0(datfol,"Lifeforms/ZOOPLANKTON carbon mass data_v5Aug 2024_AMENDED_USE.xlsx"),
+  #paste0(datfol,"Lifeforms/ZOOPLANKTON carbon mass data_v5Aug 2024_AMENDED_USE.xlsx"),
+  paste0(datfol,"Lifeforms/ZOOPLANKTON carbon mass data_v7Oct 2024_AMENDED_USE.xlsx"),
   sheet = "FINAL SHEET TO USE") %>% ## load data
   dplyr::select(.,c(2:6)) %>% ## keep only taxon info, carbon and length info
   janitor::clean_names(.) %>% # tidy names
