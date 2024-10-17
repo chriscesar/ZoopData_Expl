@@ -94,26 +94,20 @@ WB_lb2 <- ifelse(LFWB == "Solent","Solent",
                                                                                                      ifelse(LFWB == "Northumberland North","NrthmbNth",
                                                                                                             ifelse(LFWB == "Farne Islands to Newton Haven","FarneIs",
                                                                                                                    ifelse(LFWB == "Bristol Channel Inner South","BristInSth",
-                                                                                                                          ifelse(LFWB == "Lincs Offshore","LincOffsh",
+                                                                                                                          ifelse(LFWB == "Lincs Offshore","LncsOffsh",
                                                                                                                                  ifelse(LFWB == "Isle of Wight East","IoWE",
-                                                                                                                                
-                                                                                                                          NA))))))))
-                                                                                )))))
-                               )))))
-
-WB_lb <- paste0(WB_lb1,"_",WB_lb2) ###concatenate labels
-dfl$WB_lb <- WB_lb
-dfl %>% relocate(WB_lb,.after = WB) -> dfl
-
-### Order water body labels clockwise around England from
-# north east to south east to south to south west to north west
-dfl$WB_lb <- factor(dfl$WB_lb, levels = c(
+                                                                                                                                        NA)))))))))))))
+                                      )))))
+WB_lb <- paste0(WB_lb1,"_",WB_lb2)
+df_tx$WB_lb <- WB_lb
+df_tx %>% relocate(WB_lb,.after = WB) -> df_tx
+df_tx$WB_lb <- factor(df_tx$WB_lb, levels = c(
   "NE_NrthmbNth",
   "NE_FarneIs",
   "NE_Tees",
   "Ang_YorksSth",
   "Ang_Lincs",
-  "Ang_LincOffsh",
+  "Ang_LncsOffsh",
   "Ang_WashOtr",
   "Ang_BlckwOtr",
   "Thm_ThmLwr",
