@@ -99,9 +99,31 @@ WB_lb2 <- ifelse(LFWB == "Solent","Solent",
                                                                                                                                         NA)))))))))))))
                                       )))))
 WB_lb <- paste0(WB_lb1,"_",WB_lb2)
-df_tx$WB_lb <- WB_lb
-df_tx %>% relocate(WB_lb,.after = WB) -> df_tx
-df_tx$WB_lb <- factor(df_tx$WB_lb, levels = c(
+# df_tx$WB_lb <- WB_lb
+# df_tx %>% relocate(WB_lb,.after = WB) -> df_tx
+# df_tx$WB_lb <- factor(df_tx$WB_lb, levels = c(
+#   "NE_NrthmbNth",
+#   "NE_FarneIs",
+#   "NE_Tees",
+#   "Ang_YorksSth",
+#   "Ang_Lincs",
+#   "Ang_LncsOffsh",
+#   "Ang_WashOtr",
+#   "Ang_BlckwOtr",
+#   "Thm_ThmLwr",
+#   "Sth_KentSth",
+#   "Sth_IoWE",
+#   "Sth_Solent",
+#   "Sth_SotonWtr",
+#   "SW_CornwNth",
+#   "SW_BrnstpB",
+#   "SW_BristInSth",
+#   "NW_MerseyMth",
+#   "NW_SolwOtr"
+# ))
+dfl$WB_lb <- WB_lb
+dfl %>% relocate(WB_lb,.after = WB) -> dfl
+dfl$WB_lb <- factor(dfl$WB_lb, levels = c(
   "NE_NrthmbNth",
   "NE_FarneIs",
   "NE_Tees",
