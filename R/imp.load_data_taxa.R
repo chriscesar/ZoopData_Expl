@@ -36,32 +36,31 @@ toc(log=TRUE)
 
 tic("Prep for export & export data");print("Prep for export & export data")
 
-### convert dates
+# convert & format dates ####
 df_tx$sample.date <- as.Date(df_tx$sample.date, origin = "1899-12-30")
 
-### add day of year
+### add day of year ###
 df_tx$yday <- lubridate::yday(df_tx$sample.date)
 df_tx %>% relocate(.,yday, .after = sample.date) -> df_tx
-### add month
+### add month ###
 df_tx$month <- lubridate::month(df_tx$sample.date)
 df_tx %>% relocate(.,month, .after = sample.date) -> df_tx
-### add season
+### add season ###
 df_tx$DJF <- as.factor(seas::mkseas(df_tx$sample.date, width="DJF"))#convert dates to 3month seasonal block
 df_tx %>% relocate(.,DJF, .after = sample.date) -> df_tx
 
-# Remove 100 µm data [OPTIONAL] ####
+# Remove 100 µm data [OPTIONAL] ###
 df_tx_100um <- df_tx %>% 
   filter(str_starts(Sample.comments,"100um"))
 
 df_tx %>% 
   filter(!str_starts(Sample.comments,"100um")) -> df_tx
 
-### set Region as a factor
+# set Region as a factor ####
 df_tx$Region <- factor(df_tx$Region, levels = c("NEast","Anglian","Thames",
                                                 "Southern","SWest","NWest"))
 
-### check ####
-### create label
+# create labels ####
 LFRegion <- df_tx$Region
 LFWB <- df_tx$WB
 
@@ -89,7 +88,9 @@ WB_lb2 <- ifelse(LFWB == "Solent","Solent",
                                                                                                      ifelse(LFWB == "Northumberland North","NrthmbNth",
                                                                                                             ifelse(LFWB == "Farne Islands to Newton Haven","FarneIs",
                                                                                                                    ifelse(LFWB == "Bristol Channel Inner South","BristInSth",
-                                                                                                                          NA)))))))))))
+                                                                                                                          ifelse(LFWB == "Isle of Wight East","IoWE",
+                                                                                                                                 ifelse(LFWB == "Lincs Offshore","LncsOffsh",
+                                                                                                                          NA)))))))))))))
                                       )))))
 WB_lb <- paste0(WB_lb1,"_",WB_lb2)
 df_tx$WB_lb <- WB_lb
@@ -100,10 +101,12 @@ df_tx$WB_lb <- factor(df_tx$WB_lb, levels = c(
   "NE_Tees",
   "Ang_YorksSth",
   "Ang_Lincs",
+  "Ang_LncsOffsh",
   "Ang_WashOtr",
   "Ang_BlckwOtr",
   "Thm_ThmLwr",
   "Sth_KentSth",
+  "Sth_IoWE",
   "Sth_Solent",
   "Sth_SotonWtr",
   "SW_CornwNth",
@@ -112,9 +115,8 @@ df_tx$WB_lb <- factor(df_tx$WB_lb, levels = c(
   "NW_MerseyMth",
   "NW_SolwOtr"
 ))
-### check over ####
 
-###widen data & fill NAs with 0s ####
+# widen data & fill NAs with 0s ####
 df_tx %>% 
   dplyr::select(.,-c("Aphia.ID")) %>% 
   pivot_wider(names_from = "Taxa",values_from = "AbundanceRaw",#Abund_m3
@@ -122,4 +124,3 @@ df_tx %>%
   filter(.,!is.na(`Net.volume.sampled.(m3)`)) %>% ##OPTIONAL: remove 'empty' net volumes
   ungroup() -> df_tx_w
 toc(log=TRUE)
-
