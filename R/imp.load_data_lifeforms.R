@@ -14,13 +14,13 @@ print("Load lifeforms data and correct taxon names")
 df_tx0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
                                                "processedData/MBA_Returns_Amalgamated_USE.xlsx"),
                                         sheet="outR04_LF"))
-### prep taxon data ####
+# prep taxon data ####
 df_tx <- as_tibble(df_tx0) ### create new data (keep df0 as 'raw')
 
 ### convert dates
 df_tx$sample.date <- as.Date(df_tx$sample.date, origin = "1899-12-30")
 
-# Remove 100 µm data [OPTIONAL] ####
+## Remove 100 µm data [OPTIONAL] ####
 df_tx_100um <- df_tx %>% 
   filter(str_starts(Sample.comments,"100um"))
 
@@ -29,29 +29,23 @@ df_tx %>%
 
 toc(log=TRUE)
 
-###############
+## format dates ####
 tic("Prep for export & export data");print("Prep for export & export data")
-
-### add day of year
+# add day of year ###
 df_tx$yday <- lubridate::yday(df_tx$sample.date)
 df_tx %>% relocate(.,yday, .after = sample.date) -> df_tx
-### add month
+### add month ###
 df_tx$month <- lubridate::month(df_tx$sample.date)
 df_tx %>% relocate(.,month, .after = sample.date) -> df_tx
-### add season
+### add season ###
 df_tx$DJF <- as.factor(seas::mkseas(df_tx$sample.date, width="DJF"))#convert dates to 3month seasonal block
 df_tx %>% relocate(.,DJF, .after = sample.date) -> df_tx
 
-# Remove 100 µm data [OPTIONAL] ####
-df_tx %>% 
-  filter(!str_starts(Sample.comments,"100um")) -> df_tx
-
-# ### set Region as a factor
+### define Region as a factor ###
 df_tx$Region <- factor(df_tx$Region, levels = c("NEast","Anglian","Thames",
                                                 "Southern","SWest","NWest"))
 
-### check ####
-### create label
+## create label ####
 LFRegion <- df_tx$Region
 LFWB <- df_tx$WB
 
@@ -83,6 +77,7 @@ WB_lb2 <- ifelse(LFWB == "Solent","Solent",
                                                                                                                                  ifelse(LFWB == "Isle of Wight East","IoWE",
                                                                                                                           NA)))))))))))))
                                       )))))
+
 WB_lb <- paste0(WB_lb1,"_",WB_lb2)
 df_tx$WB_lb <- WB_lb
 df_tx %>% relocate(WB_lb,.after = WB) -> df_tx
@@ -106,10 +101,10 @@ df_tx$WB_lb <- factor(df_tx$WB_lb, levels = c(
   "NW_MerseyMth",
   "NW_SolwOtr"
 ))
-### check over ####
+
 toc(log=TRUE)
 
-###widen data & fill NAs with 0s ####
+# widen data & fill NAs with 0s ####
 tic("widen data")
 df_tx %>% 
   dplyr::select(.,-c("Aphia.ID","Abund_m3","Taxa","Category":"Unallocated",
