@@ -360,3 +360,43 @@ dfl %>%
 
 ggsave(plot = pl, filename = "figs/2409dd/carbonTax_Soton_Mean.pdf",
        width = 20,height = 12,units = "in");rm(pl)
+
+############
+## export carbon contents per sample
+dfl %>% 
+  dplyr::select(.,c(
+    Pot.Number,
+    sample.date:WIMS.Code,
+    `Net.volume.sampled.(m3)`,
+    PRN,
+    Eastings:Category,
+    AbundanceRaw:md_carbTot_m3)) %>% 
+  dplyr::select(., -copNonCop) %>% 
+  group_by(across(-c(
+    AbundanceRaw,
+    Abund_m3,
+    mnlongMaxAxis_mm,
+    mdlongMaxAxis_mm,
+    mnCPerIndiv_ug,
+    mdCPerIndiv_ug,
+    mn_carbTot_raw,
+    md_carbTot_raw,
+    mn_carbTot_m3,
+    md_carbTot_m3
+  ))) %>% 
+  summarise(.,
+            AbundanceRaw=sum(AbundanceRaw,na.rm = TRUE),
+            Abund_m3=sum(Abund_m3,na.rm = TRUE),
+            mnlongMaxAxis_mm=mean(mnlongMaxAxis_mm,na.rm = TRUE),
+            mdlongMaxAxis_mm=mean(mdlongMaxAxis_mm,na.rm = TRUE),
+            mnCPerIndiv_ug=mean(mnCPerIndiv_ug,na.rm = TRUE),
+            mdCPerIndiv_ug=mean(mdCPerIndiv_ug,na.rm = TRUE),
+            mn_carbTot_raw=sum(mn_carbTot_raw,na.rm = TRUE),
+            md_carbTot_raw=sum(md_carbTot_raw,na.rm = TRUE),
+            mn_carbTot_m3=sum(mn_carbTot_m3,na.rm = TRUE),
+            md_carbTot_m3=sum(md_carbTot_m3,na.rm = TRUE),
+  .groups = "drop") ->df_tot
+
+## write outs
+write.csv(dfl,file="outputs/abundances_by_taxon.csv",row.names = FALSE)
+write.csv(df_tot,file="outputs/abundances_by_sample.csv",row.names = FALSE)
