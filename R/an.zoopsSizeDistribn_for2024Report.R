@@ -51,24 +51,43 @@ dfl_complete <- dfl %>%
   # tidyr::complete(DJF, fill = list(mn_carbTot_m3 = 0)) #Fill missing seasons
   tidyr::complete(yyyy_mm, DJF, fill = list(mn_carbTot_m3 = 0))
 
+# dfl_complete has lots of NA values as a result of filling in of 'missing' values
 
+dfl %>% 
+  dplyr::select(.,c(
+    # site.name,
+    BIOSYS.Code,
+    WIMS.Code,
+    #Eastings, Northings,
+    Region,
+    WBID,
+    WB,
+    WB_lb,
+    Category
+    )) %>% 
+  distinct() -> metadata
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# join metadata to dfl_complete to remove 'missing' values
+dfl_complete %>% 
+  left_join(., metadata,
+            # by = "BIOSYS.Code"
+            by = "WIMS.Code"
+            ) %>% #names(.) %>% 
+  dplyr::select(.,-c(
+    Region.x,
+    WBID.x,
+    WB.x,
+    WB_lb.x,
+    Category.x
+    )) %>% 
+  dplyr::rename(
+    BIOSYS.Code=BIOSYS.Code.y,
+    Region=Region.y,
+    WBID=WBID.y,
+    WB=WB.y,
+    WB_lb=WB_lb.y,
+    Category=Category.y
+  ) -> dfl_complete
 
 
 
