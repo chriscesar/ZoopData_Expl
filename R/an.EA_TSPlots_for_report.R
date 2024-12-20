@@ -30,7 +30,7 @@ check_and_create_dir <- function(parent_dir, sub_dir) {
 }
 
 parent_directory <- "figs"
-sub_directory <- "2407dd_timeseries"
+sub_directory <- "2412dd_timeseries"
 message <- check_and_create_dir(parent_directory, sub_directory)
 print(message)
 rm(parent_directory,sub_directory,message,check_and_create_dir)
@@ -123,7 +123,7 @@ dfw_lf %>%
         strip.text = element_text(face=2),
         axis.title = element_text(face=2)) -> pl
 
-ggsave(plot = pl, filename = "figs/2407dd_timeseries/copSizesTSByWB.pdf",
+ggsave(plot = pl, filename = "figs/2412dd_timeseries/copSizesTSByWB.pdf",
        width = 12,height = 8,units = "in")
 rm(pl)
 
@@ -155,7 +155,7 @@ dfw_lf %>%
         axis.title.y= element_text(face=2),
         strip.text = element_text(face=2)) -> pl
 
-ggsave(plot = pl, filename = "figs/2407dd_timeseries/copSizeSmoothTSByRgn.pdf",
+ggsave(plot = pl, filename = "figs/2412dd_timeseries/copSizeSmoothTSByRgn.pdf",
        width = 12,height = 8,units = "in")
 rm(pl)
 
@@ -181,7 +181,7 @@ dfw_lf %>%
         axis.title.y = element_text(face=2),
         strip.text = element_text(face=2)) -> pl
 
-ggsave(plot = pl, filename = "figs/2407dd_timeseries/smCopTSByWBLogN.pdf",
+ggsave(plot = pl, filename = "figs/2412dd_timeseries/smCopTSByWBLogN.pdf",
        width = 12,height = 8,units = "in")
 rm(pl)
 
@@ -208,7 +208,7 @@ dfw_lf %>%
         axis.title.y = element_text(face=2),
         strip.text = element_text(face=2)) -> pl
 
-ggsave(plot = pl, filename = "figs/2407dd_timeseries/smCopTSByRgn.pdf",
+ggsave(plot = pl, filename = "figs/2412dd_timeseries/smCopTSByRgn.pdf",
        width = 12,height = 8,units = "in")
 rm(pl)
 
@@ -234,7 +234,7 @@ dfw_lf %>%
         axis.title.y = element_text(face=2),
         strip.text = element_text(face=2)) -> pl
 
-ggsave(plot = pl, filename = "figs/2407dd_timeseries/fishTSByWB.pdf",
+ggsave(plot = pl, filename = "figs/2412dd_timeseries/fishTSByWB.pdf",
        width = 12,height = 8,units = "in")
 rm(pl)
 
@@ -259,7 +259,7 @@ dfw_lf %>%
         axis.title.y = element_text(face=2),
         strip.text = element_text(face=2)) -> pl
 
-ggsave(plot = pl, filename = "figs/2407dd_timeseries/fishTSByRgn.pdf",
+ggsave(plot = pl, filename = "figs/2412dd_timeseries/fishTSByRgn.pdf",
        width = 12,height = 8,units = "in")
 rm(pl)
 
@@ -287,7 +287,7 @@ dfw_lf %>%
         axis.title = element_text(face=2),
         strip.text = element_text(face=2)) -> pl
 
-ggsave(plot = pl, filename = "figs/2407dd_timeseries/copepodsFishByWB_allSmooths.pdf",
+ggsave(plot = pl, filename = "figs/2412dd_timeseries/copepodsFishByWB_allSmooths.pdf",
        width = 12,height = 8,units = "in")
 rm(pl)
 
@@ -376,7 +376,7 @@ df_lf_w_C %>%
         axis.title = element_text(face=2),
         strip.text = element_text(face=2)) -> pl
 
-ggsave(plot = pl, filename = "figs/2407dd_timeseries/logtotCByDateByWB_Fixed_Y.pdf",
+ggsave(plot = pl, filename = "figs/2412dd_timeseries/logtotCByDateByWB_Fixed_Y.pdf",
        width = 16,height = 12,units = "in")
 rm(pl)
 
@@ -394,12 +394,15 @@ df_lf_w_C %>%
   labs(title = "Total carbon content in zooplankton assemblages by EA water body",
        y="log(total carbon)",
        caption = paste0("Dashed line indicates global mean log carbon content across all water bodies",
-                        "\nBox widths are proportional to the number of observations"))+
+                        "\nBox widths are proportional to the number of observations",
+                        "\nSamples gathered between ",format(min(dfw_lf$sample.date), "%d/%m/%Y"),
+                        " & ",format(max(dfw_lf$sample.date), "%d/%m/%Y")))+
   theme(legend.position = "none",
         axis.title.x = element_blank(),
         axis.title.y = element_text(face=2),
         axis.text.x = element_text(face=2)) -> pl
-ggsave(plot = pl, filename = "figs/2407dd_timeseries/carbonByWB.pdf",
+
+ggsave(plot = pl, filename = "figs/2412dd_timeseries/carbonByWB.pdf",
        width = 20,height = 12,units = "in")
 
 df_lf_w_C %>%
@@ -480,7 +483,9 @@ df_lf_w_C_zooType %>%
   scale_x_discrete(limits=rev)+
   labs(
     title = "Total carbon content by zooplankton type by EA region",
-    y="log(Total carbon)"
+    y="log(Total carbon)",
+    caption=paste0("\nSamples gathered between ",format(min(dfw_lf$sample.date), "%d/%m/%Y"),
+    " & ",format(max(dfw_lf$sample.date), "%d/%m/%Y"))
        )+
   theme(legend.position = "none",
         axis.title.y = element_blank(),
@@ -489,7 +494,7 @@ df_lf_w_C_zooType %>%
         axis.text.x = element_text(face=2),
         axis.text.y = element_text(face=2)) -> pl
 
-ggsave(plot = pl, filename = "figs/2407dd_timeseries/carbonByZooTypeRegion.pdf",
+ggsave(plot = pl, filename = "figs/2412dd_timeseries/carbonByZooTypeRegion.pdf",
        width = 20,height = 12,units = "in")
 rm(pl)
 
@@ -514,7 +519,9 @@ df_lf_l %>% #names(.)
   scale_x_discrete(limits=rev)+
   labs(
     title = "Total carbon content by zooplankton type by EA water body",
-    y="log(Total carbon)"
+    y="log(Total carbon)",
+    caption=paste0("\nSamples gathered between ",format(min(dfw_lf$sample.date), "%d/%m/%Y"),
+                   " & ",format(max(dfw_lf$sample.date), "%d/%m/%Y"))
   )+
   theme(legend.position = "none",
         axis.title.y = element_blank(),
@@ -524,7 +531,7 @@ df_lf_l %>% #names(.)
         axis.text.y = element_text(face=2,
                                    size = 7)) -> pl
 
-ggsave(plot = pl, filename = "figs/2407dd_timeseries/carbonByZooTypeWB_v2.pdf",
+ggsave(plot = pl, filename = "figs/2412dd_timeseries/carbonByZooTypeWB_v2.pdf",
        width = 20,height = 12,units = "in")
 rm(pl)
 
@@ -544,18 +551,21 @@ df_lf_w_C %>%
   geom_jitter(width = 0.25)+
   labs(title = "Total carbon content of zooplankters recorded in the Solent and Southampton Water",
        x="BIOSYS site code",
-       y= "Total carbon (ug C/m3)")+
+       y= "Total carbon (ug C/m3)",
+       caption=paste0("\nSamples gathered between ",format(min(dfw_lf$sample.date), "%d/%m/%Y"),
+                      " & ",format(max(dfw_lf$sample.date), "%d/%m/%Y"))
+       )+
   scale_y_continuous(breaks = c(0,50000,100000),labels = scales::comma_format())+
   coord_flip()+
   theme(legend.title = element_blank(),
         axis.title = element_text(face=2)) -> pl
 
-ggsave(plot = pl, filename = "figs/2407dd_timeseries/carbonTot_Soton.pdf",
+ggsave(plot = pl, filename = "figs/2412dd_timeseries/carbonTot_Soton.pdf",
        width = 20,height = 12,units = "in");rm(pl)
 
 ## by taxon
-dfw_lf %>% 
-  filter(.,WB_lb %in% c("Sth_Solent","Sth_SotonWtr")) %>% names(.)
+# dfw_lf %>% 
+#   filter(.,WB_lb %in% c("Sth_Solent","Sth_SotonWtr")) %>% names(.)
 
 df_lf_l %>% 
   filter(.,WB_lb %in% c("Sth_Solent","Sth_SotonWtr")) %>%
@@ -579,12 +589,15 @@ df_lf_l %>%
   geom_jitter(width = 0.25)+
   labs(title = "Total carbon content of selected zooplankters recorded in the Solent and Southampton Water",
        x="BIOSYS site code",
-       y= "Log (n+1) carbon content (ug C/m3)")+
+       y= "Log (n+1) carbon content (ug C/m3)",
+       caption=paste0("\nSamples gathered between ",format(min(dfw_lf$sample.date), "%d/%m/%Y"),
+                      " & ",format(max(dfw_lf$sample.date), "%d/%m/%Y"))
+       )+
   theme(legend.title = element_blank(),
         axis.title = element_text(face=2))+
   coord_flip() -> pl
 
-ggsave(plot = pl, filename = "figs/2407dd_timeseries/log_CarbonTot_Soton.pdf",
+ggsave(plot = pl, filename = "figs/2412dd_timeseries/log_CarbonTot_Soton.pdf",
        width = 20,height = 12,units = "in");rm(pl)
 
 # how many taxa do we not have C data for? ####
@@ -620,7 +633,7 @@ left_join(df_tx_l, df_carb_summary, by="Aphia.ID") %>%
     legend.position = "none"
   ) -> pl
   
-ggsave(plot = pl, filename = "figs/2407dd_timeseries/LogAbundTot_Missing_C.pdf",
+ggsave(plot = pl, filename = "figs/2412dd_timeseries/LogAbundTot_Missing_C.pdf",
        width = 20,height = 12,units = "in");rm(pl)
 
 # Prevalence of missing Carbon taxa ####
@@ -653,7 +666,7 @@ left_join(df_tx_l, df_carb_summary, by="Aphia.ID") %>%
     axis.text.x = element_text(face=2),
     strip.text = element_text(face=2)
   ) -> pl
-ggsave(plot = pl, filename = "figs/2407dd_timeseries/OccurencesMissing_C.pdf",
+ggsave(plot = pl, filename = "figs/2412dd_timeseries/OccurencesMissing_C.pdf",
        width = 20,height = 12,units = "in");rm(pl)
 
 df_tx_l %>% 
