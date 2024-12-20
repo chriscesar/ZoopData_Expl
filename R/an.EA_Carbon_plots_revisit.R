@@ -47,7 +47,7 @@ dfl %>% #names()
           axis.title = element_text(face=2),
           strip.text = element_text(face=2)) -> pl
 
-ggsave(plot = pl, filename = "figs/2409dd/logtotCByDateByWB_Fixed_Y_median.pdf",
+ggsave(plot = pl, filename = "figs/2412dd/logtotCByDateByWB_Fixed_Y_median.pdf",
        width = 12,height = 8,units = "in"); rm(pl)
 
 ## Means ####
@@ -78,7 +78,7 @@ dfl %>% #names()
         axis.title = element_text(face=2),
         strip.text = element_text(face=2)) -> pl
 
-ggsave(plot = pl, filename = "figs/2409dd/logtotCByDateByWB_Fixed_Y_mean.pdf",
+ggsave(plot = pl, filename = "figs/2412dd/logtotCByDateByWB_Fixed_Y_mean.pdf",
        width = 12,height = 8,units = "in"); rm(pl)
 
 # Carbon by WB ####
@@ -110,7 +110,7 @@ dfl %>% #names()
         axis.title.x = element_blank(),
         axis.title.y = element_text(face=2),
         axis.text.x = element_text(face=2)) -> pl
-ggsave(plot = pl, filename = "figs/2409dd/carbonByWB_median.pdf",
+ggsave(plot = pl, filename = "figs/2412dd/carbonByWB_median.pdf",
        width = 20,height = 12,units = "in");rm(pl)
 
 ## Means ####
@@ -141,7 +141,7 @@ dfl %>% #names()
         axis.title.x = element_blank(),
         axis.title.y = element_text(face=2),
         axis.text.x = element_text(face=2)) -> pl
-ggsave(plot = pl, filename = "figs/2409dd/carbonByWB_mean.pdf",
+ggsave(plot = pl, filename = "figs/2412dd/carbonByWB_mean.pdf",
        width = 20,height = 12,units = "in");rm(pl)
 
 # Carbon by zoop type by WB ####
@@ -178,7 +178,7 @@ dfl %>% #names(.)
         axis.text.y = element_text(face=2,
                                    size = 7)) -> pl
 
-ggsave(plot = pl, filename = "figs/2409dd/carbonByZooTypeWB_Median.pdf",
+ggsave(plot = pl, filename = "figs/2412dd/carbonByZooTypeWB_Median.pdf",
        width = 20,height = 12,units = "in"); rm(pl)
 
 ## Mean ####
@@ -214,7 +214,7 @@ dfl %>% #names(.)
         axis.text.y = element_text(face=2,
                                    size = 7)) -> pl
 
-ggsave(plot = pl, filename = "figs/2409dd/carbonByZooTypeWB_Mean.pdf",
+ggsave(plot = pl, filename = "figs/2412dd/carbonByZooTypeWB_Mean.pdf",
        width = 20,height = 12,units = "in"); rm(pl)
 
 # Seahorse food: total C ####
@@ -252,7 +252,7 @@ dfl %>% #names()
   theme(legend.title = element_blank(),
         axis.title = element_text(face=2)) -> pl
 
-ggsave(plot = pl, filename = "figs/2409dd/carbonTot_Soton_Median.pdf",
+ggsave(plot = pl, filename = "figs/2412dd/carbonTot_Soton_Median.pdf",
        width = 20,height = 12,units = "in");rm(pl)
 
 ## Mean ####
@@ -289,7 +289,7 @@ dfl %>% #names()
   theme(legend.title = element_blank(),
         axis.title = element_text(face=2)) -> pl
 
-ggsave(plot = pl, filename = "figs/2409dd/carbonTot_Soton_Mean.pdf",
+ggsave(plot = pl, filename = "figs/2412dd/carbonTot_Soton_Mean.pdf",
        width = 20,height = 12,units = "in");rm(pl)
 
 # Seahorse food: By taxon ####
@@ -324,7 +324,7 @@ dfl %>%
         axis.title = element_text(face=2))+
   coord_flip() -> pl
 
-ggsave(plot = pl, filename = "figs/2409dd/carbonTax_Soton_Median.pdf",
+ggsave(plot = pl, filename = "figs/2412dd/carbonTax_Soton_Median.pdf",
        width = 20,height = 12,units = "in");rm(pl)
 
 ## Mean ####
@@ -358,7 +358,7 @@ dfl %>%
         axis.title = element_text(face=2))+
   coord_flip() -> pl
 
-ggsave(plot = pl, filename = "figs/2409dd/carbonTax_Soton_Mean.pdf",
+ggsave(plot = pl, filename = "figs/2412dd/carbonTax_Soton_Mean.pdf",
        width = 20,height = 12,units = "in");rm(pl)
 
 ############
