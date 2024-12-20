@@ -36,7 +36,7 @@ fac_tmp22 <- paste0(rep(2022, 12), "_", sprintf("%02d", 1:12))
 fac_tmp22 <- fac_tmp22[6:12]
 fac_tmp23 <- paste0(rep(2023, 12), "_", sprintf("%02d", 1:12))
 fac_tmp24 <- paste0(rep(2024, 12), "_", sprintf("%02d", 1:12))
-fac_tmp24 <- fac_tmp24[1:8]
+fac_tmp24 <- fac_tmp24[1:10]
 
 fac_tmp <- c(fac_tmp22,fac_tmp23,fac_tmp24)
 
@@ -73,7 +73,7 @@ dfl_complete %>%
   left_join(., metadata,
             by = "BIOSYS.Code"
             #by = "WIMS.Code"
-            ) %>% #names(.) %>% 
+            ) %>% #names(.) #%>% 
   dplyr::select(.,-c(
     Region.x,
     WBID.x,
@@ -223,7 +223,7 @@ purrr::walk(rgns, function(region) {
     
     # Save the plot
     ggplot2::ggsave(
-      filename = paste0("figs/2411dd_ZoopSizeForReport/",
+      filename = paste0("figs/2412dd_ZoopSizeForReport/",
                         "zoopSize_monthly_", region, "_page", page, "_carbon.pdf"),
       plot = p, width = 8, height = 6
     )
@@ -364,7 +364,7 @@ purrr::walk(rgns, function(region) {
     
     # Save the plot
     ggplot2::ggsave(
-      filename = paste0("figs/2411dd_ZoopSizeForReport/",
+      filename = paste0("figs/2412dd_ZoopSizeForReport/",
                         "zoopSize_monthly_", region, "_page", page, "_abund.pdf"),
       plot = p, width = 8, height = 6
     )
