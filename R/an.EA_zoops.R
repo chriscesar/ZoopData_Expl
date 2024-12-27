@@ -51,7 +51,7 @@ cbPalette2 <- c("#646464", #100/100/100
 dfw <- readRDS(paste0(datfol,"processedData/","zoopWIDEAbund_m3_WIMS_USE.RDat"))
 
 df_tx_w <- dfw %>% 
-  dplyr::select(-c(WIMS.Code.y:"Zinc, Dissolved_ug/l"))
+  dplyr::select(-c(WIMS.Code.y:Zooplankton_Coded))
 
 ###############################
 ## look at taxon data only ####
@@ -129,7 +129,7 @@ xxprev %>%
                       "Samples gathered between ",format(min(dfw$sample.date), "%d/%m/%Y")," & ",format(max(dfw$sample.date), "%d/%m/%Y")),
        y = "Count",
        x = "Prevalence")
-ggsave(filename = "figs/zoopPrevalence_by_Region.pdf",width = 12,height = 7,units = "in")
+ggsave(filename = "figs/2412dd/zoopPrevalence_by_Region.pdf",width = 12,height = 7,units = "in")
 # ggsave(filename = "figs/zoopPrevalence_by_WB.pdf",width = 12,height = 10,units = "in")
 
 ### quick species accumulation curve ####
@@ -389,7 +389,7 @@ pl_S <- df_tx_w[df_tx_w$S>0,] %>%
   ylab("Taxon richness")+
   theme(axis.text.x = element_text(angle=270,hjust=0,vjust=.5));pl_S
 
-ggsave(filename = "figs/taxRich.pdf",width = 12,height = 12,units = "in",
+ggsave(filename = "figs/2412dd/taxRich.pdf",width = 16,height = 12,units = "in",
        plot=pl_S)
 rm(pl_S,meanS,sdS,sdSmax,sdSmin)
 
@@ -410,7 +410,7 @@ pl_ts_S <- df_tx_w[df_tx_w$S>0,] %>%
        x="Date")+
   facet_wrap(.~WB_lb);pl_ts_S
 
-ggsave(filename = "figs/taxRichTSbyWB.pdf",width = 12,height = 12,units = "in",
+ggsave(filename = "figs/2412dd/taxRichTSbyWB.pdf",width = 12,height = 12,units = "in",
        plot=pl_ts_S)
 rm(pl_ts_S)
 
