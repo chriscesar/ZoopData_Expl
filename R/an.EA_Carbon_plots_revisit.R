@@ -103,7 +103,8 @@ dfl %>% #names()
   scale_colour_manual(values = cbPalette2)+
   labs(title = "Total carbon content in zooplankton assemblages by EA water body",
        y="log(total carbon)",
-       caption = paste0("Dashed line indicates global mean log carbon content across all water bodies",
+       caption = paste0("Samples gathered between ",format(min(dfl$sample.date), "%d/%m/%Y")," & ",format(max(dfl$sample.date), "%d/%m/%Y"),
+         "\nDashed line indicates global mean log carbon content across all water bodies",
                         "\nBox widths are proportional to the number of observations",
                         "\nCarbon content values are based on *median* estimates of carbon contents per taxon"))+
   theme(legend.position = "none",
@@ -134,7 +135,8 @@ dfl %>% #names()
   scale_colour_manual(values = cbPalette2)+
   labs(title = "Total carbon content in zooplankton assemblages by EA water body",
        y="log(total carbon)",
-       caption = paste0("Dashed line indicates global mean log carbon content across all water bodies",
+       caption = paste0("Samples gathered between ",format(min(dfl$sample.date), "%d/%m/%Y")," & ",format(max(dfl$sample.date), "%d/%m/%Y"),
+                        "\nDashed line indicates global mean log carbon content across all water bodies",
                         "\nBox widths are proportional to the number of observations",
                         "\nCarbon content values are based on *mean* estimates of carbon contents per taxon"))+
   theme(legend.position = "none",
