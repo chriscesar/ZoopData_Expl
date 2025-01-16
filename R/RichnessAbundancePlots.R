@@ -42,7 +42,8 @@ mnS <- mean(S);mnN <- mean(N)
 ## plot taxon richness
 dfw %>% 
   ggplot(., aes(x= WB_lb, y = S, colour = Region))+
-  geom_hline(yintercept = mnS, lty=2)+
+  # geom_hline(yintercept = mnS, lty=2)+
+  geom_hline(yintercept = mean(S), lty=2)+
   geom_boxplot(outliers = FALSE)+
   geom_jitter(width=0.25, alpha=0.4)+
   labs(
@@ -62,7 +63,8 @@ dev.off();rm(pl)
 ## plot taxon abundance
 dfw %>% 
   ggplot(., aes(x= WB_lb, y = log(N), colour = Region))+
-  geom_hline(yintercept = log(mnN), lty=2)+
+  # geom_hline(yintercept = log(mean(N)), col= "black",lty=2)+
+  geom_hline(yintercept = mean(log(N)), col= "black",lty=2)+
   geom_boxplot(outliers = FALSE)+
   geom_jitter(width=0.25, alpha=0.4)+
   labs(
