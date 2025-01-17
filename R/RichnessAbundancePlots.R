@@ -81,3 +81,68 @@ pdf(file = "figs/2412dd/TaxAbund.pdf",width=18,height=10) #scaled
 print(pl)
 dev.off();rm(pl)
 
+# time series plots ####
+# Taxon Richness (S)
+dfw %>% mutate(year = lubridate::year(sample.date)) %>% 
+  ggplot(.,aes(x=sample.date, y=S))+
+  geom_point(aes(colour=Region),show.legend = FALSE)+
+  facet_wrap(~WB_lb)+
+  geom_smooth()+
+  labs(
+    title = "Taxon richness in zooplankton samples",
+    y="Taxon richness",
+    caption=paste0("Samples gathered between ",format(min(dfw$sample.date), "%d/%m/%Y")," & ",format(max(dfw$sample.date), "%d/%m/%Y")))+
+theme(axis.title.x = element_blank()) -> pl
+pdf(file = "figs/2501dd/TaxRich_ts.pdf",width=18,height=10) #scaled
+print(pl)
+dev.off();rm(pl)
+
+dfw %>% mutate(year = lubridate::year(sample.date)) %>% 
+  ggplot(.,aes(x=year, y=S,group = year))+
+  geom_boxplot(outliers = FALSE,varwidth = TRUE)+
+  geom_jitter(width=0.25,aes(colour=Region),show.legend = FALSE)+
+  facet_wrap(~WB_lb)+
+  #geom_smooth()+
+  labs(
+    title = "Taxon richness in zooplankton samples",
+    y="Taxon richness",
+    caption=paste0("Samples gathered between ",format(min(dfw$sample.date), "%d/%m/%Y")," & ",format(max(dfw$sample.date), "%d/%m/%Y")))+
+  scale_x_continuous(breaks = scales::breaks_pretty(n = 3))+
+  theme(axis.title.x = element_blank()) -> pl
+pdf(file = "figs/2501dd/TaxRich_ts_box.pdf",width=18,height=10) #scaled
+print(pl)
+dev.off();rm(pl)
+
+# Taxon Abundance (N)
+dfw %>% mutate(year = lubridate::year(sample.date)) %>% 
+  ggplot(.,aes(x=sample.date, y=log(N)))+
+  geom_point(aes(colour=Region),show.legend = FALSE)+
+  facet_wrap(~WB_lb)+
+  geom_smooth()+
+  labs(
+    title = "Taxon abundance in zooplankton samples",
+    y="Log taxon abundance",
+    caption=paste0("Samples gathered between ",format(min(dfw$sample.date), "%d/%m/%Y")," & ",format(max(dfw$sample.date), "%d/%m/%Y")))+
+  theme(axis.title.x = element_blank()) -> pl
+pdf(file = "figs/2501dd/TaxAbund_ts.pdf",width=18,height=10) #scaled
+print(pl)
+dev.off();rm(pl)
+
+dfw %>% mutate(year = lubridate::year(sample.date)) %>% 
+  ggplot(.,aes(x=year, y=log(N),group = year))+
+  geom_boxplot(outliers = FALSE,varwidth = TRUE)+
+  geom_jitter(width=0.25,aes(colour=Region),show.legend = FALSE)+
+  facet_wrap(~WB_lb)+
+  labs(
+    title = "Taxon abundance in zooplankton samples",
+    y="log taxon abundance",
+    caption=paste0("Samples gathered between ",format(min(dfw$sample.date), "%d/%m/%Y")," & ",format(max(dfw$sample.date), "%d/%m/%Y")))+
+  scale_x_continuous(breaks = scales::breaks_pretty(n = 3))+
+  theme(axis.title.x = element_blank()) -> pl
+pdf(file = "figs/2501dd/TaxAbund_ts_box.pdf",width=18,height=10) #scaled
+print(pl)
+dev.off();rm(pl)
+
+
+
+
