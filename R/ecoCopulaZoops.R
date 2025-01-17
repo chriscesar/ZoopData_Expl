@@ -1,7 +1,13 @@
-library(ecoCopula)
-library(tidyr)
-library(tidygraph)
-library(ggraph)
+# library(ecoCopula)
+# library(tidyr)
+# library(tidygraph)
+# library(ggraph)
+
+# load packages ####
+ld_pkgs <- c("tidyverse", "tictoc","ggraph","ecoCopula")
+vapply(ld_pkgs, library, logical(1L),
+       character.only = TRUE, logical.return = TRUE);rm(ld_pkgs)
+
 
 ### load data ####
 tic("load data sets")
@@ -17,6 +23,8 @@ dfw <- left_join(df_tx_w,df_wims_w,by="PRN")
 rm(df_tx_w, df_tx, df_tx_100um, df_wims, df_wims_w)
 toc(log=TRUE)
 
+# prep data ####
+tic("prep data")
 ## abundance data
 dfabd <- dfw[,c(25:61)]
 n <- 20
@@ -90,7 +98,8 @@ X <- X %>%
 X %>% 
   mutate_if(is.numeric,scale) -> X_scale
 
-X_use <- X_scale[,c(1:2,7,12,14)]
+X_use <- X_scale[,c(1:2,7,9,12,14,15)]
+toc(log=TRUE)
 
 ## graphical model
 tic("fit marginal model")
@@ -106,15 +115,20 @@ igraph_out <- fit_gr$best_graph$igraph_out
 igraph_out %>% ggraph('fr') + # see ?layout_tbl_graph_igraph
   geom_edge_fan0(aes( colour = partcor, width=partcor)) +
   scale_edge_width(range = c(0.5, 3))+
-  scale_edge_color_gradient2(low="#b2182b",mid="white",high="#2166ac")+
+  scale_edge_color_gradient2(low="#b2182b",
+                             # mid="white",
+                             mid="darkgrey",
+                             high="#2166ac")+
   geom_node_text(aes(label=name), repel = TRUE)+
-  geom_node_point(aes(size=1.3))+
+  geom_node_point(aes(size=1.3),show.legend = FALSE)+
+  labs(caption = "Taxa pairs that have no direct edge between them have no direct association. Any co-occurrence patterns they have are due to associations they both have with other taxa in the data (i.e., mediator species).
+       Taxa with direct edges between them have positive (blue), or negative (pink) associations even after controlling for mediation effects of all other taxa.")+
   theme_void() +
-  theme(legend.position = 'none',
-        panel.background = element_rect(fill="lightgrey",
-                                        colour="lightgrey")) -> pl
-ggsave(filename = "figs/zoop_all_copula.pdf",width = 30,height = 20,units = "in",plot = pl)
+  theme(
+    # legend.position = 'none',
+    panel.background = element_rect(fill="azure2",
+                                    colour="azure2")
+    ) +
+  guides(width = "none") -> pl
+ggsave(filename = "figs/zoop_all_copula.pdf",width = 20,height = 12,units = "in",plot = pl)
 toc(log=TRUE)
-panel.background = element_rect(fill = "lightblue",
-                                colour = "lightblue",
-                                size = 0.5, linetype = "solid")
