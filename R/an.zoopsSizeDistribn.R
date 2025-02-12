@@ -35,7 +35,6 @@ fac_tmp22 <- paste0(rep(2022, 12), "_", sprintf("%02d", 1:12))
 fac_tmp22 <- fac_tmp22[6:12]
 fac_tmp23 <- paste0(rep(2023, 12), "_", sprintf("%02d", 1:12))
 fac_tmp24 <- paste0(rep(2024, 12), "_", sprintf("%02d", 1:12))
-fac_tmp24 <- fac_tmp24[1:8]
 
 fac_tmp <- c(fac_tmp22,fac_tmp23,fac_tmp24)
 
@@ -88,8 +87,10 @@ purrr::walk(unique_sites, function(site) {
           legend.position = "none")
   
   # Export the plot to a PDF file using ggplot2::ggsave()
-  ggplot2::ggsave(filename = paste0("figs/2410_zoopSize/",
-    "zoopSize_monthly_", na.omit(dfl_filtered$WB_lb)[1],"_",site, "_carbon.pdf"),
+  ggplot2::ggsave(filename = paste0("figs/",
+    "zoopSize_monthly_", na.omit(dfl_filtered$WB_lb)[1],"_",site, "_carbon_",
+    format(min(dfl$sample.date), "%y%m%d"),"_",
+    format(max(dfl$sample.date), "%y%m%d"),".pdf"),
     plot = p, width = 8, height = 6)
 })
 toc(log = TRUE)
@@ -131,8 +132,11 @@ purrr::walk(unique_sites, function(site) {
           legend.position = "none")
   
   # Export the plot to a PDF file using ggplot2::ggsave()
-  ggplot2::ggsave(filename = paste0("figs/2410_zoopSize/",
-                                    "zoopSize_seasoanlly_", na.omit(dfl_filtered$WB_lb)[1],"_",site, "_carbon.pdf"),
+  ggplot2::ggsave(filename = paste0("figs/",
+                                    "zoopSize_seasoanlly_",
+                                    na.omit(dfl_filtered$WB_lb)[1],"_",
+                                    site, "_carbon_",format(min(dfl$sample.date), "%y%m%d"),"_",
+                                    format(max(dfl$sample.date), "%y%m%d"),".pdf"),
                   plot = p, width = 8, height = 6)
 })
 toc(log = TRUE)
@@ -174,8 +178,12 @@ purrr::walk(unique_sites, function(site) {
           legend.position = "none")
   
   # Export the plot to a PDF file using ggplot2::ggsave()
-  ggplot2::ggsave(filename = paste0("figs/2410_zoopSize/",
-                                    "zoopSize_monthly_", na.omit(dfl_filtered$WB_lb)[1],"_",site, "_abundance.pdf"), plot = p, width = 8, height = 6)
+  ggplot2::ggsave(filename = paste0("figs/",
+                                    "zoopSize_monthly_",
+                                    na.omit(dfl_filtered$WB_lb)[1],"_",
+                                    site, "_abundance_",format(min(dfl$sample.date), "%y%m%d"),"_",
+                                    format(max(dfl$sample.date), "%y%m%d"),".pdf"),
+                  plot = p, width = 8, height = 6)
 })
 toc(log = TRUE)
 
@@ -216,8 +224,12 @@ purrr::walk(unique_sites, function(site) {
           legend.position = "none")
   
   # Export the plot to a PDF file using ggplot2::ggsave()
-  ggplot2::ggsave(filename = paste0("figs/2410_zoopSize/",
-                                    "zoopSize_seasoanlly_", na.omit(dfl_filtered$WB_lb)[1],"_",site, "_abundance.pdf"),
+  ggplot2::ggsave(filename = paste0("figs/",
+                                    "zoopSize_seasoanlly_",
+                                    na.omit(dfl_filtered$WB_lb)[1],"_",
+                                    site, "_abundance_",
+                                    format(min(dfl$sample.date), "%y%m%d"),"_",
+                                    format(max(dfl$sample.date), "%y%m%d"),".pdf"),
                   plot = p, width = 8, height = 6)
 })
 toc(log = TRUE)

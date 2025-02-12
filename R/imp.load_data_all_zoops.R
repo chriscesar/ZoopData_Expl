@@ -6,6 +6,11 @@ ld_pkgs <- c("tidyverse","seas","tictoc")
 vapply(ld_pkgs, library, logical(1L),
        character.only = TRUE, logical.return = TRUE);rm(ld_pkgs)
 
+## set universals ####
+tic("Set universals");print("set universals")
+source("R/set_meta.R")
+toc(log=TRUE)
+
 tic("Load lifeforms data, format data and correct names")
 print("Load lifeforms data and correct taxon names")
 

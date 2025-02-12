@@ -129,7 +129,10 @@ xxprev %>%
                       "Samples gathered between ",format(min(dfw$sample.date), "%d/%m/%Y")," & ",format(max(dfw$sample.date), "%d/%m/%Y")),
        y = "Count",
        x = "Prevalence")
-ggsave(filename = "figs/2412dd/zoopPrevalence_by_Region.pdf",width = 12,height = 7,units = "in")
+ggsave(filename = paste0("figs/zoopPrevalence_by_Region_",
+                         format(min(dfw$sample.date), "%y%m%d"),"_",
+                         format(max(dfw$sample.date), "%y%m%d"),".pdf"),
+       width = 12,height = 7,units = "in")
 # ggsave(filename = "figs/zoopPrevalence_by_WB.pdf",width = 12,height = 10,units = "in")
 
 ### quick species accumulation curve ####
@@ -162,7 +165,8 @@ df_tx_w %>%
   dplyr::select(-last_col()) %>% ###remove taxon richness
   #dplyr::select(where(~sum(. !=0)>1)) %>%  ### [OPTIONAL!!!] remove singleton taxa
   dplyr::select_if(~ !is.numeric(.) || sum(.) !=0) %>% ### drop cols summing to 0
-  filter(rowSums(across(where(is.numeric)))!=0) -> dftmp ###remove 'empty' rows
+  filter(rowSums(across(where(is.numeric)))!=0) %>% 
+  dplyr::select(.,-S) -> dftmp ###remove 'empty' rows
 
 ### NMDS ####
 # ptm <- Sys.time()###
@@ -259,7 +263,11 @@ geom_segment(data=scores_site,aes(x=NMDS1,y=NMDS2,
   theme(legend.title = element_blank(),
         axis.title = element_text(face="bold"));pl
 
-ggsave(filename = "figs/nmds_by_Region.pdf",width = 12,height = 12,units = "in",
+ggsave(filename = paste0("figs/nmds_by_Region_",
+                         format(min(dfw$sample.date), "%y%m%d"),"_",
+                         format(max(dfw$sample.date), "%y%m%d"),
+                         ".pdf"),
+       width = 12,height = 12,units = "in",
        plot=pl);rm(pl)
 
 # pl <- ggplot(data=scores_site,aes(x=NMDS1,y=NMDS2,
@@ -389,7 +397,11 @@ pl_S <- df_tx_w[df_tx_w$S>0,] %>%
   ylab("Taxon richness")+
   theme(axis.text.x = element_text(angle=270,hjust=0,vjust=.5));pl_S
 
-ggsave(filename = "figs/2412dd/taxRich.pdf",width = 16,height = 12,units = "in",
+ggsave(filename = paste0("figs/taxRich_",
+                         format(min(dfw$sample.date), "%y%m%d"),"_",
+                         format(max(dfw$sample.date), "%y%m%d"),
+                         ".pdf")
+       ,width = 16,height = 12,units = "in",
        plot=pl_S)
 rm(pl_S,meanS,sdS,sdSmax,sdSmin)
 
@@ -410,7 +422,11 @@ pl_ts_S <- df_tx_w[df_tx_w$S>0,] %>%
        x="Date")+
   facet_wrap(.~WB_lb);pl_ts_S
 
-ggsave(filename = "figs/2412dd/taxRichTSbyWB.pdf",width = 12,height = 12,units = "in",
+ggsave(filename = paste0("figs/taxRichTSbyWB_",
+                         format(min(dfw$sample.date), "%y%m%d"),"_",
+                         format(max(dfw$sample.date), "%y%m%d"),
+                         ".pdf"),
+       width = 12,height = 12,units = "in",
        plot=pl_ts_S)
 rm(pl_ts_S)
 
@@ -438,7 +454,10 @@ pl_N <- df_tx_w[df_tx_w$N>0,] %>%
   ylab("log(abundance)")+
   theme(axis.text.x = element_text(angle=270,hjust=0,vjust=.5)); pl_N
 
-ggsave(filename = "figs/taxAbund.pdf",width = 12,height = 12,units = "in",
+ggsave(filename = paste0("figs/taxAbund_",
+                         format(min(dfw$sample.date), "%y%m%d"),"_",
+                         format(max(dfw$sample.date), "%y%m%d"),".pdf"),
+       width = 12,height = 12,units = "in",
        plot=pl_N)
 
 rm(pl_N, meanN, logmeanN, logsdNmin, sdN)
@@ -458,8 +477,10 @@ pl_ts_N <- df_tx_w[df_tx_w$N>0,] %>%
        x="Date")+
   facet_wrap(.~WB_lb);pl_ts_N
 
-ggsave(filename = "figs/taxAbundTSbyWB.pdf",width = 12,height = 12,units = "in",
-       plot=pl_ts_N)
+ggsave(filename = paste0("figs/taxAbundTSbyWB_",
+                         format(min(dfw$sample.date), "%y%m%d"),"_",
+                         format(max(dfw$sample.date), "%y%m%d"),".pdf"),
+                         width = 12,height = 12,units = "in",plot=pl_ts_N)
 
 #### plot by YY_MM ####
 # Create an empty list to store individual plots
@@ -507,7 +528,7 @@ for (level in levels(scores_site$yymm)) {
 }
 
 # Combine all the individual plots into a single plot
-(final_plot <- wrap_plots(plotlist = plot_list, ncol = 4)+  # Adjust the number of columns as needed
+(final_plot <- wrap_plots(plotlist = plot_list, ncol = 6)+  # Adjust the number of columns as needed
     plot_annotation(title="Non-metric Multidimensional Scaling Plots by sampling Year-Month",
                     subtitle = "Based on zooplankton taxon abundance data",
                     caption = paste0("Stress = ",round(ord$stress,3),
@@ -516,7 +537,9 @@ for (level in levels(scores_site$yymm)) {
                                      format(max(dfw$sample.date),"%d/%m/%Y")),
                     theme = theme(plot.title = element_text(size = 16, face="bold"))))
 
-ggsave(filename = "figs/nmds_by_Region&YYMM_Taxa.pdf",width = 12,height = 12,units = "in",
+ggsave(filename = paste0("figs/nmds_by_Region&YYMM_Taxa_",
+                         format(min(dfw$sample.date), "%y%m%d"),"_",
+                         format(max(dfw$sample.date), "%y%m%d"),".pdf"),width = 12,height = 12,units = "in",
        plot=final_plot);rm(final_plot,plot_list)
 
 #### plot by season ####
@@ -561,7 +584,9 @@ for (level in levels(scores_site$DJF)) {
                                      "\nDJF = December-February; MAM = March-May,\nJJA=June-August,SON=September-November"),
                     theme = theme(plot.title = element_text(size = 16, face="bold"))))
 
-ggsave(filename = "figs/nmds_by_Region&season_Taxa.pdf",width = 12,height = 12,units = "in",
+ggsave(filename = paste0("figs/nmds_by_Region&season_Taxa_",
+                         format(min(dfw$sample.date),"%y%m%d"),"_",
+                         format(max(dfw$sample.date),"%y%m%d"),".pdf"),width = 12,height = 12,units = "in",
        plot=final_plot);rm(final_plot, plot_list)
 
 ### STATS ###############
@@ -570,10 +595,15 @@ ggsave(filename = "figs/nmds_by_Region&season_Taxa.pdf",width = 12,height = 12,u
 #### unconstrained ordination ####
 mv_dftmp <- mvabund::mvabund(dftmp)#create mvabund object
 
-# png(file = "figs/zoopMeanVar.png",
-#     width=12*ppi, height=6*ppi, res=ppi)
-pdf(file = "figs/zoopMeanVar.pdf",
-    width=12, height=6)
+png(file = paste0("figs/zoopMeanVar_",
+                  format(min(dfw$sample.date),"%y%m%d"),"_",
+                  format(max(dfw$sample.date),"%y%m%d"),".png"),
+    width=12*ppi, height=6*ppi, res=ppi)
+# pdf(file = paste0("figs/zoopMeanVar_",
+#                   format(min(dfw$sample.date),"%y%m%d"),"_",
+#                   format(max(dfw$sample.date),"%y%m%d"),
+#                   ".pdf"),
+#     width=12, height=6)
 mvpl <- mvabund::meanvar.plot(mv_dftmp,# mean-variance plot
                       # main = "Mean-variance relationship of zooplankton taxon abundances",
                       # # sub="Many multivariate analyses assume no mean-variance relationship",
@@ -638,7 +668,7 @@ dev.off()
 # dfsub <- dfw[dfw$S>0,] ### removes 'empty' samples
 
 #### check distribution ####
-plot(performance::check_distribution(df_tx_w$S)) ### beta-binomial
+performance::check_distribution(df_tx_w$S) ### beta-binomial
 
 ### taxon richness ####
 summary(m_S_0 <- lm(S~WB_lb, data=df_tx_w));visreg::visreg(m_S_0)
@@ -657,14 +687,14 @@ performance::check_posterior_predictions(m_S_nb)
 AIC(m_S_0,m_S_pois,m_S_nb) ## LM > NBGLM > Poisson
 
 #################################################################
-performance::check_model(m_S_0)## 'best' model
-# performance::check_model(m_S_nb)
+# performance::check_model(m_S_0)## 'best' model
+performance::check_model(m_S_nb)
 # performance::check_model(m_S_pois)
 
 ### taxon abundance ####
 #### check distribution ####
 # plot(performance::check_distribution(dfsub$N)) ### 
-plot(performance::check_distribution(log(df_tx_w$N))) # tweedie distribution 
+plot(performance::check_distribution(log(df_tx_w$N))) # weibull distribution 
 plot(performance::check_distribution(df_tx_w$N)) # lognormal
 
 ### run models ####
@@ -781,8 +811,12 @@ m_lvm_0 <- gllvm(y=df_tx_w_trm,
                  family="tweedie",
                  studyDesign = sDsn, row.eff = ~(1|Region)
                  )
-saveRDS(m_lvm_0, file="figs/gllvm_uncon_tweed.Rdat") #12.647 mins
-Sys.time() - ptm;rm(ptm);toc()
+saveRDS(m_lvm_0, file=paste0("figs/gllvm_uncon_tweed_",
+                             format(min(dfw$sample.date),"%y%m%d"),"_",
+                             format(max(dfw$sample.date),"%y%m%d"),
+                             ".Rdat")) #12.647 mins
+toc(log=TRUE)
+
 m_lvm_0 <- readRDS("figs/gllvm_uncon_tweed.Rdat")
 #####
 #### gaussian distribution ####
