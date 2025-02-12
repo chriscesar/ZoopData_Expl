@@ -14,27 +14,27 @@ source("R/set_meta.R")
 toc(log=TRUE)
 
 ### create subdirectory for figures
-tic("Create subdirectory for figures")
-check_and_create_dir <- function(parent_dir, sub_dir) {
-  # Construct the full path to the sub-directory
-  full_path <- file.path(parent_dir, sub_dir)
-  
-  # Check if the sub-directory exists
-  if (dir.exists(full_path)) {
-    return("Directory already exists")
-  } else {
-    # Create the sub-directory
-    dir.create(full_path)
-    return(paste("Directory", sub_dir, "created in", parent_dir))
-  }
-}
+# tic("Create subdirectory for figures")
+# check_and_create_dir <- function(parent_dir, sub_dir) {
+#   # Construct the full path to the sub-directory
+#   full_path <- file.path(parent_dir, sub_dir)
+#   
+#   # Check if the sub-directory exists
+#   if (dir.exists(full_path)) {
+#     return("Directory already exists")
+#   } else {
+#     # Create the sub-directory
+#     dir.create(full_path)
+#     return(paste("Directory", sub_dir, "created in", parent_dir))
+#   }
+# }
 
-parent_directory <- "figs"
-sub_directory <- "2412dd_timeseries"
-message <- check_and_create_dir(parent_directory, sub_directory)
-print(message)
-rm(parent_directory,sub_directory,message,check_and_create_dir)
-toc(log=TRUE)
+# parent_directory <- "figs"
+# sub_directory <- "2412dd_timeseries"
+# message <- check_and_create_dir(parent_directory, sub_directory)
+# print(message)
+# rm(parent_directory,sub_directory,message,check_and_create_dir)
+# toc(log=TRUE)
 
 ## load data ####
 
@@ -118,12 +118,17 @@ dfw_lf %>%
   labs(x="Day of year",
        y="Relative abundance",
        title="Relative abundance of copepod size classes recorded in EA water bodies",
-       caption="Relative abundance of a given size class is the value recorded in a sample divided by the maximum recorded value for that size class across all samples")+
+       caption=paste0("Relative abundance of a given size class is the value recorded in a sample divided by the maximum recorded value for that size class across all samples\n",
+                      "Samples gathered between ",format(min(dfw_lf$sample.date),
+                                                         "%d/%m/%Y")," & ", format(max(dfw_lf$sample.date), "%d/%m/%Y")))+
   theme(legend.title = element_blank(),
         strip.text = element_text(face=2),
         axis.title = element_text(face=2)) -> pl
 
-ggsave(plot = pl, filename = "figs/2412dd_timeseries/copSizesTSByWB.pdf",
+ggsave(plot = pl,
+       filename = paste0("figs/copSizesTSByWB_",
+                         format(min(dfw_lf$sample.date), "%y%m%d"),"_",
+                         format(max(dfw_lf$sample.date), "%y%m%d"),".pdf"),
        width = 12,height = 8,units = "in")
 rm(pl)
 
@@ -149,13 +154,15 @@ dfw_lf %>%
        y="Relative abundance",
        title="Modelled relative abundances of copepod size classes recorded in EA water bodies",
        subtitle="Curves represent loess smooths with span = 0.9",
-       caption="Relative abundance of a given size class is the value recorded in a sample
-       divided by the maximum recorded value for that size class across all samples")+
+       caption=paste0("Relative abundance of a given size class is the value recorded in a sample divided by the maximum recorded value for that size class across all samples\n",
+                      "Samples gathered between ",format(min(dfw_lf$sample.date),
+                                                         "%d/%m/%Y")," & ", format(max(dfw_lf$sample.date), "%d/%m/%Y")))+
   theme(legend.title = element_blank(),
         axis.title.y= element_text(face=2),
         strip.text = element_text(face=2)) -> pl
 
-ggsave(plot = pl, filename = "figs/2412dd_timeseries/copSizeSmoothTSByRgn.pdf",
+ggsave(plot = pl, filename = paste0("figs/copSizeSmoothTSByRgn_",format(min(dfw_lf$sample.date), "%y%m%d"),"_",
+                                    format(max(dfw_lf$sample.date), "%y%m%d"),".pdf"),
        width = 12,height = 8,units = "in")
 rm(pl)
 
@@ -172,16 +179,23 @@ dfw_lf %>%
   scale_shape_manual(values=c(21:24))+
   geom_point(aes(shape=DJF, fill=DJF), size=2)+
   facet_wrap(.~WB_lb, scales = "free_y")+
+  scale_x_date(date_breaks = "6 months", date_labels = "%m_%y") +
   labs(title = "Temporal trends in small copepod abundances in EA water bodies",
        y = "log(Abundance, n+1)",#bquote("Abudance (m"^3~")"),
        x=NULL,
-       caption = "Colour and shape of points indicates sampling season:
-       Winter (grey circle), Spring (green square), Summer (Orange diamond), Autumn (brown triangle)") +
+       caption = paste0("Colour and shape of points indicates sampling season:
+       Winter (grey circle), Spring (green square), Summer (Orange diamond), Autumn (brown triangle)\n",
+                        "Samples gathered between ",format(min(dfw_lf$sample.date),
+                                                           "%d/%m/%Y")," & ", format(max(dfw_lf$sample.date), "%d/%m/%Y")
+                        )) +
   theme(legend.position = "none",
         axis.title.y = element_text(face=2),
-        strip.text = element_text(face=2)) -> pl
+        strip.text = element_text(face=2),
+        axis.text.x = element_text(angle=45,vjust = 1,hjust=1)) -> pl
 
-ggsave(plot = pl, filename = "figs/2412dd_timeseries/smCopTSByWBLogN.pdf",
+ggsave(plot = pl, filename = paste0("figs/smCopTSByWBLogN_",format(min(dfw_lf$sample.date), "%y%m%d"),"_",
+                                    format(max(dfw_lf$sample.date), "%y%m%d"),
+                                    ".pdf"),
        width = 12,height = 8,units = "in")
 rm(pl)
 
@@ -201,14 +215,18 @@ dfw_lf %>%
   labs(title = "Temporal trends in small copepod abundances in EA Regions",
        y = expression(bold("Abudance (m"^-3~")")),
        x=NULL,
-       caption = "Colour and shape of points indicates sampling season:
-       Winter (grey circle), Spring (green square), Summer (Orange diamond), Autumn (brown triangle).
-       Line represents loess smoother (span = 0.9)") +
+       caption = paste0("Line represents loess smoother (span = 0.9).  Colour and shape of points indicates sampling season:\n",
+       "Winter (grey circle), Spring (green square), Summer (Orange diamond), Autumn (brown triangle)\n.",
+       "Samples gathered between ",format(min(dfw_lf$sample.date),
+                                          "%d/%m/%Y")," & ", format(max(dfw_lf$sample.date), "%d/%m/%Y")
+       )) +
   theme(legend.position = "none",
         axis.title.y = element_text(face=2),
         strip.text = element_text(face=2)) -> pl
 
-ggsave(plot = pl, filename = "figs/2412dd_timeseries/smCopTSByRgn.pdf",
+ggsave(plot = pl, filename = paste0("figs/smCopTSByRgn_",format(min(dfw_lf$sample.date), "%y%m%d"),"_",
+                                    format(max(dfw_lf$sample.date), "%y%m%d"),
+                                    ".pdf"),
        width = 12,height = 8,units = "in")
 rm(pl)
 
@@ -225,16 +243,22 @@ dfw_lf %>%
   geom_point(aes(shape=DJF, fill=DJF), size=2)+
   ylim(0,NA)+
   facet_wrap(.~WB_lb, scales = "free_y")+
+  scale_x_date(date_breaks = "6 months", date_labels = "%m_%y") +
   labs(title = "Temporal trends in fish abundances in EA water bodies",
        y = expression(bold("Abudance (m"^3~")")),
        x=NULL,
-       caption = "Colour and shape of points indicates sampling season:
-       Winter (grey circle), Spring (green square), Summer (Orange diamond), Autumn (brown triangle)") +
+       caption = paste0("Colour and shape of points indicates sampling season:
+       Winter (grey circle), Spring (green square), Summer (Orange diamond), Autumn (brown triangle)\n",
+       "Samples gathered between ",format(min(dfw_lf$sample.date),
+                                          "%d/%m/%Y")," & ", format(max(dfw_lf$sample.date), "%d/%m/%Y"))) +
   theme(legend.position = "none",
         axis.title.y = element_text(face=2),
-        strip.text = element_text(face=2)) -> pl
+        strip.text = element_text(face=2),
+        axis.text.x = element_text(angle=45,vjust = 1,hjust=1)) -> pl
 
-ggsave(plot = pl, filename = "figs/2412dd_timeseries/fishTSByWB.pdf",
+ggsave(plot = pl, filename = paste0("figs/fishTSByWB_",
+                                    format(min(dfw_lf$sample.date), "%y%m%d"),"_",
+                                    format(max(dfw_lf$sample.date), "%y%m%d"),".pdf"),
        width = 12,height = 8,units = "in")
 rm(pl)
 
@@ -259,7 +283,9 @@ dfw_lf %>%
         axis.title.y = element_text(face=2),
         strip.text = element_text(face=2)) -> pl
 
-ggsave(plot = pl, filename = "figs/2412dd_timeseries/fishTSByRgn.pdf",
+ggsave(plot = pl, filename = paste0("figs/fishTSByRgn_",
+                                    format(min(dfw_lf$sample.date), "%y%m%d"),"_",
+                                    format(max(dfw_lf$sample.date), "%y%m%d"),".pdf"),
        width = 12,height = 8,units = "in")
 rm(pl)
 
@@ -287,7 +313,9 @@ dfw_lf %>%
         axis.title = element_text(face=2),
         strip.text = element_text(face=2)) -> pl
 
-ggsave(plot = pl, filename = "figs/2412dd_timeseries/copepodsFishByWB_allSmooths.pdf",
+ggsave(plot = pl, filename = paste0("figs/copepodsFishByWB_allSmooths_",
+                                    format(min(dfw_lf$sample.date), "%y%m%d"),"_",
+                                    format(max(dfw_lf$sample.date), "%y%m%d"),".pdf"),
        width = 12,height = 8,units = "in")
 rm(pl)
 
@@ -314,7 +342,10 @@ dfw_lf %>%
   theme(legend.position = "none",
         strip.text = element_text(face=2)) -> pl
 
-ggsave(plot = pl, filename = "figs/2407dd_timeseries/copepodsChlByWB_lm.pdf",
+ggsave(plot = pl, filename = paste0("figs/copepodsChlByWB_lm_",
+                                    format(min(dfw_lf$sample.date), "%y%m%d"),"_",
+                                    format(max(dfw_lf$sample.date), "%y%m%d"),
+                                    ".pdf"),
        width = 12,height = 8,units = "in")
 rm(pl)
 #####
@@ -376,7 +407,9 @@ df_lf_w_C %>%
         axis.title = element_text(face=2),
         strip.text = element_text(face=2)) -> pl
 
-ggsave(plot = pl, filename = "figs/2412dd_timeseries/logtotCByDateByWB_Fixed_Y.pdf",
+ggsave(plot = pl, filename = paste0("figs/logtotCByDateByWB_Fixed_Y_",
+                                    format(min(dfw_lf$sample.date), "%y%m%d"),"_",
+                                    format(max(dfw_lf$sample.date), "%y%m%d"),".pdf"),
        width = 16,height = 12,units = "in")
 rm(pl)
 
@@ -402,7 +435,10 @@ df_lf_w_C %>%
         axis.title.y = element_text(face=2),
         axis.text.x = element_text(face=2)) -> pl
 
-ggsave(plot = pl, filename = "figs/2412dd_timeseries/carbonByWB.pdf",
+ggsave(plot = pl, filename = paste0("figs/carbonByWB_",
+                                    format(min(dfw_lf$sample.date), "%y%m%d"),"_",
+                                    format(max(dfw_lf$sample.date), "%y%m%d"),
+                                    ".pdf"),
        width = 20,height = 12,units = "in")
 
 df_lf_w_C %>%
@@ -494,7 +530,10 @@ df_lf_w_C_zooType %>%
         axis.text.x = element_text(face=2),
         axis.text.y = element_text(face=2)) -> pl
 
-ggsave(plot = pl, filename = "figs/2412dd_timeseries/carbonByZooTypeRegion.pdf",
+ggsave(plot = pl, filename = paste0("figs/carbonByZooTypeRegion_",
+                                    format(min(dfw_lf$sample.date), "%y%m%d"),"_",
+                                    format(max(dfw_lf$sample.date), "%y%m%d"),
+                                    ".pdf"),
        width = 20,height = 12,units = "in")
 rm(pl)
 
@@ -531,7 +570,10 @@ df_lf_l %>% #names(.)
         axis.text.y = element_text(face=2,
                                    size = 7)) -> pl
 
-ggsave(plot = pl, filename = "figs/2412dd_timeseries/carbonByZooTypeWB_v2.pdf",
+ggsave(plot = pl, filename = paste0("figs/carbonByZooTypeWB_v2_",
+                                    format(min(dfw_lf$sample.date), "%y%m%d"),"_",
+                                    format(max(dfw_lf$sample.date), "%y%m%d"),
+                                    ".pdf"),
        width = 20,height = 12,units = "in")
 rm(pl)
 
@@ -560,7 +602,10 @@ df_lf_w_C %>%
   theme(legend.title = element_blank(),
         axis.title = element_text(face=2)) -> pl
 
-ggsave(plot = pl, filename = "figs/2412dd_timeseries/carbonTot_Soton.pdf",
+ggsave(plot = pl, filename = paste0("figs/carbonTot_Soton_",
+                                    format(min(dfw_lf$sample.date), "%y%m%d"),"_",
+                                    format(max(dfw_lf$sample.date), "%y%m%d"),
+                                    ".pdf"),
        width = 20,height = 12,units = "in");rm(pl)
 
 ## by taxon
@@ -597,7 +642,10 @@ df_lf_l %>%
         axis.title = element_text(face=2))+
   coord_flip() -> pl
 
-ggsave(plot = pl, filename = "figs/2412dd_timeseries/log_CarbonTot_Soton.pdf",
+ggsave(plot = pl, filename = paste0("figs/log_CarbonTot_Soton_",
+                                    format(min(dfw_lf$sample.date), "%y%m%d"),"_",
+                                    format(max(dfw_lf$sample.date), "%y%m%d"),
+                                    ".pdf"),
        width = 20,height = 12,units = "in");rm(pl)
 
 # how many taxa do we not have C data for? ####
@@ -623,7 +671,9 @@ left_join(df_tx_l, df_carb_summary, by="Aphia.ID") %>%
     subtitle = "Abundances split between taxa for which we do (Y) and do not (N) have carbon content estimates",
     # y="Total zooplankton abundance (individuals/m3)",
     y="Log (n+1) zooplankton abundance",
-    x=NULL
+    x=NULL,
+    caption = paste0("Samples gathered between ",format(min(dfw_lf$sample.date), "%d/%m/%Y"),
+                      " & ",format(max(dfw_lf$sample.date), "%d/%m/%Y"),".")
     )+
   facet_wrap(.~WB_lb, scales = "free_y")+
   theme(
@@ -633,7 +683,10 @@ left_join(df_tx_l, df_carb_summary, by="Aphia.ID") %>%
     legend.position = "none"
   ) -> pl
   
-ggsave(plot = pl, filename = "figs/2412dd_timeseries/LogAbundTot_Missing_C.pdf",
+ggsave(plot = pl, filename = paste0("figs/LogAbundTot_Missing_C_",
+                                    format(min(dfw_lf$sample.date), "%y%m%d"),"_",
+                                    format(max(dfw_lf$sample.date), "%y%m%d"),
+                                    ".pdf"),
        width = 20,height = 12,units = "in");rm(pl)
 
 # Prevalence of missing Carbon taxa ####
@@ -666,7 +719,9 @@ left_join(df_tx_l, df_carb_summary, by="Aphia.ID") %>%
     axis.text.x = element_text(face=2),
     strip.text = element_text(face=2)
   ) -> pl
-ggsave(plot = pl, filename = "figs/2412dd_timeseries/OccurencesMissing_C.pdf",
+ggsave(plot = pl, filename = paste0("figs/OccurencesMissing_C_",
+                                    format(min(dfw_lf$sample.date), "%y%m%d"),"_",
+                                    format(max(dfw_lf$sample.date), "%y%m%d"),".pdf"),
        width = 20,height = 12,units = "in");rm(pl)
 
 df_tx_l %>% 
