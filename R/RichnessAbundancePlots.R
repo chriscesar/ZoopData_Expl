@@ -56,7 +56,10 @@ dfw %>%
         axis.title.x = element_blank(),
         axis.title.y = element_text(face = 2),
         axis.text = element_text(face = 2)) -> pl
-pdf(file = "figs/2412dd/TaxRich.pdf",width=18,height=10) #scaled
+pdf(file = paste0("figs/TaxRich_",
+                  format(min(dfl$sample.date), "%y%m%d"),"_",
+                  format(max(dfl$sample.date), "%y%m%d"),".pdf"),
+    width=18,height=10) #scaled
 print(pl)
 dev.off();rm(pl)
 
@@ -77,7 +80,10 @@ dfw %>%
         axis.title.x = element_blank(),
         axis.title.y = element_text(face = 2),
         axis.text = element_text(face = 2)) -> pl
-pdf(file = "figs/2412dd/TaxAbund.pdf",width=18,height=10) #scaled
+pdf(file = paste0("figs/TaxAbund_",
+                  format(min(dfl$sample.date), "%y%m%d"),"_",
+                  format(max(dfl$sample.date), "%y%m%d"), ".pdf"),
+    width=18,height=10) #scaled
 print(pl)
 dev.off();rm(pl)
 
@@ -93,7 +99,11 @@ dfw %>% mutate(year = lubridate::year(sample.date)) %>%
     y="Taxon richness",
     caption=paste0("Samples gathered between ",format(min(dfw$sample.date), "%d/%m/%Y")," & ",format(max(dfw$sample.date), "%d/%m/%Y")))+
 theme(axis.title.x = element_blank()) -> pl
-pdf(file = "figs/2501dd/TaxRich_ts.pdf",width=18,height=10) #scaled
+pdf(file = paste0("figs/TaxRich_ts_",
+                  format(min(dfl$sample.date), "%y%m%d"),"_",
+                  format(max(dfl$sample.date), "%y%m%d"),
+                  ".pdf"),
+    width=18,height=10) #scaled
 print(pl)
 dev.off();rm(pl)
 
@@ -109,7 +119,10 @@ dfw %>% mutate(year = lubridate::year(sample.date)) %>%
     caption=paste0("Samples gathered between ",format(min(dfw$sample.date), "%d/%m/%Y")," & ",format(max(dfw$sample.date), "%d/%m/%Y")))+
   scale_x_continuous(breaks = scales::breaks_pretty(n = 3))+
   theme(axis.title.x = element_blank()) -> pl
-pdf(file = "figs/2501dd/TaxRich_ts_box.pdf",width=18,height=10) #scaled
+pdf(file = paste0("figs/TaxRich_ts_box_",
+                  format(min(dfl$sample.date), "%y%m%d"),"_",
+                  format(max(dfl$sample.date), "%y%m%d"),
+                  ".pdf"),width=18,height=10) #scaled
 print(pl)
 dev.off();rm(pl)
 
@@ -124,7 +137,10 @@ dfw %>% mutate(year = lubridate::year(sample.date)) %>%
     y="Log taxon abundance",
     caption=paste0("Samples gathered between ",format(min(dfw$sample.date), "%d/%m/%Y")," & ",format(max(dfw$sample.date), "%d/%m/%Y")))+
   theme(axis.title.x = element_blank()) -> pl
-pdf(file = "figs/2501dd/TaxAbund_ts.pdf",width=18,height=10) #scaled
+pdf(file = paste0("figs/TaxAbund_ts_",
+                  format(min(dfl$sample.date), "%y%m%d"),"_",
+                  format(max(dfl$sample.date), "%y%m%d"),
+                  ".pdf"),width=18,height=10) #scaled
 print(pl)
 dev.off();rm(pl)
 
@@ -139,10 +155,16 @@ dfw %>% mutate(year = lubridate::year(sample.date)) %>%
     caption=paste0("Samples gathered between ",format(min(dfw$sample.date), "%d/%m/%Y")," & ",format(max(dfw$sample.date), "%d/%m/%Y")))+
   scale_x_continuous(breaks = scales::breaks_pretty(n = 3))+
   theme(axis.title.x = element_blank()) -> pl
-pdf(file = "figs/2501dd/TaxAbund_ts_box.pdf",width=18,height=10) #scaled
+pdf(file = paste0("figs/TaxAbund_ts_box_",
+    format(min(dfl$sample.date), "%y%m%d"),"_",
+    format(max(dfl$sample.date), "%y%m%d"),".pdf"),
+    width=18,height=10) #scaled
 print(pl)
 dev.off();rm(pl)
 
 
-
-
+## tidy
+rm(list=ls(pattern = "^df"))
+rm(list=ls(pattern = "^cb"))
+rm(list=ls(pattern = "^mn"))
+rm(datfol,N,nit,perms,ppi,S)
