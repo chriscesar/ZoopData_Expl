@@ -94,17 +94,22 @@ tic();set.seed(271);df_LF0 %>%
   ggplot(.,aes(label=LF02, size=prop))+
   # geom_text_wordcloud()+
   geom_text_wordcloud_area()+
-  scale_size_area(max_size = 150,
+  scale_size_area(max_size = 85,#originally 150
                   trans = power_trans(1/.7)) + #trans = power_trans(1/.7) "better fit human area perception"
   # facet_wrap(.~Region, scales = "free")+
   # scale_size_area(max_size = 20) +
   theme_minimal()+
+  labs(caption=paste0("Data gathered between ",format(min(as.Date(df_tx$sample.date,origin = "1899-12-30")), "%y%m%d")," & ",format(max(as.Date(df_tx$sample.date,origin = "1899-12-30")), "%y%m%d")))+
   theme(strip.text = element_text(face="bold",
                                   size=14,
                                   colour="red")) -> pl_LF_wc
 
-png(file = "figs/wordcloud_LF_v3.5.png",
-    width=16*ppi, height=10*ppi, res=ppi)
+png(file = paste0("figs/wordcloud_LF_",
+                  format(min(as.Date(df_tx$sample.date,origin = "1899-12-30")), "%y%m%d"),
+                  "_",
+                  format(max(as.Date(df_tx$sample.date,origin = "1899-12-30")), "%y%m%d"),
+                  ".png"),
+    width=14*ppi, height=8*ppi, res=ppi)
 print(pl_LF_wc)
 dev.off();toc()
 
@@ -121,16 +126,21 @@ tic();set.seed(21);df_tx %>%
   # scale_size_area(max_size = 50, trans = power_trans(1/.7)) +
   # facet_wrap(.~Region, scales = "free")+
   # scale_size_area(max_size = 20) +
-  scale_size_area(max_size = 70,
+  scale_size_area(max_size = 40,
                   trans = power_trans(1/.7)) + #trans = power_trans(1/.7) "better fit human area perception"
   theme_minimal()+
+  labs(caption=paste0("Data gathered between ",format(min(as.Date(df_tx$sample.date,origin = "1899-12-30")), "%y%m%d")," & ",format(max(as.Date(df_tx$sample.date,origin = "1899-12-30")), "%y%m%d")))+
   theme(strip.text = element_text(face="bold",
                                   size=14,
                                   colour="red")) -> pl_tx_wc
 
-png(file = "figs/wordcloud_tx_v3.5.png",
-    width=16*ppi,
-    height=10*ppi,
+png(file = paste0("figs/wordcloud_tx_",
+                  format(min(as.Date(df_tx$sample.date,origin = "1899-12-30")), "%y%m%d"),
+                  "_",
+                  format(max(as.Date(df_tx$sample.date,origin = "1899-12-30")), "%y%m%d"),
+                  ".png"),
+    width=14*ppi,
+    height=8*ppi,
     res=ppi)
 print(pl_tx_wc)
 dev.off();toc()
