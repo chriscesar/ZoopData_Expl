@@ -104,28 +104,7 @@ WB_lb2 <- ifelse(LFWB == "Solent","Solent",
                                                                                                                                         NA)))))))))))))
                                       )))))
 WB_lb <- paste0(WB_lb1,"_",WB_lb2)
-# df_tx$WB_lb <- WB_lb
-# df_tx %>% relocate(WB_lb,.after = WB) -> df_tx
-# df_tx$WB_lb <- factor(df_tx$WB_lb, levels = c(
-#   "NE_NrthmbNth",
-#   "NE_FarneIs",
-#   "NE_Tees",
-#   "Ang_YorksSth",
-#   "Ang_Lincs",
-#   "Ang_LncsOffsh",
-#   "Ang_WashOtr",
-#   "Ang_BlckwOtr",
-#   "Thm_ThmLwr",
-#   "Sth_KentSth",
-#   "Sth_IoWE",
-#   "Sth_Solent",
-#   "Sth_SotonWtr",
-#   "SW_CornwNth",
-#   "SW_BrnstpB",
-#   "SW_BristInSth",
-#   "NW_MerseyMth",
-#   "NW_SolwOtr"
-# ))
+
 dfl$WB_lb <- WB_lb
 dfl %>% relocate(WB_lb,.after = WB) -> dfl
 dfl$WB_lb <- factor(dfl$WB_lb, levels = c(
@@ -156,7 +135,6 @@ toc(log=TRUE)
 tic("Carbon content data")
 ## this version has been tweaked.  See 'changeLog' worksheet in .xlsx for info
 df_carb <- readxl::read_xlsx(
-  #paste0(datfol,"Lifeforms/ZOOPLANKTON carbon mass data_v5Aug 2024_AMENDED_USE.xlsx"),
   paste0(datfol,"Lifeforms/ZOOPLANKTON carbon mass data_v7Oct 2024_AMENDED_USE.xlsx"),
   sheet = "FINAL SHEET TO USE") %>% ## load data
   dplyr::select(.,c(2:6)) %>% ## keep only taxon info, carbon and length info
