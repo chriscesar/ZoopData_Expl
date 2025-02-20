@@ -47,7 +47,7 @@ dfl %>% #names()
           axis.title = element_text(face=2),
           strip.text = element_text(face=2)) -> pl
 
-ggsave(plot = pl, filename = "figs/2412dd/logtotCByDateByWB_Fixed_Y_median.pdf",
+ggsave(plot = pl, filename = "figs/2412dd/Carb_logtotCByDateByWB_Fixed_Y_median.pdf",
        width = 12,height = 8,units = "in"); rm(pl)
 
 ## Means ####
@@ -78,7 +78,7 @@ dfl %>% #names()
         axis.title = element_text(face=2),
         strip.text = element_text(face=2)) -> pl
 
-ggsave(plot = pl, filename = "figs/2412dd/logtotCByDateByWB_Fixed_Y_mean.pdf",
+ggsave(plot = pl, filename = "figs/2412dd/Carb_logtotCByDateByWB_Fixed_Y_mean.pdf",
        width = 12,height = 8,units = "in"); rm(pl)
 
 # Carbon by WB ####
@@ -111,7 +111,7 @@ dfl %>% #names()
         axis.title.x = element_blank(),
         axis.title.y = element_text(face=2),
         axis.text.x = element_text(face=2)) -> pl
-ggsave(plot = pl, filename = "figs/2412dd/carbonByWB_median.pdf",
+ggsave(plot = pl, filename = "figs/2412dd/Carb_carbonByWB_median.pdf",
        width = 20,height = 12,units = "in");rm(pl)
 
 ## Means ####
@@ -143,7 +143,7 @@ dfl %>% #names()
         axis.title.x = element_blank(),
         axis.title.y = element_text(face=2),
         axis.text.x = element_text(face=2)) -> pl
-ggsave(plot = pl, filename = "figs/2412dd/carbonByWB_mean.pdf",
+ggsave(plot = pl, filename = "figs/2412dd/Carb_carbonByWB_mean.pdf",
        width = 20,height = 12,units = "in");rm(pl)
 
 # Carbon by zoop type by WB ####
