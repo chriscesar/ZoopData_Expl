@@ -390,28 +390,30 @@ df_lf_w_C <- df_lf_l %>%
   ungroup()
 
 df_lf_w_C %>% 
-  ggplot(., aes(x=sample.date, y = log(SUM)))+ 
+  ggplot(., aes(x=yday, y = log(SUM)))+ 
   geom_hline(yintercept = 10, colour=2,linewidth = 1.2)+
-  geom_point()+
-  geom_smooth(se=FALSE)+
+  geom_point(size=4)+
+  geom_smooth(se=FALSE,linewidth=2)+
   facet_wrap(.~WB_lb)+#, scale="free_y")+
   ylim(0,NA)+
   labs(title = "Trend in total carbon content within zooplankton assemblages by date in EA water bodies",
        y = expression(bold("Log total carbon content (ug m"^-3~")")),
        # y = expression(bold("Square root of total carbon content (ug m"^-3~")")),
        # y = expression(bold("Total carbon content (ug m"^-3~")")),
-       x = "Date",
+       x = "Julian day",
        caption=paste0("Samples gathered between ",format(min(dfw_lf$sample.date), "%d/%m/%Y")," & ",format(max(dfw_lf$sample.date), "%d/%m/%Y"),
                       "\nBlue lines inidate loess smooths.")) +
   theme(legend.position = "none",
-        axis.title = element_text(face=2),
-        strip.text = element_text(face=2)) #-> pl
+        plot.title = element_text(face=2,size=18),
+        axis.title = element_text(face=2,size=16),
+        strip.text = element_text(face=2),
+        plot.caption = element_text(size=14)
+        ) -> pl
 
-ggsave(plot = pl, filename = paste0("figs/logtotCByDateByWB_Fixed_Y_",
+ggsave(plot = pl, filename = paste0("figs/logtotCByDayByWB_Fixed_Y_",
                                     format(min(dfw_lf$sample.date), "%y%m%d"),"_",
-                                    format(max(dfw_lf$sample.date), "%y%m%d"),".pdf"),
-       width = 16,height = 12,units = "in")
-rm(pl)
+                                    format(max(dfw_lf$sample.date), "%y%m%d"),".png"),
+       width = 16,height = 12,units = "in");rm(pl)
 
 ## swest only ####
 # as mgC/m3 - trends by WB
@@ -481,13 +483,14 @@ df_lf_w_C %>%
     #legend.position = "none",
     legend.position = c(0.15,0.95),legend.direction = "horizontal", legend.text = element_text(face=2),
     axis.title = element_text(face=2),
-    strip.text = element_text(face=2)
+    strip.text = element_text(face=2),
+    plot.title = element_text(face=2)
   ) -> pl
 
 ggsave(plot = pl, filename = paste0("figs/CarbonSWtotCByJDay_All_",
                                     format(min(dfw_lf$sample.date), "%y%m%d"),"_",
-                                    format(max(dfw_lf$sample.date), "%y%m%d"),".pdf"),
-       width = 16,height = 12,units = "in")
+                                    format(max(dfw_lf$sample.date), "%y%m%d"),".png"),
+       width = 12,height = 8,units = "in")
 rm(pl)
 
 
@@ -500,7 +503,8 @@ df_lf_w_C %>%
   ggplot(.,aes(x=WB_lb, y=log10(SUM), colour=Region))+
   #geom_hline(yintercept = glob.mean.log,lty=2)+
   geom_boxplot(varwidth = TRUE,outlier.shape = NA)+
-  geom_point(aes(group=Region), position=position_jitterdodge(),alpha=0.3)+
+  geom_point(aes(group=Region), position=position_jitterdodge(),alpha=0.3,
+             size=4)+
   scale_colour_manual(values = cbPalette2)+
   labs(title = "Total carbon content in zooplankton assemblages by EA water body",
        y="log(total carbon)",
@@ -509,15 +513,18 @@ df_lf_w_C %>%
                         "\nSamples gathered between ",format(min(dfw_lf$sample.date), "%d/%m/%Y"),
                         " & ",format(max(dfw_lf$sample.date), "%d/%m/%Y")))+
   theme(legend.position = "none",
+        plot.caption = element_text(size=14),
         axis.title.x = element_blank(),
-        axis.title.y = element_text(face=2),
-        axis.text.x = element_text(face=2)) #-> pl
+        axis.title.y = element_text(face=2,size = 16),
+        plot.title = element_text(face=2, size=18),
+        axis.text.x = element_text(face=2, size=11)
+        ) -> pl
 
 ggsave(plot = pl, filename = paste0("figs/carbonByWB_",
                                     format(min(dfw_lf$sample.date), "%y%m%d"),"_",
                                     format(max(dfw_lf$sample.date), "%y%m%d"),
-                                    ".pdf"),
-       width = 20,height = 12,units = "in")
+                                    ".png"),
+       width = 20,height = 12,units = "in");rm(pl)
 
 df_lf_w_C %>%
   group_by(WB_lb) %>% 
