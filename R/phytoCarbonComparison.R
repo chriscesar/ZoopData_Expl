@@ -31,8 +31,10 @@ df0 %>% #View()
   mutate(.,OrdMagDiffSign = ifelse(Diff<0,-1*OrdMagDiff,OrdMagDiff)) -> df
 
 # plot ####
-png(file = "figs/PhytoCarbonComparison_v1.png",
-    width=9*ppi, height=12*ppi, res=ppi)
+# png(file = "figs/PhytoCarbonComparison_v1.png",
+#     width=9*ppi, height=12*ppi, res=ppi)
+png(file = "figs/PhytoCarbonComparison_v2_wide.png",
+    width=12*ppi, height=8*ppi, res=ppi)
 df %>% 
   arrange(LogDiffSign) %>% #View() %>% 
   mutate(Name = factor(Name, levels = Name)) %>%  # Reorder factor levels
@@ -56,44 +58,15 @@ df %>%
     axis.text.x = element_text(face=2),
     axis.title.x = element_text(face=2),
     axis.title.y= element_blank(),
-    axis.text.y = element_blank()
+    axis.text.y = element_blank(),
+    plot.caption = element_text(size=11)
   )
 dev.off()
 
-png(file = "figs/PhytoCarbonComparison_v2.png",
-    width=9*ppi, height=12*ppi, res=ppi)
-# df %>% 
-#   arrange(OrdMagDiff) %>% #View() %>% 
-#   mutate(Name = factor(Name, levels = Name)) %>%  # Reorder factor levels
-#   ggplot(., aes(y = Name, x = OrdMagDiff))+
-#   geom_rect(aes(xmin = -1,xmax = 1, ymin = -Inf,ymax=Inf),fill="lightgrey")+
-#   geom_rect(aes(xmin = -Inf,xmax = -1, ymin = -Inf,ymax=Inf), fill = "lightblue")+
-#   geom_rect(aes(xmin = 1,xmax = Inf, ymin = -Inf,ymax=Inf), fill = "lightgreen")+
-#   geom_vline(xintercept = seq(-3,3, by = 1),col="grey", lty=3)+
-#   geom_vline(xintercept = 0, lty=2, col=2)+
-#   geom_point()+
-#   scale_x_continuous(breaks = seq(-5, 5, by = 1))+
-#   labs(
-#     title = "Differences in phytoplankton carbon content estimates for Environment Agency<br>and Plymouth Marine Laboratory",
-#     x = expression(bold(Log[10]~"difference in carbon content values")),
-#     caption = bquote(
-#       "Orders of magnitude difference calculated using " * Log[10] * "(EA) - " * Log[10] * "(PML)." * "<br>" *
-#         "Values represent the log"[10] * " of the absolute differences in estimates between institutions." * "<br>" *
-#         "Values <0 indicate estimates for which PML values are larger; values >0 indicate estimates for which EA values are larger." * "<br>" *
-#         "Values are based on estimates of carbon content (pg per cell) by each institution." * "<br>" *
-#         "Differences in estimates are provided for the " * .(nrow(df)) * 
-#         " taxa which have carbon content estimates from both institutions." * "<br>" *
-#         "The grey area indicates estimates which are within 1 order of magnitude of each other."
-#     )
-#   ) +
-#   theme(
-#     plot.caption = element_markdown(),
-#     axis.text.x = element_text(face=2),
-#     axis.title.x = element_text(face=2),
-#     axis.title.y= element_blank(),
-#     axis.text.y = element_blank()
-#   )
-
+# png(file = "figs/PhytoCarbonComparison_v2_wide.png",
+    # width=9*ppi, height=12*ppi, res=ppi)
+png(file = "figs/PhytoCarbonComparison_v2_wide.png",
+    width=12*ppi, height=8*ppi, res=ppi)
 df %>% 
   arrange(OrdMagDiff) %>% 
   mutate(Name = factor(Name, levels = Name)) %>%  # Reorder factor levels
@@ -117,11 +90,12 @@ df %>%
     )
   ) +
   theme(
-    plot.caption = element_markdown(),  # Enables Markdown rendering for the caption
+    plot.caption = element_markdown(size=11),  # Enables Markdown rendering for the caption
     axis.text.x = element_text(face = 2),
     axis.title.x = element_text(face = 2),
     axis.title.y = element_blank(),
-    axis.text.y = element_blank()
+    axis.text.y = element_blank(),
+    plot.title = element_text(face=2)
   )
 
 dev.off()
