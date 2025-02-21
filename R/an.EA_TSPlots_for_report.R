@@ -405,7 +405,7 @@ df_lf_w_C %>%
                       "\nBlue lines inidate loess smooths.")) +
   theme(legend.position = "none",
         axis.title = element_text(face=2),
-        strip.text = element_text(face=2)) -> pl
+        strip.text = element_text(face=2)) #-> pl
 
 ggsave(plot = pl, filename = paste0("figs/logtotCByDateByWB_Fixed_Y_",
                                     format(min(dfw_lf$sample.date), "%y%m%d"),"_",
@@ -413,14 +413,92 @@ ggsave(plot = pl, filename = paste0("figs/logtotCByDateByWB_Fixed_Y_",
        width = 16,height = 12,units = "in")
 rm(pl)
 
+## swest only ####
+# as mgC/m3 - trends by WB
+df_lf_w_C %>% 
+  filter(., Region == "SWest") %>% 
+  ggplot(., aes(x=yday(sample.date), y = (SUM/1000)))+ 
+  # geom_hline(yintercept = 10, colour=2,linewidth = 1.2)+
+  geom_point(
+    aes(colour=WB_lb,shape=WB_lb),
+    show.legend = FALSE,
+    size=3
+    )+
+  geom_smooth(
+    aes(group=WB_lb, col=WB_lb),
+    se=FALSE
+    )+
+  # facet_wrap(.~WB_lb)+#, scale="free_y")+
+  ylim(0,NA)+
+  labs(title = "Within-year trend in total carbon content within zooplankton assemblages by date in EA water bodies",
+       #y = expression(bold(Log[10] ~"total carbon content (mg m"^-3~")")),
+       y = expression(bold("Total carbon content (mg m"^-3~")")),
+       # y = expression(bold("Square root of total carbon content (ug m"^-3~")")),
+       # y = expression(bold("Total carbon content (ug m"^-3~")")),
+       x = "Julian day",
+       caption=paste0("Samples gathered between ",format(min(dfw_lf$sample.date), "%d/%m/%Y")," & ",format(max(dfw_lf$sample.date), "%d/%m/%Y"),
+                      "\nBlue lines inidate loess smooths.")) +
+  scale_colour_discrete(name="",labels=c("Cornwall Nth","Barnstaple Bay","Bristol Inner S"))+
+  theme(
+    #legend.position = "none",
+    legend.position = c(0.15,0.95),legend.direction = "horizontal", legend.text = element_text(face=2),
+    axis.title = element_text(face=2),
+    strip.text = element_text(face=2)
+    ) -> pl
+
+ggsave(plot = pl, filename = paste0("figs/CarbonSWtotCByJDay_WB_",
+                                    format(min(dfw_lf$sample.date), "%y%m%d"),"_",
+                                    format(max(dfw_lf$sample.date), "%y%m%d"),".pdf"),
+       width = 16,height = 12,units = "in")
+rm(pl)
+
+# as mgC/m3 - trends ALL
+df_lf_w_C %>% 
+  filter(., Region == "SWest") %>% 
+  ggplot(., aes(x=yday(sample.date), y = (SUM/1000)))+ 
+  # geom_hline(yintercept = 10, colour=2,linewidth = 1.2)+
+  geom_point(
+    #aes(colour=WB_lb,shape=WB_lb),
+    show.legend = FALSE,
+    size=3
+  )+
+  geom_smooth(
+    #aes(group=WB_lb, col=WB_lb),
+    se=FALSE
+  )+
+  # facet_wrap(.~WB_lb)+#, scale="free_y")+
+  ylim(0,NA)+
+  labs(title = "Within-year trend in total carbon content within zooplankton assemblages by date in EA water bodies",
+       #y = expression(bold(Log[10] ~"total carbon content (mg m"^-3~")")),
+       y = expression(bold("Total carbon content (mg m"^-3~")")),
+       # y = expression(bold("Square root of total carbon content (ug m"^-3~")")),
+       # y = expression(bold("Total carbon content (ug m"^-3~")")),
+       x = "Julian day",
+       caption=paste0("Samples gathered between ",format(min(dfw_lf$sample.date), "%d/%m/%Y")," & ",format(max(dfw_lf$sample.date), "%d/%m/%Y"),
+                      "\nBlue lines inidate loess smooths.")) +
+  scale_colour_discrete(name="",labels=c("Cornwall Nth","Barnstaple Bay","Bristol Inner S"))+
+  theme(
+    #legend.position = "none",
+    legend.position = c(0.15,0.95),legend.direction = "horizontal", legend.text = element_text(face=2),
+    axis.title = element_text(face=2),
+    strip.text = element_text(face=2)
+  ) -> pl
+
+ggsave(plot = pl, filename = paste0("figs/CarbonSWtotCByJDay_All_",
+                                    format(min(dfw_lf$sample.date), "%y%m%d"),"_",
+                                    format(max(dfw_lf$sample.date), "%y%m%d"),".pdf"),
+       width = 16,height = 12,units = "in")
+rm(pl)
+
+
 glob.mean <- mean(df_lf_w_C$SUM)
 glob.mean.log <- mean(log(df_lf_w_C$SUM))
 glob.median <- median(df_lf_w_C$SUM)
 glob.median.log <- median(log(df_lf_w_C$SUM))
 
 df_lf_w_C %>% 
-  ggplot(.,aes(x=WB_lb, y=log(SUM), colour=Region))+
-  geom_hline(yintercept = glob.mean.log,lty=2)+
+  ggplot(.,aes(x=WB_lb, y=log10(SUM), colour=Region))+
+  #geom_hline(yintercept = glob.mean.log,lty=2)+
   geom_boxplot(varwidth = TRUE,outlier.shape = NA)+
   geom_point(aes(group=Region), position=position_jitterdodge(),alpha=0.3)+
   scale_colour_manual(values = cbPalette2)+
@@ -433,7 +511,7 @@ df_lf_w_C %>%
   theme(legend.position = "none",
         axis.title.x = element_blank(),
         axis.title.y = element_text(face=2),
-        axis.text.x = element_text(face=2)) -> pl
+        axis.text.x = element_text(face=2)) #-> pl
 
 ggsave(plot = pl, filename = paste0("figs/carbonByWB_",
                                     format(min(dfw_lf$sample.date), "%y%m%d"),"_",
