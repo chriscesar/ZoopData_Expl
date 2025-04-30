@@ -473,6 +473,29 @@ m_lvm_4 <- gllvm(y=Y, # model with environmental parameters
 
 # saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_negbin_scaled.Rdat") #scaled #6.862054 mins
 saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4WB_negbin_scaled.Rdat") #scaled #6.862054 mins
+
+## variance partitioning ####
+VP <- varPartitioning(m_lvm_4)
+plotVarPartitioning(VP,col=palette(hcl.colors(10,"Roma")))
+
+# plot with ggplot2
+as.data.frame(VP$PropExplainedVarSp) %>%
+  mutate(name = row.names(.)) %>% 
+  pivot_longer(.,cols = nh4:"Random effect: WB",
+               names_to = "var",values_to = "val") %>% 
+  mutate(var = as.factor(var)) %>% 
+  mutate(var = fct_relevel(var,
+                           "Random effect: WB",
+                           "LV1","LV2")) -> VP_plot
+
+VP_plot %>% 
+  ggplot(., aes(fill = var, y=val, x= name)) + 
+  geom_bar(col=1,position = "fill", stat= "identity")+
+  scale_x_discrete(limits=rev)+
+  coord_flip()+
+  scale_fill_manual(values = cbPalette[1,])
+
+
 toc(log=TRUE)
 
 tic("Model summaries & comparisons")
