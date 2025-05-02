@@ -475,6 +475,41 @@ m_lvm_4 <- gllvm(y=Y, # model with environmental parameters
 saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4WB_negbin_scaled.Rdat") #scaled #6.862054 mins
 toc(log=TRUE)
 
+#### variance partitioning ####
+VP <- varPartitioning(m_lvm_4)
+plotVarPartitioning(VP,col=palette(hcl.colors(10,"Roma")))
+
+# plot with ggplot2
+as.data.frame(VP$PropExplainedVarSp) %>%
+  mutate(name = row.names(.)) %>% 
+  pivot_longer(.,cols = nh4:"Random effect: WB",
+               names_to = "var",values_to = "val") %>% 
+  mutate(var = as.factor(var)) %>% 
+  mutate(var = fct_relevel(var,
+                           "Random effect: WB",
+                           "LV1","LV2")) -> VP_plot
+
+VP_plot %>% 
+  ggplot(., aes(fill = var, y=val, x= name)) + 
+  geom_bar(col=1,position = "fill", stat= "identity")+
+  scale_x_discrete(limits=rev)+
+  coord_flip()+
+  labs(title = "Variance partitioning of zooplankton life form abundances",
+       y="Variance explained",
+       caption = paste0("Samples gathered between ",
+       min(dfl$sample.date)," & ",
+       max(dfl$sample.date)))+
+  scale_fill_manual(values = c("#FFFFFF","#888888",
+                               "#000000",
+                               cbPalette[2:8]
+  ))+
+  # scale_colour_manual(values=c("red","red","red",rep("black",7)))+
+  theme(axis.title.y = element_blank()) -> pl_VP
+
+pdf(file = "figs/gllvm_VariancePartition.pdf",width=16,height=8)
+print(pl_VP)
+dev.off();rm(pl_VP)
+
 tic("Model summaries & comparisons")
 # m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_negbin_scaled.Rdat")#scaled
 m_lvm_4 <- readRDS("figs/gllvm_traits_nh4SalChlaDinDepPo4WB_negbin_scaled.Rdat")#scaled
@@ -488,7 +523,7 @@ dev.off()
 AIC(m_lvm_0,m_lvm_4)
 anova(m_lvm_0,m_lvm_4)
 
-##### GLLVM plots ####
+#### GLLVM plots ####
 pdf(file = "figs/coef_trt_all_unordered.pdf",width=16,height=8)
 coefplot(m_lvm_4,cex.ylab = 0.7,
          order=FALSE)
