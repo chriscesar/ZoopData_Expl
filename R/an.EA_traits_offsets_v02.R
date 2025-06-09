@@ -497,8 +497,8 @@ VP_plot %>%
   labs(title = "Variance partitioning of zooplankton life form abundances",
        y="Variance explained",
        caption = paste0("Samples gathered between ",
-       min(dfl$sample.date)," & ",
-       max(dfl$sample.date)))+
+       min(dfw$sample.date)," & ",
+       max(dfw$sample.date)))+
   scale_fill_manual(values = c("#FFFFFF","#888888",
                                "#000000",
                                cbPalette[2:8]
