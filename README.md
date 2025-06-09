@@ -1,8 +1,5 @@
 # ZoopData_Expl
-Explorations into zooplankton data
-
-The aim of this is to import the estuarine and coastal zooplankton monitoring data
-gathered as part of the Environment Agency's monitoring programme.
+Import and explore zooplankton data gathered by the Environment Agency since 2022 around the English coast.
 
 # To-do list
 * Generate report investigating drivers of change in inshore zooplankton data
