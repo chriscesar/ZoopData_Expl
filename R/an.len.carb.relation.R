@@ -100,8 +100,8 @@ dfl %>%
       geom_point() +
       geom_smooth(method = "lm") +
       facet_wrap(.~LF02)+
-      stat_regline_equation(label.x = -1, label.y = 7.5) +
-      stat_cor(aes(label = ..rr.label..), label.x = -1, label.y = 6.5) +
+      ggpubr::stat_regline_equation(label.x = -1, label.y = 7.5) +
+      ggpubr::stat_cor(aes(label = ..rr.label..), label.x = -1, label.y = 6.5) +
       labs(
         title = "Relationship between log(zooplankter length) & log(individual carbon content) in zooplankton assemblages recorded in English estuarine & coastal water bodies",
         x = "log(mean maximum length (mm))",
