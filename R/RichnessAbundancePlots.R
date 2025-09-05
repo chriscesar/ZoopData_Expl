@@ -20,6 +20,14 @@ names(dfl)
 dfl %>% 
   dplyr::select(.,c(Pot.Number:WB_lb,DisplayName,Abund_m3)) %>% #names()
   dplyr::select(.,-c(Aphia.ID,Taxa)) %>% 
+  dplyr::select(.,-c(
+  max_axis_length_mm, ugC_per_individ_mn,ugC_in_sample_mn,
+  ugC_per.m3_mn,mgC_per_individ_mn,mgC_in_sample_mn,
+  mgC_per.m3_mn,ugC_per_individ_md,ugC_in_sample_md,
+  ugC_per.m3_md, mgC_per_individ_md,mgC_in_sample_md,
+  mgC_per.m3_md
+  )
+  ) %>% 
   group_by(., across(!c(Abund_m3))) %>% 
   summarise(.,Abund_m3 = sum(Abund_m3),.groups = "drop") %>% #names()
   ungroup(.) %>% 
