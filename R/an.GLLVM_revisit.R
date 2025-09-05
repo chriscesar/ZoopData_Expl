@@ -1,5 +1,5 @@
 # an.GLLVM_revisit.R ####
-# Conducting GLLVM modelling
+# Conducting GLLVM modelling on carbon content values
 
 # 00 set up ####
 ## load packages ####
@@ -27,7 +27,7 @@ toc(log=TRUE)
 # rm(df_wims0)
 
 tic("Load mean carbon content values")
-source("R/an_EA_taxa_gllvm.R")
+source("R/an_EA_taxa_gllvm_no_offset.R")
 toc(log=TRUE)
 
 #############
@@ -42,6 +42,9 @@ runs <- 5
 ## define X (environmental parameters) & Y (biological responses)
 Y <- df_carb[[2]] %>% dplyr::select(.,-c(PRN))
 X <- df_carb[[3]] %>% dplyr::select(.,-c(PRN))
+
+X0 <- X
+Y0 <- Y
 
 # choose interesting environmental variables
 keep <- c(
@@ -83,7 +86,7 @@ X$WB <- df_carb[[1]]$WB_lb
 X$Region <- df_carb[[1]]$Region
 
 #OPTIONAL: remove lifeforms which only appear n>=4 times ####
-n <- 10 # 7 terms in 'full' X-model
+n <- 200 # 7 terms in 'full' X-model
 Y <- Y[,colSums(ifelse(Y==0,0,1))>n]
 
 ## replace NA values with mean values for respective column.
@@ -97,6 +100,20 @@ X %>%
                 )
   )
   ) -> X
+
+# # OPTIONAL: subsample data for model building ####
+# num_rows <- nrow(X)
+# num_true <- 5000
+# 
+# sample_vec <- rep(FALSE, num_rows)
+# sample_vec[sample(num_rows, num_true)] <- TRUE
+# rm(num_rows, num_true)
+# Y <- Y[sample_vec,]
+# X <- X[sample_vec,]
+# ## identify and remove 'empty' abundance rows after subsampling
+# emptY <- rowSums(Y) != 0
+# X <- X[emptY,]
+# Y <- Y[emptY,]
 
 ## rename colums
 X <- X %>% 
@@ -137,29 +154,36 @@ X %>%
 offset_m3 <- df_carb[[1]]$netVol_use
 toc(log=TRUE)
 
+tic("Fit Unconstrained model")
+# Computational efficiency tweaks ####
+# Xmt <- as.matrix(X)
+# Ymt <- as.matrix(Y)
+# Ymt <- Ymt+0.01
+
 ## Fit GLLVM ####
 ## unconstrained ####
-### Negative binomial ####
-tic("Fit Unconstrained Negative binomial model")
+### Tweedie ####
 sDsn <- data.frame(WB = X$wb)
-m_lvm_0 <- gllvm(Y, # unconstrained model
-                 # offset = log(X$net_vol_m3),#set model offset
-                 #model offset is logged to accommodate the neg.bin log-link function
-                 offset = log(offset_m3),
+m_lvm_0 <- gllvm(as.matrix(Y), # unconstrained model
                  studyDesign = sDsn,
                  row.eff = ~(1|WB),
-                 family = "negative.binomial",
-                 starting.val="res",
+                 family = "tweedie",
+                 starting.val="random",
                  n.init = runs, #re-run model to get best fit
                  trace=TRUE,
-                 seed = pi,
+                 seed = 123,
                  num.lv = 2
                  )
 
-saveRDS(m_lvm_0, file="figs/2412dd/gllvm_carbon_uncon_WB_negbin.Rdat") 
+# saveRDS(m_lvm_0, file="figs/2412dd/gllvm_carbon_uncon_WB_negbin.Rdat")
+# saveRDS(m_lvm_0, file="figs/2412dd/gllvm_carbon_uncon_WB_gamma.Rdat")
+saveRDS(m_lvm_0, file="figs/2412dd/gllvm_carbon_uncon_WB_tweedie.Rdat")
 toc(log=TRUE)
 
-m_lvm_0 <- readRDS("figs/gllvm_traits_uncon_WB_negbin.Rdat")
+tic("Generate summary plots for unconstrained model")
+# m_lvm_0 <- readRDS("figs/2412dd/gllvm_carbon_uncon_WB_negbin.Rdat")
+# m_lvm_0 <- readRDS("figs/2412dd/gllvm_carbon_uncon_WB_gamma.Rdat")
+m_lvm_0 <- readRDS("figs/2412dd/gllvm_carbon_uncon_WB_tweedie.Rdat")
 par(mfrow=c(2,2));plot(m_lvm_0, which=1:4);par(mfrow=c(1,1))
 gllvm::ordiplot.gllvm(m_lvm_0,biplot = TRUE,symbols=TRUE)
 cr <- getResidualCor(m_lvm_0)
@@ -168,6 +192,7 @@ pdf(file = "figs/2412dd/m_lvm_0_carb_LF_corrplot.pdf",width=14,height=14)
 corrplot::corrplot(cr, diag = FALSE, type = "lower", method = "square",
                    tl.srt = 25)
 dev.off();rm(cr)
+toc(log=TRUE)
 
 ##########################
 ## Constrained ####
@@ -175,26 +200,26 @@ dev.off();rm(cr)
 tic("Fit Constrained Negative binomial model")
 # sDsn <- data.frame(region = X$region)
 sDsn <- data.frame(WB = X$wb)
-m_lvm_4 <- gllvm(y=Y, # model with environmental parameters
+m_lvm_4 <- gllvm(y=as.matrix(Y), # model with environmental parameters
                  X=X_scaled, #scaled
-                 # offset = log(X$net_vol_m3),#set model offset
-                 offset = log(offset_m3),#set model offset
                  formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
                  studyDesign = sDsn,
                  row.eff = ~(1|WB),
-                 family="negative.binomial",
-                 starting.val="res",
+                 family="tweedie",
+                 starting.val="random",
                  n.init=runs,#re-run model to get best fit
                  trace=TRUE,
                  num.lv = 2
-)
+                 )
 
 # saveRDS(m_lvm_4, file="figs/gllvm_traits_nh4SalChlaDinDepPo4Reg_negbin_scaled.Rdat") #scaled #6.862054 mins
-saveRDS(m_lvm_4, file="figs/2412dd/gllvm_carbon_Con_WB_negbin.Rdat")
+# saveRDS(m_lvm_4, file="figs/2412dd/gllvm_carbon_Con_WB_negbin.Rdat")
+saveRDS(m_lvm_4, file="figs/2412dd/gllvm_carbon_Con_WB_tweedie.Rdat")
 toc(log=TRUE)
 
 tic("Model summaries & comparisons")
-m_lvm_4 <- readRDS("figs/2412dd/gllvm_carbon_Con_WB_negbin.Rdat")#scaled
+# m_lvm_4 <- readRDS("figs/2412dd/gllvm_carbon_Con_WB_negbin.Rdat")#scaled
+m_lvm_4 <- readRDS("figs/2412dd/gllvm_carbon_Con_WB_tweedie.Rdat")#scaled
 gllvm::ordiplot.gllvm(m_lvm_4,biplot = TRUE,symbols=TRUE)
 cr <- getResidualCor(m_lvm_4)
 
@@ -327,9 +352,9 @@ print(paste0("Including environmental parameters in the model explains ",round(b
 AIC(m_lvm_0,m_lvm_4)
 
 # Combine all the individual plots into a single plot
-(final_plot <- wrap_plots(plotlist = plot_list,
+(final_plot <- patchwork::wrap_plots(plotlist = plot_list,
                           ncol = nlevels(mod_coefs$coefficient))+  # Adjust the number of columns as needed
-    plot_annotation(title="Caterpillar plot of generalised linear latent variable model outputs",
+    patchwork::plot_annotation(title="Caterpillar plot of generalised linear latent variable model outputs",
                     subtitle = paste0("Including environmental variables explains ",round(btwn,2),"% of the (co)variation in lifeform abundances compared to the null (lifeforms-only) model"),
                     caption = paste0("Colours indicate lifeform 95% confidence intervals which do (grey) or do not (red/blue) include zero. ",
                                      "Dashed vertical lines indicate mean point estimate values\n","Lifeforms recorded in fewer than ",n+1," samples removed from data prior to model estimations","\n",
@@ -360,13 +385,9 @@ tic("Fit QUADRATIC unconstrained Negative binomial model")
 sDsn <- data.frame(region = X$region)
 m_lvm_quad_0 <- gllvm(
   y = YQuad,
-  # y = YQuadTrim, 
-  # X = X_scaled, #scaled
-  # offset = log(X$net_vol_m3),#set model offset
-  offset = log(offset_m3),#set model offset
   # formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
   studyDesign = sDsn, row.eff = ~(1 | region), 
-  family = "negative.binomial", 
+  family = "tweedie", 
   starting.val = "zero", 
   n.init = 100, n.init.max = 10,
   trace = TRUE, 
@@ -375,8 +396,8 @@ m_lvm_quad_0 <- gllvm(
   seed = pi,
   #sd.errors = FALSE#quicker fitting for model testing only
 )
-saveRDS(m_lvm_quad_0, file="figs/2412dd/gllvm_LF_unconstrainedQuadraticNegBin.Rdat")
-m_lvm_quad_0 <- readRDS("figs/2412dd/gllvm_LF_unconstrainedQuadraticNegBin.Rdat")
+saveRDS(m_lvm_quad_0, file="figs/2412dd/gllvm_LF_unconstrainedQuadraticTweedie.Rdat")
+m_lvm_quad_0 <- readRDS("figs/2412dd/gllvm_LF_unconstrainedQuadraticTweedie.Rdat")
 toc(log=TRUE)
 
 tic("QUADRATIC unconstrained Negative binomial model checking")
@@ -455,10 +476,10 @@ tic("Fit QUADRATIC constrained Negative binomial model")
 sDsn <- data.frame(region = X$region)
 m_lvm_quad_4 <- gllvm(y = YQuad, 
                       X = X_scaled, #scaled
-                      offset = log(offset_m3),#set model offset
+                      # offset = log(offset_m3),#set model offset
                       formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
                       studyDesign = sDsn, row.eff = ~(1 | region), 
-                      family = "negative.binomial", 
+                      family = "tweedie", 
                       starting.val = "res", 
                       start.struct="all",
                       n.init = 100, n.init.max = 10,
@@ -469,9 +490,9 @@ m_lvm_quad_4 <- gllvm(y = YQuad,
                       sd.errors = FALSE#quicker fitting for model testing only
 )
 
-saveRDS(m_lvm_quad_4, file="figs/2412dd/gllvm_traits_constrainedQuadraticNegBin.Rdat")
+saveRDS(m_lvm_quad_4, file="figs/2412dd/gllvm_traits_constrainedQuadraticTweedie.Rdat")
 toc(log=TRUE)
-m_lvm_quad_4 <- readRDS("figs/2412dd/gllvm_traits_constrainedQuadraticNegBin.Rdat")
+m_lvm_quad_4 <- readRDS("figs/2412dd/gllvm_traits_constrainedQuadraticTweedie.Rdat")
 par(mfrow=c(2,2));plot(m_lvm_quad_4, which = 1:4);par(mfrow=c(1,1))
 ordiplot(m_lvm_quad_4, symbols = TRUE,biplot = TRUE)
 
