@@ -65,14 +65,16 @@ dfl$yyyy_mm <- paste0(year(dfl$sample.date),"_",sprintf("%02d", month(dfl$sample
 fac_tmp22 <- paste0(rep(2022, 12), "_", sprintf("%02d", 1:12))
 fac_tmp22 <- fac_tmp22[6:12]
 fac_tmp23 <- paste0(rep(2023, 12), "_", sprintf("%02d", 1:12))
+# fac_tmp24 <- paste0(rep(2024, 12), "_", sprintf("%02d", 1:12))
 fac_tmp24 <- paste0(rep(2024, 12), "_", sprintf("%02d", 1:12))
-fac_tmp24 <- fac_tmp24[1:10]
+fac_tmp25 <- paste0(rep(2025, 12), "_", sprintf("%02d", 1:12))
+fac_tmp25 <- fac_tmp25[1:3]
 
-fac_tmp <- c(fac_tmp22,fac_tmp23,fac_tmp24)
+fac_tmp <- c(fac_tmp22,fac_tmp23,fac_tmp24,fac_tmp25)
 
 # assign dates to factors
 dfl$yyyy_mm <- factor(dfl$yyyy_mm, levels = fac_tmp)
-rm(fac_tmp,fac_tmp22,fac_tmp23,fac_tmp24)
+rm(fac_tmp,fac_tmp22,fac_tmp23,fac_tmp24,fac_tmp25)
 
 ### make a 'complete' version so that 'missing' surveys will be included in the charts
 dfl_complete <- dfl %>%
@@ -86,7 +88,8 @@ tic("Carbon-weighted plots of monthly data by BIOSYS site")
 
 ## create ridge plot ####
 dfl_complete %>% 
-  dplyr::filter(.,WB_lb == wb_label) %>%droplevels(.) %>% 
+  dplyr::filter(.,WB_lb == wb_label) %>% 
+  droplevels(.) %>% 
   ggplot2::ggplot(aes(x = mnlongMaxAxis_mm, y = yyyy_mm, weight = mn_carbTot_m3)) +
   ggridges::geom_density_ridges(alpha=0.7, aes(fill=DJF),
                                 jittered_points=TRUE,
