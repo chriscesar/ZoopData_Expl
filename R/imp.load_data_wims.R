@@ -19,7 +19,7 @@ df_wims0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
                                                  #"/WIMS_Extract_WaterQuality_Zoop_Samples_240618.xlsx"),
                                                  #/"/WIMS_Extract_240618.xlsx"),
                                                  #"/WIMS_Extract_WaterQuality_Zoop_Samples_240930.xlsx"),
-                                                 "WIMS_Extract_WaterQuality_Zoop_Samples_241217.xlsx"),
+                                                 "WIMS_Extract_WaterQuality_Zoop_Samples_250609.xlsx"),
                                           sheet="allDat"))
 
 ### prep data ####
