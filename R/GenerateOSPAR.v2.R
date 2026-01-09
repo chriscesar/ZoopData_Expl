@@ -105,10 +105,14 @@ dfout %>%
     SMPNO = paste0("Pot_",PotNum), #Need to consider using SampleID in future exports
     # STNNO = `BIOSYS Code`,
     ## concatenate BIOSYS Code & SDATE
+    # #############
+    # ## FIX1 (FAILED): Append BIOSYS & POTNUMBER #####
+    # #############
+    # STNNO = paste0(`BIOSYS Code`,PotNum),
     #############
-    ## FIX: Append BIOSYS & POTNUMBER #####
+    ## FIX2 (TEST): Append BIOSYS & SAMPLE DATE #####
     #############
-    STNNO = paste0(`BIOSYS Code`,PotNum),
+    STNNO = paste0(`BIOSYS Code`,"_",SDATE),
     PARAM = "ABUNDNR",
     # MUNIT = "nr",# change to num per m3
     MUNIT = "nr/m3",# change to num per m3 #DONE
@@ -122,7 +126,8 @@ dfout %>%
     POSYS = NA_character_,
     # STATN = SiteNam,
     ## remove special characters from site names
-    STATN = str_replace_all(SiteNam,"[^A-Za-z0-9 ]", ""),
+    # STATN = str_replace_all(SiteNam,"[^A-Za-z0-9 ]", ""),
+    STATN = `BIOSYS Code`,
     WADEP = NA_character_,
     EDATE = NA_character_,
     STIME = NA_character_,
