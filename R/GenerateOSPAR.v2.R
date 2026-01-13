@@ -272,7 +272,7 @@ dfout_exp %>% dplyr::filter(!is.na(SMVOL)) -> dfout_exp
 
 tictoc::tic("Write data, appending today's date to filename")
 write.csv(x = dfout_exp,
-          file = paste0("outputs/OSPAR/",format(Sys.Date(), format="%Y%m%d"),"_OSPAR_Zoop_export_UTF8.csv"),
+          file = paste0("outputs/OSPAR/",format(Sys.Date(), format="%Y%m%d"),"EA_OSPAR_Zoop_export_UTF8.csv"),
           row.names = FALSE,
           fileEncoding = "UTF-8" #ensure UTF-8 encoding
           )
