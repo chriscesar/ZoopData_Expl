@@ -23,12 +23,13 @@ toc(log=TRUE)
 rm(dfl0)
 
 ## initial look at a single sample
-dfl %>% 
-  filter(.,Pot.Number==5) -> dftmp
+# dfl %>% 
+#   filter(.,Pot.Number==5) -> dftmp
 
 ### generate new variable: yyy_mm
 ## create year_month variable
-dfl$yyyy_mm <- paste0(year(dfl$sample.date),"_",sprintf("%02d", month(dfl$sample.date)))
+dfl$yyyy_mm <- paste0(year(dfl$sample.date),"_",
+                      sprintf("%02d", month(dfl$sample.date)))
 
 # generate factor levels
 fac_tmp22 <- paste0(rep(2022, 12), "_", sprintf("%02d", 1:12))
@@ -36,11 +37,11 @@ fac_tmp22 <- fac_tmp22[6:12]
 fac_tmp23 <- paste0(rep(2023, 12), "_", sprintf("%02d", 1:12))
 fac_tmp24 <- paste0(rep(2024, 12), "_", sprintf("%02d", 1:12))
 fac_tmp25 <- paste0(rep(2025, 12), "_", sprintf("%02d", 1:12))
-fac_tmp25 <- fac_tmp25[1:3]
+fac_tmp25 <- fac_tmp25[1:5]
 fac_tmp <- c(fac_tmp22,fac_tmp23,fac_tmp24,fac_tmp25)
 
 # assign dates to factors
-dfl$yyyy_mm <- factor(dfl$yyyy_mm, levels = fac_tmp)
+dfl$yyyy_mm_fac <- factor(dfl$yyyy_mm, levels = fac_tmp)
 rm(fac_tmp,fac_tmp22,fac_tmp23,fac_tmp24,fac_tmp25)
 
 ### make a 'complete' version so that 'missing' surveys will be included in the charts
@@ -48,7 +49,8 @@ dfl_complete <- dfl %>%
   group_by(BIOSYS.Code) %>%  # Group by site
   # tidyr::complete(yyyy_mm, fill = list(mn_carbTot_m3 = 0)) %>% # Fill missing months with 0 or NA
   # tidyr::complete(DJF, fill = list(mn_carbTot_m3 = 0)) #Fill missing seasons
-  tidyr::complete(yyyy_mm, DJF, fill = list(mn_carbTot_m3 = 0))
+  # tidyr::complete(yyyy_mm, DJF, fill = list(mn_carbTot_m3 = 0))
+  tidyr::complete(yyyy_mm_fac, DJF, fill = list(mn_carbTot_m3 = 0))
 
 # generate pdfs for individual BIOSYS sites ####
 ## Carbon-weighted ####
@@ -67,7 +69,11 @@ purrr::walk(unique_sites, function(site) {
   
   # Create the plot with ggplot2
   p <- dfl_filtered %>%
-    ggplot2::ggplot(aes(x = mnlongMaxAxis_mm, y = yyyy_mm, weight = mn_carbTot_m3)) +
+    ggplot2::ggplot(aes(x = mnlongMaxAxis_mm,
+                        # y = yyyy_mm,
+                        y = yyyy_mm_fac,
+                        weight = mn_carbTot_m3)
+                    ) +
     ggridges::geom_density_ridges(alpha=0.7, aes(fill=DJF),
                                   jittered_points=TRUE,
                                   position = position_points_jitter(width = 0.05, height = 0),
@@ -89,7 +95,8 @@ purrr::walk(unique_sites, function(site) {
   
   # Export the plot to a PDF file using ggplot2::ggsave()
   ggplot2::ggsave(filename = paste0("figs/",
-    "zoopSize_monthly_", na.omit(dfl_filtered$WB_lb)[1],"_",site, "_carbon_",
+    "zoopSize_monthly_", na.omit(dfl_filtered$WB_lb)[1],
+    "_",site, "_carbon_",
     format(min(dfl$sample.date), "%y%m%d"),"_",
     format(max(dfl$sample.date), "%y%m%d"),".pdf"),
     plot = p, width = 8, height = 6)
@@ -158,7 +165,7 @@ purrr::walk(unique_sites, function(site) {
   
   # Create the plot with ggplot2
   p <- dfl_filtered %>%
-    ggplot2::ggplot(aes(x = mnlongMaxAxis_mm, y = yyyy_mm, weight = Abund_m3)) +
+    ggplot2::ggplot(aes(x = mnlongMaxAxis_mm, y = yyyy_mm_fac, weight = Abund_m3)) +
     ggridges::geom_density_ridges(alpha=0.7, aes(fill=DJF),
                                   jittered_points=TRUE,
                                   position = position_points_jitter(width = 0.05, height = 0),
