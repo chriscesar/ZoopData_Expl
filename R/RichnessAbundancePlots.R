@@ -52,7 +52,12 @@ dfw %>%
   ggplot(., aes(x= WB_lb, y = S, colour = Region))+
   # geom_hline(yintercept = mnS, lty=2)+
   geom_hline(yintercept = mean(S), lty=2)+
-  geom_boxplot(outliers = FALSE)+
+  geom_boxplot(
+    #notch = TRUE,
+    varwidth = TRUE,
+    outliers = FALSE,
+    
+    )+
   geom_jitter(width=0.25, alpha=0.4)+
   labs(
     title = "Taxon richness in zooplankton samples",
@@ -60,10 +65,13 @@ dfw %>%
                    format(min(dfl$sample.date),
                           "%d/%m/%Y")," & ",format(max(dfl$sample.date), "%d/%m/%Y")),
     y="Taxon richness")+
-  theme(legend.position = "none",
-        axis.title.x = element_blank(),
-        axis.title.y = element_text(face = 2),
-        axis.text = element_text(face = 2)) -> pl
+  theme(
+    plot.title = element_text(face = 2),
+    legend.position = "none",
+    axis.title.x = element_blank(),
+    axis.title.y = element_text(face = 2),
+    axis.text = element_text(face = 2)
+    ) -> pl
 pdf(file = paste0("figs/TaxRich_",
                   format(min(dfl$sample.date), "%y%m%d"),"_",
                   format(max(dfl$sample.date), "%y%m%d"),".pdf"),
@@ -76,7 +84,8 @@ dfw %>%
   ggplot(., aes(x= WB_lb, y = log(N), colour = Region))+
   # geom_hline(yintercept = log(mean(N)), col= "black",lty=2)+
   geom_hline(yintercept = mean(log(N)), col= "black",lty=2)+
-  geom_boxplot(outliers = FALSE)+
+  geom_boxplot(varwidth = TRUE,
+    outliers = FALSE)+
   geom_jitter(width=0.25, alpha=0.4)+
   labs(
     title = "Log taxon abundances in zooplankton samples",
@@ -84,10 +93,13 @@ dfw %>%
                    format(min(dfl$sample.date),
                           "%d/%m/%Y")," & ",format(max(dfl$sample.date), "%d/%m/%Y")),
     y="Log taxon abundance")+
-  theme(legend.position = "none",
-        axis.title.x = element_blank(),
-        axis.title.y = element_text(face = 2),
-        axis.text = element_text(face = 2)) -> pl
+  theme(
+    plot.title = element_text(face = 2),
+    legend.position = "none",
+    axis.title.x = element_blank(),
+    axis.title.y = element_text(face = 2),
+    axis.text = element_text(face = 2)
+    ) -> pl
 pdf(file = paste0("figs/TaxAbund_",
                   format(min(dfl$sample.date), "%y%m%d"),"_",
                   format(max(dfl$sample.date), "%y%m%d"), ".pdf"),
@@ -101,12 +113,18 @@ dfw %>% mutate(year = lubridate::year(sample.date)) %>%
   ggplot(.,aes(x=sample.date, y=S))+
   geom_point(aes(colour=Region),show.legend = FALSE)+
   facet_wrap(~WB_lb)+
-  geom_smooth()+
+  geom_smooth(method = "gam")+
   labs(
     title = "Taxon richness in zooplankton samples",
     y="Taxon richness",
-    caption=paste0("Samples gathered between ",format(min(dfw$sample.date), "%d/%m/%Y")," & ",format(max(dfw$sample.date), "%d/%m/%Y")))+
-theme(axis.title.x = element_blank()) -> pl
+    caption=paste0("Samples gathered between ",format(min(dfw$sample.date), "%d/%m/%Y")," & ",format(max(dfw$sample.date), "%d/%m/%Y\nBlue line reflects GAM smooth term")))+
+theme(
+  plot.title = element_text(face = 2),
+  axis.title = element_text(face = 2),
+  axis.title.x = element_blank(),
+  axis.text = element_text(face = 2),
+  strip.text = element_text(face = 2),
+  ) -> pl
 pdf(file = paste0("figs/TaxRich_ts_",
                   format(min(dfl$sample.date), "%y%m%d"),"_",
                   format(max(dfl$sample.date), "%y%m%d"),
@@ -126,7 +144,13 @@ dfw %>% mutate(year = lubridate::year(sample.date)) %>%
     y="Taxon richness",
     caption=paste0("Samples gathered between ",format(min(dfw$sample.date), "%d/%m/%Y")," & ",format(max(dfw$sample.date), "%d/%m/%Y")))+
   scale_x_continuous(breaks = scales::breaks_pretty(n = 3))+
-  theme(axis.title.x = element_blank()) -> pl
+  theme(
+    plot.title = element_text(face = 2),
+    axis.title = element_text(face = 2),
+    axis.title.x = element_blank(),
+    axis.text = element_text(face = 2),
+    strip.text = element_text(face = 2),
+    ) -> pl
 pdf(file = paste0("figs/TaxRich_ts_box_",
                   format(min(dfl$sample.date), "%y%m%d"),"_",
                   format(max(dfl$sample.date), "%y%m%d"),
@@ -139,12 +163,18 @@ dfw %>% mutate(year = lubridate::year(sample.date)) %>%
   ggplot(.,aes(x=sample.date, y=log(N)))+
   geom_point(aes(colour=Region),show.legend = FALSE)+
   facet_wrap(~WB_lb)+
-  geom_smooth()+
+  geom_smooth(method= "gam")+
   labs(
     title = "Taxon abundance in zooplankton samples",
     y="Log taxon abundance",
-    caption=paste0("Samples gathered between ",format(min(dfw$sample.date), "%d/%m/%Y")," & ",format(max(dfw$sample.date), "%d/%m/%Y")))+
-  theme(axis.title.x = element_blank()) -> pl
+    caption=paste0("Samples gathered between ",format(min(dfw$sample.date), "%d/%m/%Y")," & ",format(max(dfw$sample.date), "%d/%m/%Y\nBlue line reflects GAM smooth term")))+
+  theme(
+    plot.title = element_text(face = 2),
+    axis.title = element_text(face = 2),
+    axis.title.x = element_blank(),
+    axis.text = element_text(face = 2),
+    strip.text = element_text(face = 2),
+    ) -> pl
 pdf(file = paste0("figs/TaxAbund_ts_",
                   format(min(dfl$sample.date), "%y%m%d"),"_",
                   format(max(dfl$sample.date), "%y%m%d"),
@@ -162,7 +192,13 @@ dfw %>% mutate(year = lubridate::year(sample.date)) %>%
     y="log taxon abundance",
     caption=paste0("Samples gathered between ",format(min(dfw$sample.date), "%d/%m/%Y")," & ",format(max(dfw$sample.date), "%d/%m/%Y")))+
   scale_x_continuous(breaks = scales::breaks_pretty(n = 3))+
-  theme(axis.title.x = element_blank()) -> pl
+  theme(
+    plot.title = element_text(face = 2),
+    axis.title = element_text(face = 2),
+    axis.title.x = element_blank(),
+    axis.text = element_text(face = 2),
+    strip.text = element_text(face = 2),
+    ) -> pl
 pdf(file = paste0("figs/TaxAbund_ts_box_",
     format(min(dfl$sample.date), "%y%m%d"),"_",
     format(max(dfl$sample.date), "%y%m%d"),".pdf"),

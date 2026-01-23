@@ -159,11 +159,16 @@ dfl %>% #names(.)
   group_by(across(c(!md_carbTot_m3))) %>% 
   summarise(md_carbTot_m3 = sum(md_carbTot_m3),.groups = "drop") %>%
   ungroup(.) %>%
-  ggplot(., aes(x=LF03, y=log(md_carbTot_m3), col=Region))+
+  dplyr::filter(WB_lb == "Thm_ThmLwr") %>%
+  ggplot(., aes(
+    x=LF03,
+    y=log(md_carbTot_m3),
+    col=Region
+    ))+
   geom_boxplot(varwidth = FALSE,outlier.shape = NA)+
   coord_flip()+
-  facet_wrap(.~WB_lb)+
   # facet_wrap(.~WB_lb)+
+  facet_wrap(.~WB_lb)+
   geom_point(aes(group=LF03), position=position_jitter(width = 0.2),alpha=0.2)+
   scale_colour_manual(values = cbPalette2)+
   scale_x_discrete(limits=rev)+
