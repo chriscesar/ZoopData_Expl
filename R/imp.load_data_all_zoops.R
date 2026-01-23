@@ -6,6 +6,7 @@ ld_pkgs <- c("tidyverse","seas","tictoc")
 vapply(ld_pkgs, library, logical(1L),
        character.only = TRUE, logical.return = TRUE);rm(ld_pkgs)
 
+tictoc::tic.clearlog()
 ## set universals ####
 tic("Set universals");print("set universals")
 source("R/set_meta.R")
@@ -16,12 +17,16 @@ print("Load lifeforms data and correct taxon names")
 
 ## load data
 dfl0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
-                                            "processedData/250827_MBA_Returns_Amalgamated_USE.xlsx"),
+                                            # "processedData/250827_MBA_Returns_Amalgamated_USE.xlsx"),
+                                            # "processedData/251021_MBA_Returns_Amalgamated_USE.xlsx"),
+                                            "processedData/260114_MBA_Returns_Amalgamated_USE.xlsx"),
                                      sheet="outR04_LF"))
 
 ### import  updated taxon names
 tx_chk0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
-                                                "processedData/250827_MBA_Returns_Amalgamated_USE.xlsx"),
+                                                # "processedData/250827_MBA_Returns_Amalgamated_USE.xlsx"),
+                                                # "processedData/251021_MBA_Returns_Amalgamated_USE.xlsx"),
+                                                "processedData/260114_MBA_Returns_Amalgamated_USE.xlsx"),
                                          sheet="TaxonomicRaw"))
 
 tx_chk <- tx_chk0 %>% 
