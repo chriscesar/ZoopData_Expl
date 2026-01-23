@@ -3,7 +3,7 @@
 
 # 00 set up ####
 ## load packages ####
-ld_pkgs <- c("tidyverse", "tictoc","gllvm", "lubridate")
+ld_pkgs <- c("tidyverse", "tictoc","gllvm", "lubridate","DHARMa")
 vapply(ld_pkgs, library, logical(1L),
        character.only = TRUE, logical.return = TRUE);rm(ld_pkgs)
 
@@ -206,7 +206,7 @@ m_lvm_4 <- gllvm(y=as.matrix(Y), # model with environmental parameters
                  studyDesign = sDsn,
                  row.eff = ~(1|WB),
                  family="tweedie",
-                 starting.val="random",
+                 starting.val="res",
                  n.init=runs,#re-run model to get best fit
                  trace=TRUE,
                  num.lv = 2
@@ -331,7 +331,9 @@ for (level in levels(mod_coefs$coefficient)) {
     guides(colour="none",
            fill="none")+
     theme(axis.title = element_blank(),
-          plot.title = element_text(hjust=0.5))
+          plot.title = element_text(hjust=0.5),
+          axis.text = element_text(face=2)
+          )
   
   # Add the current plot to the list
   plot_list[[as.character(level)]] <- current_plot
@@ -348,27 +350,89 @@ for (level in levels(mod_coefs$coefficient)) {
 rcov0 <- getResidualCov(m_lvm_0, adjust = 1) # 'null' model
 rcov1 <- getResidualCov(m_lvm_4, adjust = 1) # model with env variables #REGION
 btwn <- 100 - (rcov1$trace / rcov0$trace*100)
-print(paste0("Including environmental parameters in the model explains ",round(btwn,2),"% of the (co)variation in zooplankton abundances"))
+print(paste0("Including environmental parameters in the model explains ",round(btwn,1),"% of the (co)variation in zooplankton abundances"))
 AIC(m_lvm_0,m_lvm_4)
 
 # Combine all the individual plots into a single plot
 (final_plot <- patchwork::wrap_plots(plotlist = plot_list,
                           ncol = nlevels(mod_coefs$coefficient))+  # Adjust the number of columns as needed
     patchwork::plot_annotation(title="Caterpillar plot of generalised linear latent variable model outputs",
-                    subtitle = paste0("Including environmental variables explains ",round(btwn,2),"% of the (co)variation in lifeform abundances compared to the null (lifeforms-only) model"),
+                    subtitle = paste0("Including environmental variables explains ",round(btwn,1),"% of the (co)variation in lifeform abundances compared to the null (lifeforms-only) model"),
                     caption = paste0("Colours indicate lifeform 95% confidence intervals which do (grey) or do not (red/blue) include zero. ",
                                      "Dashed vertical lines indicate mean point estimate values\n","Lifeforms recorded in fewer than ",n+1," samples removed from data prior to model estimations","\n",
                                      "Model call: ~",as.character(m_lvm_4$formula)[2],". ",
                                      "Distribution family: ",as.character(m_lvm_4$family),".",
                                      "\nRandom row effects: ",as.character(m_lvm_4$call)[8],"; number of model iterations = ",m_lvm_4$n.init,".",
                                      "\nSamples gathered between ",format(min(dfl$sample.date), "%d/%m/%Y")," & ",format(max(dfl$sample.date), "%d/%m/%Y")),
-                    theme = theme(plot.title = element_text(size = 16, face="bold"))))
+                    theme = theme(plot.title = element_text(size = 16, face="bold"),
+                                  axis.text = element_text(face=2),
+                                  )
+                    ))
 
 pdf(file = "figs/2412dd/coef_trt_all_unordered_v2_scaled.pdf",width=16,height=8) #scaled
 print(final_plot)
 dev.off()
 
 toc(log=TRUE)
+
+# Variance partitioning plots ####
+
+VP <- varPartitioning(m_lvm_4)
+plotVarPartitioning(VP,col=palette(hcl.colors(10,"Roma")))
+
+# plot with ggplot2
+as.data.frame(VP$PropExplainedVarSp) %>%
+  mutate(name = row.names(.)) %>% 
+  pivot_longer(.,cols = nh4:"Row random effect: WB",
+               names_to = "var",values_to = "val") %>% 
+  mutate(var = as.factor(var)) %>% 
+  mutate(var = fct_relevel(var,
+                           "Row random effect: WB",
+                           "LV1","LV2")) -> VP_plot
+
+VP_plot %>% 
+  ggplot(., aes(fill = var, y=val, x= name)) + 
+  geom_bar(col=1,position = "fill", stat= "identity")+
+  scale_x_discrete(limits=rev)+
+  coord_flip()+
+  labs(title = "Variance partitioning of zooplankton life form abundances",
+       y="Variance explained",
+       caption = paste0("Samples gathered between ",
+                        min(dfl$sample.date)," & ",
+                        max(dfl$sample.date)))+
+  scale_fill_manual(values = c("#000000",
+                               "grey50","grey70",
+                               #"#888888","#FFFFFF",
+                               cbPalette[2:8]
+  ))+
+  # scale_colour_manual(values=c("red","red","red",rep("black",7)))+
+  theme(
+    axis.title.y = element_blank(),
+    axis.text = element_text(face = 2),
+    legend.text = element_text(face = 2),
+    legend.title = element_blank(),
+    ) -> pl_VP
+
+pdf(file = "figs/gllvm_VariancePartition.pdf",width=16,height=8)
+print(pl_VP)
+dev.off();rm(pl_VP)
+
+# check model fit ####
+pl <- plot(m_lvm_4, what = "lv.coefs")
+
+
+sim_res <- simulateResiduals(
+  fittedModel = m_lvm_4,
+  n = 1000,
+  refit = FALSE,
+  simulateFunction = function(fittedModel, n) {
+    replicate(n, simulate(fittedModel)[[1]])
+  }
+)
+plot(sim_res)
+
+plot(sim_res)
+
 
 ## fun & games with unimodal QUADRATIC model ####
 # model is processor-hungry and needs lots of data.  Trim Y
@@ -408,7 +472,7 @@ tolerances(m_lvm_quad_0,sd.errors = FALSE)## inspect tolerances
 # some very large values in the optima and tolerances, indicating linear responses
 ## Use model to predict some values for visualisation
 #LV1
-LVs = getLV(m_lvm_quad_0)
+LVs <- getLV(m_lvm_quad_0)
 newLV <- cbind(LV1=seq(min(LVs[,1]), max(LVs[,1]),length.out=1000),LV2=0)
 ### causes error:
 preds <- gllvm::predict.gllvm(m_lvm_quad_0,
