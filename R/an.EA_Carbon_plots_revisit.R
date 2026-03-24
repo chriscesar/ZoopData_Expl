@@ -45,7 +45,9 @@ dfl %>% #names()
                         "\nCarbon content values are based on *median* estimates of carbon contents per taxon")) +
     theme(legend.position = "none",
           axis.title = element_text(face=2),
-          strip.text = element_text(face=2)) -> pl
+          strip.text = element_text(face=2),
+          axis.text = element_text(face=2),
+          ) -> pl
 
 ggsave(plot = pl, filename = "figs/2412dd/Carb_logtotCByDateByWB_Fixed_Y_median.pdf",
        width = 12,height = 8,units = "in"); rm(pl)
@@ -76,7 +78,9 @@ dfl %>% #names()
                       "\nCarbon content values are based on *mean* estimates of carbon contents per taxon")) +
   theme(legend.position = "none",
         axis.title = element_text(face=2),
-        strip.text = element_text(face=2)) -> pl
+        strip.text = element_text(face=2),
+        axis.text = element_text(face=2),
+        ) -> pl
 
 ggsave(plot = pl, filename = "figs/2412dd/Carb_logtotCByDateByWB_Fixed_Y_mean.pdf",
        width = 12,height = 8,units = "in"); rm(pl)
@@ -159,7 +163,7 @@ dfl %>% #names(.)
   group_by(across(c(!md_carbTot_m3))) %>% 
   summarise(md_carbTot_m3 = sum(md_carbTot_m3),.groups = "drop") %>%
   ungroup(.) %>%
-  dplyr::filter(WB_lb == "Thm_ThmLwr") %>%
+  # dplyr::filter(WB_lb == "Thm_ThmLwr") %>%
   ggplot(., aes(
     x=LF03,
     y=log(md_carbTot_m3),
@@ -245,7 +249,10 @@ dfl %>% #names()
                                                     "Y0004367",
                                                     "G0003532"))) %>% #View()
   ggplot(.,aes(x=BIOSYS.Code,y=sum, colour=WB_lb))+
-  geom_hline(yintercept = seq(from=0, to=150000, by=10000), colour = "grey",
+  geom_hline(yintercept = seq(from=0,
+                              # to=150000,
+                              to = 400000,
+                              by=10000), colour = "grey",
              linetype=2)+
   geom_boxplot(outliers = FALSE)+
   geom_jitter(width = 0.25)+
@@ -254,7 +261,14 @@ dfl %>% #names()
        y= "Total carbon (ug C/m3)",
        caption = paste0("Samples gathered between ",format(min(dfl$sample.date), "%d/%m/%Y")," & ",format(max(dfl$sample.date), "%d/%m/%Y"),
                         "\nCarbon content values are based on *median* estimates of carbon contents per taxon"))+
-  scale_y_continuous(breaks = c(0,50000,100000,150000),labels = scales::comma_format())+
+  scale_y_continuous(
+    # breaks = c(0,50000,100000,150000),
+    breaks = seq(from=0,
+                 # to=150000,
+                 to = 400000,
+                 by=50000),
+    labels = scales::comma_format()
+    )+
   coord_flip()+
   theme(legend.title = element_blank(),
         axis.title = element_text(face=2)) -> pl
@@ -282,7 +296,7 @@ dfl %>% #names()
   group_by(across(c(!mn_carbTot_m3))) %>% 
   summarise(sum=sum(mn_carbTot_m3, na.rm = TRUE), .groups = "drop") %>%
   ggplot(.,aes(x=BIOSYS.Code,y=sum, colour=WB_lb))+
-  geom_hline(yintercept = seq(from=0, to=330000, by=10000), colour = "grey",
+  geom_hline(yintercept = seq(from=0, to=360000, by=10000), colour = "grey",
              linetype=2)+
   geom_boxplot(outliers = FALSE)+
   geom_jitter(width = 0.25)+
@@ -291,7 +305,7 @@ dfl %>% #names()
        y= "Total carbon (ug C/m3)",
        caption = paste0("Samples gathered between ",format(min(dfl$sample.date), "%d/%m/%Y")," & ",format(max(dfl$sample.date), "%d/%m/%Y"),
                         "\nCarbon content values are based on *mean* estimates of carbon contents per taxon"))+
-  scale_y_continuous(breaks = seq(from=0,to=330000,by=50000),labels = scales::comma_format())+
+  scale_y_continuous(breaks = seq(from=0,to=350000,by=50000),labels = scales::comma_format())+
   coord_flip()+
   theme(legend.title = element_blank(),
         axis.title = element_text(face=2)) -> pl
@@ -328,7 +342,11 @@ dfl %>%
        caption = paste0("Samples gathered between ",format(min(dfl$sample.date), "%d/%m/%Y")," & ",format(max(dfl$sample.date), "%d/%m/%Y"),
                         "\nCarbon content values are based on *median* estimates of carbon contents per taxon"))+
   theme(legend.title = element_blank(),
-        axis.title = element_text(face=2))+
+        axis.title = element_text(face=2),
+        strip.text = element_text(face = 2, size = 14),
+        plot.title = element_text(face = 2),
+        plot.caption = element_text(size = 14),
+        )+
   coord_flip() -> pl
 
 ggsave(plot = pl, filename = "figs/2412dd/carbonTax_Soton_Median.pdf",
@@ -362,7 +380,11 @@ dfl %>%
        caption = paste0("Samples gathered between ",format(min(dfl$sample.date), "%d/%m/%Y")," & ",format(max(dfl$sample.date), "%d/%m/%Y"),
                         "\nCarbon content values are based on *mean* estimates of carbon contents per taxon"))+
   theme(legend.title = element_blank(),
-        axis.title = element_text(face=2))+
+        axis.title = element_text(face=2),
+        strip.text = element_text(face = 2, size = 14),
+        plot.title = element_text(face = 2),
+        plot.caption = element_text(size = 14),
+  )+
   coord_flip() -> pl
 
 ggsave(plot = pl, filename = "figs/2412dd/carbonTax_Soton_Mean.pdf",
