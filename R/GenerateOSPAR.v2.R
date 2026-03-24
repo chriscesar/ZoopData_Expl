@@ -16,7 +16,7 @@ rm(cbPalette,cbPalette2,ppi,nit,perms)
 tic("Load zoop data")
 df0 <- readxl::read_xlsx(
   paste0(datfol,
-         "processedData/260113_MBA_Returns_Amalgamated_USE.xlsx"),
+         "processedData/260114_MBA_Returns_Amalgamated_USE.xlsx"),
                          sheet = "outR04_LF")
 toc(log=TRUE)
 
@@ -264,11 +264,11 @@ dfout %>%
     # MSTAT,
     PURPM,
     MPROG
-  ) -> dfout_exp
+  ) -> dfout_exp0
 tictoc::toc(log = TRUE)
 
 # remove NA sample volume values ####
-dfout_exp %>% dplyr::filter(!is.na(SMVOL)) -> dfout_exp
+dfout_exp0 %>% dplyr::filter(!is.na(SMVOL)) -> dfout_exp
 
 tictoc::tic("Write data, appending today's date to filename")
 write.csv(x = dfout_exp,
