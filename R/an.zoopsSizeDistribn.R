@@ -37,7 +37,7 @@ fac_tmp22 <- fac_tmp22[6:12]
 fac_tmp23 <- paste0(rep(2023, 12), "_", sprintf("%02d", 1:12))
 fac_tmp24 <- paste0(rep(2024, 12), "_", sprintf("%02d", 1:12))
 fac_tmp25 <- paste0(rep(2025, 12), "_", sprintf("%02d", 1:12))
-fac_tmp25 <- fac_tmp25[1:5]
+fac_tmp25 <- fac_tmp25[1:7]
 fac_tmp <- c(fac_tmp22,fac_tmp23,fac_tmp24,fac_tmp25)
 
 # assign dates to factors
@@ -72,7 +72,7 @@ purrr::walk(unique_sites, function(site) {
     ggplot2::ggplot(aes(x = mnlongMaxAxis_mm,
                         # y = yyyy_mm,
                         y = yyyy_mm_fac,
-                        weight = mn_carbTot_m3)
+                        weight = mn_carbTot_m3_ug)
                     ) +
     ggridges::geom_density_ridges(alpha=0.7, aes(fill=DJF),
                                   jittered_points=TRUE,
@@ -119,7 +119,7 @@ purrr::walk(unique_sites, function(site) {
   
   # Create the plot with ggplot2
   p <- dfl_filtered %>%
-    ggplot2::ggplot(aes(x = mnlongMaxAxis_mm, y = DJF, weight = mn_carbTot_m3)) +
+    ggplot2::ggplot(aes(x = mnlongMaxAxis_mm, y = DJF, weight = mn_carbTot_m3_ug)) +
     ggridges::geom_density_ridges(alpha=0.7, aes(fill=DJF),
                                   jittered_points=TRUE,
                                   position = position_points_jitter(width = 0.05, height = 0),
