@@ -24,7 +24,7 @@ tic("Format & prep data")
 ## generate carbon-content data for analysis ####
 ### widen taxon data & append WIMS data ####
 dfl %>% #names()
-  dplyr::select(.,c(Pot.Number:WB_lb,LF02,mn_carbTot_raw)) %>% #names()
+  dplyr::select(.,c(Pot.Number:WB_lb,LF02,mn_carbTot_raw_ug)) %>% #names()
   #### assign net volume value of 1 if net is empty
   dplyr::mutate(netVol_use = ifelse(is.na(`Net.volume.sampled.(m3)`),1,`Net.volume.sampled.(m3)`)) %>%
   ### remove 'old' net value
@@ -38,7 +38,7 @@ dfl %>% #names()
     ugC_per.m3_mn, mgC_per_individ_mn, mgC_in_sample_mn,
     ugC_per_individ_md, ugC_in_sample_md, ugC_per.m3_md,
     mgC_per_individ_md, mgC_in_sample_md, mgC_per.m3_md,
-    mn_carbTot_raw
+    mn_carbTot_raw_ug
     )) %>% 
   
   #### sum carbon across duplicate lifeforms
