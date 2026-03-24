@@ -12,20 +12,6 @@ tictoc::tic.clearlog();tic("Set universals");print("set universals")
 source("R/set_meta.R")
 toc(log=TRUE)
 
-## load data ####
-# ### Biological data ####
-# ### Data is in LONG format
-# tic("Load zoop data")
-# source("R/imp.load_data_all_zoops.R")
-# toc(log=TRUE)
-# rm(dfl0)
-# 
-# ### WIMS data ####
-# tic("Load WIMS data")
-# source("R/imp.load_data_wims.R")
-# toc(log=TRUE)
-# rm(df_wims0)
-
 tic("Load mean carbon content values")
 source("R/an_EA_taxa_gllvm_no_offset.R")
 toc(log=TRUE)
@@ -75,7 +61,7 @@ rm(kp, keep)
 # define function to replace "less than" values by  half their value
 replace_values <- function(x) {
   if_else(str_detect(x, "^<"), as.numeric(sub("^<", "", x))/2, as.numeric(x))
-}
+  }
 
 # amend < values in wims data
 X %>% 
@@ -85,7 +71,7 @@ X %>%
 X$WB <- df_carb[[1]]$WB_lb
 X$Region <- df_carb[[1]]$Region
 
-#OPTIONAL: remove lifeforms which only appear n>=4 times ####
+#OPTIONAL: remove lifeforms which only appear n times ####
 n <- 200 # 7 terms in 'full' X-model
 Y <- Y[,colSums(ifelse(Y==0,0,1))>n]
 
@@ -184,7 +170,7 @@ tic("Generate summary plots for unconstrained model")
 # m_lvm_0 <- readRDS("figs/2412dd/gllvm_carbon_uncon_WB_negbin.Rdat")
 # m_lvm_0 <- readRDS("figs/2412dd/gllvm_carbon_uncon_WB_gamma.Rdat")
 m_lvm_0 <- readRDS("figs/2412dd/gllvm_carbon_uncon_WB_tweedie.Rdat")
-par(mfrow=c(2,2));plot(m_lvm_0, which=1:4);par(mfrow=c(1,1))
+# par(mfrow=c(2,2));plot(m_lvm_0, which=1:4);par(mfrow=c(1,1))
 gllvm::ordiplot.gllvm(m_lvm_0,biplot = TRUE,symbols=TRUE)
 cr <- getResidualCor(m_lvm_0)
 
@@ -197,12 +183,13 @@ toc(log=TRUE)
 ##########################
 ## Constrained ####
 ### Negbin ####
-tic("Fit Constrained Negative binomial model")
+tic("Fit Constrained Tweedie model")
 # sDsn <- data.frame(region = X$region)
 sDsn <- data.frame(WB = X$wb)
 m_lvm_4 <- gllvm(y=as.matrix(Y), # model with environmental parameters
                  X=X_scaled, #scaled
-                 formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
+                 # formula = ~ nh4 + sal_ppt + chla + din + depth + po4 + tempC,
+                 formula = ~ chla + nh4 + no3 + no2 + po4 + sal_ppt + si + tempC + o2_dis_sat,
                  studyDesign = sDsn,
                  row.eff = ~(1|WB),
                  family="tweedie",
@@ -301,7 +288,8 @@ for (level in levels(mod_coefs$coefficient)) {
   mean_estimate <- mean(subset_data$Estimate)
   
   # Determine the color of the vertical line based on the mean estimate
-  line_color <- ifelse(mean_estimate > 0, "blue", ifelse(mean_estimate < 0, "red", "grey"))
+  line_color <- ifelse(mean_estimate > 0, "blue",
+                       ifelse(mean_estimate < 0, "red", "grey"))
   
   # Create a plot for the current level
   current_plot <- ggplot(subset_data,
@@ -311,28 +299,20 @@ for (level in levels(mod_coefs$coefficient)) {
                              colour=clr,
                              fill=clr)) +
     geom_hline(yintercept = seq(1.5,ntrt,by=1),col="lightgrey",lty=3)+
-    geom_vline(xintercept = 0)+
+    geom_vline(xintercept = 0, lty=2, col="darkgrey")+
     # Add vertical line for mean estimate
-    geom_vline(xintercept = mean_estimate, color = line_color,linetype="dashed") +
+    # geom_vline(xintercept = mean_estimate, color = line_color,linetype="dashed") +
     geom_linerange()+
     labs(title = paste0(level))+
-    # geom_point(shape=21) +
     geom_point() +
     scale_y_discrete(limits = rev(levels(as.factor(mod_coefs$LF))))+
-    # scale_colour_manual(values = c("red",#negative
-    #                                     "grey",#null
-    #                                     "blue"#positive
-    # ))+
     scale_colour_identity()+
-    # scale_fill_manual(values = c("red",#negative
-    #                                   "white",#null
-    #                                   "blue"#positive
-    # ))+
     guides(colour="none",
            fill="none")+
     theme(axis.title = element_blank(),
-          plot.title = element_text(hjust=0.5),
-          axis.text = element_text(face=2)
+          plot.title = element_text(hjust=0.5,size=14,face=2),
+          axis.text = element_text(face=2),
+          axis.text.y = element_text(size=12),
           )
   
   # Add the current plot to the list
@@ -354,25 +334,41 @@ print(paste0("Including environmental parameters in the model explains ",round(b
 AIC(m_lvm_0,m_lvm_4)
 
 # Combine all the individual plots into a single plot
-(final_plot <- patchwork::wrap_plots(plotlist = plot_list,
-                          ncol = nlevels(mod_coefs$coefficient))+  # Adjust the number of columns as needed
-    patchwork::plot_annotation(title="Caterpillar plot of generalised linear latent variable model outputs",
-                    subtitle = paste0("Including environmental variables explains ",round(btwn,1),"% of the (co)variation in lifeform abundances compared to the null (lifeforms-only) model"),
-                    caption = paste0("Colours indicate lifeform 95% confidence intervals which do (grey) or do not (red/blue) include zero. ",
-                                     "Dashed vertical lines indicate mean point estimate values\n","Lifeforms recorded in fewer than ",n+1," samples removed from data prior to model estimations","\n",
-                                     "Model call: ~",as.character(m_lvm_4$formula)[2],". ",
-                                     "Distribution family: ",as.character(m_lvm_4$family),".",
-                                     "\nRandom row effects: ",as.character(m_lvm_4$call)[8],"; number of model iterations = ",m_lvm_4$n.init,".",
-                                     "\nSamples gathered between ",format(min(dfl$sample.date), "%d/%m/%Y")," & ",format(max(dfl$sample.date), "%d/%m/%Y")),
-                    theme = theme(plot.title = element_text(size = 16, face="bold"),
-                                  axis.text = element_text(face=2),
-                                  )
-                    ))
+(final_plot <-
+  patchwork::wrap_plots(
+    plotlist = plot_list,
+    ncol = nlevels(mod_coefs$coefficient)
+  ) +
+  patchwork::plot_annotation(
+    title="Caterpillar plot of generalised linear latent variable model outputs",
+    subtitle = paste0("Including environmental variables explains <b>",round(btwn,1),"% </b>of the (co)variation in zooplankton lifeform carbon content compared to the null (lifeforms-only) model"),
+    caption = paste0(
+      "Colours indicate lifeform 95% confidence intervals which do (grey) or do not (red/blue) include zero.<br>",
+      "Lifeforms recorded in fewer than ",n+1," samples removed from data prior to model estimations","<br>",
+      "<i>Model call:</i> ~",as.character(m_lvm_4$formula)[2],". ",
+      "<i>Distribution family:</i> ",as.character(unique(m_lvm_4$family)),".<br>",
+      "<i>Random row effects: </i>",as.character(m_lvm_4$call)[8],". <i>Number of model iterations: </i> ",m_lvm_4$n.init,"<br>",
+      "Samples gathered between <b>",format(min(dfl$sample.date), "%d/%m/%Y")," & ",format(max(dfl$sample.date), "%d/%m/%Y")
+    ),
+    
+    # >>> Theme ONLY for the annotation <<<
+    theme = theme(
+      plot.title = element_text(size = 18, face = "bold"),
+      plot.subtitle = ggtext::element_markdown(size = 14),
+      plot.caption = ggtext::element_markdown(size = 11)
+    )
+  ))
 
 pdf(file = "figs/2412dd/coef_trt_all_unordered_v2_scaled.pdf",width=16,height=8) #scaled
 print(final_plot)
 dev.off()
 
+png(file = "figs/2412dd/coef_trt_all_unordered_v2_scaled.png",
+    width=18*ppi, height=12*ppi, res=ppi)
+print(final_plot)
+dev.off()
+
+par(mfrow=c(1,1))
 toc(log=TRUE)
 
 # Variance partitioning plots ####
@@ -390,7 +386,7 @@ as.data.frame(VP$PropExplainedVarSp) %>%
                            "Row random effect: WB",
                            "LV1","LV2")) -> VP_plot
 
-VP_plot %>% 
+(VP_plot %>% 
   ggplot(., aes(fill = var, y=val, x= name)) + 
   geom_bar(col=1,position = "fill", stat= "identity")+
   scale_x_discrete(limits=rev)+
@@ -403,19 +399,28 @@ VP_plot %>%
   scale_fill_manual(values = c("#000000",
                                "grey50","grey70",
                                #"#888888","#FFFFFF",
-                               cbPalette[2:8]
+                               cbPalette[c(2:8,15)]
   ))+
   # scale_colour_manual(values=c("red","red","red",rep("black",7)))+
   theme(
     axis.title.y = element_blank(),
     axis.text = element_text(face = 2),
+    axis.title.x = element_text(face = 2),
     legend.text = element_text(face = 2),
+    plot.title = element_text(face = 2),
+    plot.caption = element_text(face = 2),
     legend.title = element_blank(),
-    ) -> pl_VP
+    ) -> pl_VP)
 
-pdf(file = "figs/gllvm_VariancePartition.pdf",width=16,height=8)
+pdf(file = "figs/2412dd/gllvm_VariancePartition.pdf",width=16,height=8)
 print(pl_VP)
-dev.off();rm(pl_VP)
+dev.off()
+
+png(file = "figs/2412dd/gllvm_VariancePartition.png",
+    width=18*ppi, height=12*ppi, res=ppi)
+print(pl_VP)
+dev.off()
+rm(pl_VP)
 
 # check model fit ####
 pl <- plot(m_lvm_4, what = "lv.coefs")
