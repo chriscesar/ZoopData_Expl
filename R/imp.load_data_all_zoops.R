@@ -47,7 +47,7 @@ dfl0 %>%
   # remove repeated taxon names within samples: sum by updated taxon names
   group_by(across(-c(AbundanceRaw,Abund_m3))) %>% 
   summarise(.,
-            AbundanceRaw=sum(AbundanceRaw, na.rm = TRUE),
+            AbundanceRaw=sum(as.numeric(AbundanceRaw), na.rm = TRUE),
             Abund_m3 = sum(Abund_m3, na.rm = TRUE),
             .groups = "drop") %>%
   ungroup() %>% 
@@ -166,10 +166,10 @@ dfl <- left_join(dfl, df_carb, by="Aphia.ID")
 rm(df_carb)
 
 dfl %>%
-  mutate(mn_carbTot_raw = AbundanceRaw*mnCPerIndiv_ug,
-         md_carbTot_raw = AbundanceRaw*mdCPerIndiv_ug,
-         mn_carbTot_m3 = Abund_m3*mnCPerIndiv_ug,
-         md_carbTot_m3 = Abund_m3*mdCPerIndiv_ug
+  mutate(mn_carbTot_raw_ug = AbundanceRaw*mnCPerIndiv_ug,
+         md_carbTot_raw_ug = AbundanceRaw*mdCPerIndiv_ug,
+         mn_carbTot_m3_ug = Abund_m3*mnCPerIndiv_ug,
+         md_carbTot_m3_ug = Abund_m3*mdCPerIndiv_ug
   ) -> dfl
 
 toc(log=TRUE)
