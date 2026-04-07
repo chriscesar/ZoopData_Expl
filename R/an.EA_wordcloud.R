@@ -44,17 +44,17 @@ cbPalette2 <- c("#646464", #100/100/100
 
 #### load LIFEFORMS data ####
 df_LF0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
-                                               "processedData/250827_MBA_Returns_Amalgamated_USE.xlsx"),
+                                               "processedData/260114_MBA_Returns_Amalgamated_USE.xlsx"),
                                         sheet="outR04_LF"))
 
 #### load TAXON data ####
 df_tx0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
-                                               "processedData/250827_MBA_Returns_Amalgamated_USE.xlsx"),
+                                               "processedData/260114_MBA_Returns_Amalgamated_USE.xlsx"),
                                         sheet="outR04"))
 
 ### append updated taxon names
 tx_chk0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
-                                                "processedData/250827_MBA_Returns_Amalgamated_USE.xlsx"),
+                                                "processedData/260114_MBA_Returns_Amalgamated_USE.xlsx"),
                                          sheet="TaxonomicRaw"))
 
 tx_chk <- tx_chk0 %>% 
@@ -87,6 +87,7 @@ toc()
 ## summarise by counts & plot cloud
 # LF version ####
 tic();set.seed(271);df_LF0 %>% 
+  dplyr::filter(Region == "Thames") %>% 
   # group_by(Region) %>% 
   count(.,LF02) %>% 
   mutate(tot=sum(n)) %>% 
@@ -116,6 +117,7 @@ dev.off();toc()
 # taxon version ####
 # append taxon info
 tic();set.seed(21);df_tx %>% 
+  dplyr::filter(Region == "Thames") %>% 
   # group_by(Region) %>% 
   count(.,Taxa) %>% 
   mutate(tot=sum(n)) %>% 
