@@ -19,14 +19,16 @@ print("Load lifeforms data and correct taxon names")
 dfl0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
                                             # "processedData/250827_MBA_Returns_Amalgamated_USE.xlsx"),
                                             # "processedData/251021_MBA_Returns_Amalgamated_USE.xlsx"),
-                                            "processedData/260114_MBA_Returns_Amalgamated_USE.xlsx"),
+                                            # "processedData/260114_MBA_Returns_Amalgamated_USE.xlsx"),
+                                            "processedData/260608_MBA_Returns_Amalgamated_USE.xlsx"),
                                      sheet="outR04_LF"))
 
 ### import  updated taxon names
 tx_chk0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
                                                 # "processedData/250827_MBA_Returns_Amalgamated_USE.xlsx"),
                                                 # "processedData/251021_MBA_Returns_Amalgamated_USE.xlsx"),
-                                                "processedData/260114_MBA_Returns_Amalgamated_USE.xlsx"),
+                                                # "processedData/260114_MBA_Returns_Amalgamated_USE.xlsx"),
+                                                "processedData/260608_MBA_Returns_Amalgamated_USE.xlsx"),
                                          sheet="TaxonomicRaw"))
 
 tx_chk <- tx_chk0 %>% 
@@ -72,7 +74,8 @@ dfl$DJF <- as.factor(seas::mkseas(dfl$sample.date, width="DJF"))#convert dates t
 dfl %>% relocate(.,DJF, .after = sample.date) -> dfl
 
 # ### set Region as a factor & order in clockwise from NE to NW
-dfl$Region <- factor(dfl$Region, levels = c("NEast","Anglian","Thames",
+dfl$Region <- factor(dfl$Region, levels = c("NEast","Humber",
+                                            "Anglian","Thames",
                                           "Southern","SWest","NWest"))
 
 ### generate labels
@@ -83,10 +86,12 @@ LFWB <- dfl$WB
 WB_lb1 <- ifelse(LFRegion == "Southern","Sth",
                  ifelse(LFRegion == "Thames","Thm",
                         ifelse(LFRegion == "Anglian","Ang",
-                               ifelse(LFRegion == "NWest","NW",
-                                      ifelse(LFRegion == "NEast","NE",
-                                             ifelse(LFRegion == "SWest","SW",NA)
-                                      )))))
+                               ifelse(LFRegion == "Humber","Hmb",
+                                      ifelse(LFRegion == "NWest","NW",
+                                             ifelse(LFRegion == "NEast","NE",
+                                                    ifelse(LFRegion == "SWest",
+                                                           "SW",NA)
+                                                    ))))))
 
 WB_lb2 <- ifelse(LFWB == "Solent","Solent",
                  ifelse(LFWB == "SOUTHAMPTON WATER","SotonWtr",
@@ -116,7 +121,7 @@ dfl$WB_lb <- factor(dfl$WB_lb, levels = c(
   "NE_NrthmbNth",
   "NE_FarneIs",
   "NE_Tees",
-  "Ang_YorksSth",
+  "Hmb_YorksSth",
   "Ang_Lincs",
   "Ang_LncsOffsh",
   "Ang_WashOtr",
