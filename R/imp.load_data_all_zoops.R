@@ -20,7 +20,8 @@ dfl0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
                                             # "processedData/250827_MBA_Returns_Amalgamated_USE.xlsx"),
                                             # "processedData/251021_MBA_Returns_Amalgamated_USE.xlsx"),
                                             # "processedData/260114_MBA_Returns_Amalgamated_USE.xlsx"),
-                                            "processedData/260608_MBA_Returns_Amalgamated_USE.xlsx"),
+                                            # "processedData/260608_MBA_Returns_Amalgamated_USE.xlsx"),
+                                            "processedData/260728_MBA_Returns_Amalgamated_USE.xlsx"),
                                      sheet="outR04_LF"))
 
 ### import  updated taxon names
@@ -28,7 +29,8 @@ tx_chk0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
                                                 # "processedData/250827_MBA_Returns_Amalgamated_USE.xlsx"),
                                                 # "processedData/251021_MBA_Returns_Amalgamated_USE.xlsx"),
                                                 # "processedData/260114_MBA_Returns_Amalgamated_USE.xlsx"),
-                                                "processedData/260608_MBA_Returns_Amalgamated_USE.xlsx"),
+                                                # "processedData/260608_MBA_Returns_Amalgamated_USE.xlsx"),
+                                                "processedData/260728_MBA_Returns_Amalgamated_USE.xlsx"),
                                          sheet="TaxonomicRaw"))
 
 tx_chk <- tx_chk0 %>% 
@@ -46,6 +48,11 @@ dfl0$Taxa.x <- dfl0$Taxa.y;dfl0$Taxa.y <- NULL
 
 dfl0 %>%
   rename(Taxa=Taxa.x) %>% # clear up taxon column name
+  # remove presence-only taxa
+  dplyr::filter(AbundanceRaw != "P") %>% 
+  # convert abundances to numeric
+  dplyr::mutate(AbundanceRaw = as.numeric(AbundanceRaw)) %>% 
+  dplyr::mutate(Abund_m3 = as.numeric(Abund_m3)) %>% 
   # remove repeated taxon names within samples: sum by updated taxon names
   group_by(across(-c(AbundanceRaw,Abund_m3))) %>% 
   summarise(.,
