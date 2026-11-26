@@ -186,8 +186,10 @@ if (nrow(problem_sheets) > 0) {
 }
 
 tictoc::tic("Write data")
-write.csv(results, file = paste0(hldfol,"results.csv"),row.names = FALSE)
+write.csv(results, file = paste0(hldfol,"results_",
+                                 format(Sys.Date(), "%Y%m%d"),
+                                 ".csv"),row.names = FALSE)
 tictoc::toc(log=TRUE)
 
 #### timing log ####
-tictoc::tic.log(format = TRUE)
+unlist(tictoc::tic.log(format = TRUE))
