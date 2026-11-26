@@ -16,52 +16,50 @@ tic("Load lifeforms data, format data and correct names")
 print("Load lifeforms data and correct taxon names")
 
 ## load data
-dfl0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
-                                            # "processedData/250827_MBA_Returns_Amalgamated_USE.xlsx"),
-                                            # "processedData/251021_MBA_Returns_Amalgamated_USE.xlsx"),
-                                            # "processedData/260114_MBA_Returns_Amalgamated_USE.xlsx"),
-                                            # "processedData/260608_MBA_Returns_Amalgamated_USE.xlsx"),
-                                            "processedData/260728_MBA_Returns_Amalgamated_USE.xlsx"),
-                                     sheet="outR04_LF"))
+dfl0 <- readxl::read_xlsx(
+  paste0(datfol,
+         "processedData/261009_MBA_Returns_Amalgamated_USE.xlsx"),
+  sheet = "outR04_LF",
+  col_types = "text"
+  ) %>% janitor::clean_names()
 
 ### import  updated taxon names
-tx_chk0 <- as_tibble(openxlsx::read.xlsx(paste0(datfol,
-                                                # "processedData/250827_MBA_Returns_Amalgamated_USE.xlsx"),
-                                                # "processedData/251021_MBA_Returns_Amalgamated_USE.xlsx"),
-                                                # "processedData/260114_MBA_Returns_Amalgamated_USE.xlsx"),
-                                                # "processedData/260608_MBA_Returns_Amalgamated_USE.xlsx"),
-                                                "processedData/260728_MBA_Returns_Amalgamated_USE.xlsx"),
-                                         sheet="TaxonomicRaw"))
+tx_chk0 <- readxl::read_xlsx(
+  paste0(datfol,
+         "processedData/261009_MBA_Returns_Amalgamated_USE.xlsx"),
+  sheet="TaxonomicRaw",
+  col_types = "text"
+  ) %>% janitor::clean_names()
 
 tx_chk <- tx_chk0 %>% 
-  rename(Taxa=ScientificName_accepted,
-         Aphia.ID=AphiaID_accepted) %>% 
+  rename(taxa=scientific_name_accepted,
+         aphia_id=aphia_id_accepted) %>% 
   #dplyr::select(.,-ScientificName) %>% 
   distinct()
 
-tx_chk %>% dplyr::select(., Taxa, Aphia.ID) %>% 
+tx_chk %>% dplyr::select(., taxa, aphia_id) %>% 
   distinct() -> tx_chktrm
 
 ### append updated taxon names to abundance data
-dfl0 <- left_join(dfl0, tx_chktrm, by="Aphia.ID")
-dfl0$Taxa.x <- dfl0$Taxa.y;dfl0$Taxa.y <- NULL
+dfl0 <- left_join(dfl0, tx_chktrm, by="aphia_id")
+dfl0$taxa.x <- dfl0$taxa.y;dfl0$taxa.y <- NULL
 
 dfl0 %>%
-  rename(Taxa=Taxa.x) %>% # clear up taxon column name
+  rename(taxa=taxa.x) %>% # clear up taxon column name
   # remove presence-only taxa
-  dplyr::filter(AbundanceRaw != "P") %>% 
+  dplyr::filter(abundance_raw != "P") %>% 
   # convert abundances to numeric
-  dplyr::mutate(AbundanceRaw = as.numeric(AbundanceRaw)) %>% 
-  dplyr::mutate(Abund_m3 = as.numeric(Abund_m3)) %>% 
+  dplyr::mutate(abundance_raw = as.numeric(abundance_raw)) %>% 
+  dplyr::mutate(abund_m3 = as.numeric(abund_m3)) %>% 
   # remove repeated taxon names within samples: sum by updated taxon names
-  group_by(across(-c(AbundanceRaw,Abund_m3))) %>% 
+  group_by(across(-c(abundance_raw,abund_m3))) %>% 
   summarise(.,
-            AbundanceRaw=sum(as.numeric(AbundanceRaw), na.rm = TRUE),
-            Abund_m3 = sum(Abund_m3, na.rm = TRUE),
+            abundance_raw=sum(as.numeric(abundance_raw), na.rm = TRUE),
+            abund_m3 = sum(abund_m3, na.rm = TRUE),
             .groups = "drop") %>%
   ungroup() %>% 
   # remove 100um mesh samples [OPTIONAL]
-  filter(!str_starts(Sample.comments,"100um")) %>%
+  filter(!str_starts("Sample comments","100um")) %>%
   as_tibble(.) -> dfl
 rm(tx_chk,tx_chk0,tx_chktrm)
 toc(log=TRUE)
@@ -69,26 +67,26 @@ toc(log=TRUE)
 # Prep metadata formatting ####
 tic("Prep metadata formatting");print("Prep metadata formatting")
 ### convert sample dates from Excel to Date format
-dfl$sample.date <- as.Date(dfl$sample.date, origin = "1899-12-30")
+dfl$sample_date <- as.Date(as.numeric(dfl$sample_date), origin = "1899-12-30")
 ### add day of year variable
-dfl$yday <- lubridate::yday(dfl$sample.date)
-dfl %>% relocate(.,yday, .after = sample.date) -> dfl
+dfl$yday <- lubridate::yday(dfl$sample_date)
+dfl %>% relocate(.,yday, .after = sample_date) -> dfl
 ### add month variable
-dfl$month <- lubridate::month(dfl$sample.date)
-dfl %>% relocate(.,month, .after = sample.date) -> dfl
+dfl$month <- lubridate::month(dfl$sample_date)
+dfl %>% relocate(.,month, .after = sample_date) -> dfl
 ### add season variable
-dfl$DJF <- as.factor(seas::mkseas(dfl$sample.date, width="DJF"))#convert dates to 3month seasonal block
-dfl %>% relocate(.,DJF, .after = sample.date) -> dfl
+dfl$DJF <- as.factor(seas::mkseas(dfl$sample_date, width="DJF"))#convert dates to 3month seasonal block
+dfl %>% relocate(.,DJF, .after = sample_date) -> dfl
 
 # ### set Region as a factor & order in clockwise from NE to NW
-dfl$Region <- factor(dfl$Region, levels = c("NEast","Humber",
+dfl$region <- factor(dfl$region, levels = c("NEast","Humber",
                                             "Anglian","Thames",
                                           "Southern","SWest","NWest"))
 
 ### generate labels
 ### Likely wil require updating as samples are gathered at new stations/WBs
-LFRegion <- dfl$Region
-LFWB <- dfl$WB
+LFRegion <- dfl$region
+LFWB <- dfl$wb
 
 WB_lb1 <- ifelse(LFRegion == "Southern","Sth",
                  ifelse(LFRegion == "Thames","Thm",
@@ -122,9 +120,9 @@ WB_lb2 <- ifelse(LFWB == "Solent","Solent",
                                       )))))
 WB_lb <- paste0(WB_lb1,"_",WB_lb2)
 
-dfl$WB_lb <- WB_lb
-dfl %>% relocate(WB_lb,.after = WB) -> dfl
-dfl$WB_lb <- factor(dfl$WB_lb, levels = c(
+dfl$wb_lb <- WB_lb
+dfl %>% relocate(wb_lb,.after = wb) -> dfl
+dfl$wb_lb <- factor(dfl$wb_lb, levels = c(
   "NE_NrthmbNth",
   "NE_FarneIs",
   "NE_Tees",
@@ -171,24 +169,26 @@ df_carb <- readxl::read_xlsx(
   mutate_all(~ifelse(is.nan(.), NA, .)) %>% 
   as_tibble(.) %>% 
   dplyr::select(.,-c(taxon, longMaxAxis_mm,CPerIndiv_ug)) %>%
-  distinct(.)
+  distinct(.) %>% 
+  janitor::clean_names() %>% 
+  dplyr::mutate(aphia_id = as.character(aphia_id))
 
 # Append carbon content to taxon data & multiply abundance by Carbon
-dfl <- left_join(dfl, df_carb, by="Aphia.ID")
+dfl <- left_join(dfl, df_carb, by="aphia_id")
 rm(df_carb)
 
 dfl %>%
-  mutate(mn_carbTot_raw_ug = AbundanceRaw*mnCPerIndiv_ug,
-         md_carbTot_raw_ug = AbundanceRaw*mdCPerIndiv_ug,
-         mn_carbTot_m3_ug = Abund_m3*mnCPerIndiv_ug,
-         md_carbTot_m3_ug = Abund_m3*mdCPerIndiv_ug
+  mutate(mn_carbTot_raw_ug = abundance_raw*mn_c_per_indiv_ug,
+         md_carbTot_raw_ug = abundance_raw*md_c_per_indiv_ug,
+         mn_carbTot_m3_ug = abund_m3*mn_c_per_indiv_ug,
+         md_carbTot_m3_ug = abund_m3*md_c_per_indiv_ug
   ) -> dfl
 
 toc(log=TRUE)
 
 # Write data [if needed]####
 tic("Write data to csv");print("Write data to csv")
-# write.csv(dfl, file=paste0(datfol,"processedData/zoopsAll.csv"),
-#           row.names = FALSE)
+write.csv(dfl, file=paste0(datfol,"processedData/zoopsAll.csv"),
+          row.names = FALSE)
 toc(log = TRUE)
 unlist(tictoc::tic.log())

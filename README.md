@@ -21,3 +21,5 @@ Import and explore zooplankton data gathered by the Environment Agency since 202
     * `taxWide` - high resolution taxonomic information taken from the World Register of Marine Species
     * `TaxonomicRaw` - taxonomic information presenting names to display (deals with inconsistencies/typos on lab returns)
     * `LifeFormsUSE` - PLET Master lifeform lookup table, with additional lifeforms added for taxa not on master list
+* Once `datfol/processedData/[Date]_MBA_Returns_Amalgamated_USE.xlsx` is filled in and saved, run the script in `R/imp.load_data_all_zoops.R`
+  * This generates the file `processedData/zoopsAll.csv` which is used for future analyses in this project and the `PhytoFun` project
