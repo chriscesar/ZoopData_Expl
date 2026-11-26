@@ -188,7 +188,8 @@ toc(log=TRUE)
 
 # Write data [if needed]####
 tic("Write data to csv");print("Write data to csv")
-write.csv(dfl, file=paste0(datfol,"processedData/zoopsAll.csv"),
-          row.names = FALSE)
+# comment out if not updating
+# write.csv(dfl, file=paste0(datfol,"processedData/zoopsAll.csv"),
+#           row.names = FALSE)
 toc(log = TRUE)
 unlist(tictoc::tic.log())
